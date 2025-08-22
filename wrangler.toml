@@ -1,0 +1,40 @@
+# Wrangler configuration for Must Be Viral
+# LOG: DEPLOY-CONFIG-1 - Wrangler configuration setup
+
+name = "must-be-viral"
+main = "src/index.js"
+compatibility_date = "2024-01-15"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+name = "must-be-viral-prod"
+
+[env.staging]
+name = "must-be-viral-staging"
+
+# D1 Database configuration
+[[d1_databases]]
+binding = "DB"
+database_name = "must-be-viral-db"
+database_id = "your-d1-database-id"
+migrations_dir = "database"
+
+# KV Namespace configuration
+[[kv_namespaces]]
+binding = "CACHE"
+id = "your-kv-namespace-id"
+preview_id = "your-kv-preview-id"
+
+# R2 Bucket configuration (for file uploads)
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "must-be-viral-storage"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "production"
+JWT_SECRET = "your-production-jwt-secret"
+
+# Secrets (set via wrangler secret put)
+# CLOUDFLARE_API_TOKEN
+# CF_AI_API_TOKEN
