@@ -1,6 +1,8 @@
 // Jest setup file
 // LOG: TEST-SETUP-1 - Jest test setup
 
+import '@testing-library/jest-dom';
+
 // Mock console methods to reduce noise in tests
 global.console = {
   ...console,

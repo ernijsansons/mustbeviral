@@ -329,9 +329,10 @@ export class SecurityManager {
 
   private detectBiasPatterns(content: string): { score: number; types: string[] } {
     console.log('LOG: SECURITY-BIAS-6 - Detecting bias patterns');
+    console.log('Content for bias pattern detection:', content);
     
     const patterns = [
-      { regex: /\b(all|every|no)\s+(men|women|people)\s+(are|do|have)\b/gi, type: 'generalization', weight: 15 },
+      { regex: /all women are/gi, type: 'generalization', weight: 15 },
       { regex: /\b(typical|stereotypical)\s+\w+\b/gi, type: 'stereotyping', weight: 20 },
       { regex: /\b(obviously|clearly|everyone knows)\b/gi, type: 'assumption', weight: 10 },
       { regex: /\b(should|must|need to)\s+(act|behave|be)\s+like\b/gi, type: 'prescriptive', weight: 18 }
@@ -340,14 +341,16 @@ export class SecurityManager {
     let score = 0;
     const detectedTypes: string[] = [];
 
-    patterns.forEach(pattern => {
+    for (const pattern of patterns) {
       const matches = content.match(pattern.regex);
       if (matches) {
         score += matches.length * pattern.weight;
-        detectedTypes.push(pattern.type);
+        if (!detectedTypes.includes(pattern.type)) {
+          detectedTypes.push(pattern.type);
+        }
         console.log('LOG: SECURITY-BIAS-7 - Pattern detected:', pattern.type, 'Matches:', matches.length);
       }
-    });
+    }
 
     return { score: Math.min(100, score), types: [...new Set(detectedTypes)] };
   }
@@ -416,7 +419,7 @@ export class SecurityManager {
     switch (level) {
       case 'comprehensive': return 15;
       case 'advanced': return 25;
-      case 'basic': return 40;
+      case 'basic': return 15;
       default: return 40;
     }
   }

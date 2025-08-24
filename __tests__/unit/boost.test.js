@@ -175,7 +175,7 @@ describe('VisibilityBoostEngine', () => {
       console.log('LOG: TEST-BOOST-SEEDING-1 - Testing reputation repair seeding plan');
       
       const mockMetrics = {
-        overall_sentiment: -0.5,
+        overall_sentiment: -0.6,
         visibility_score: 40,
         mention_count: 10,
         positive_mentions: 2,

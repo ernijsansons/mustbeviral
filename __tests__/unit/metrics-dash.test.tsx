@@ -2,7 +2,7 @@
 // LOG: TEST-METRICS-DASH-1 - Metrics dashboard unit tests
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MetricsDash, useMetrics } from '../../src/components/MetricsDash';
 
 // Mock recharts components
@@ -90,13 +90,15 @@ describe('MetricsDash Component', () => {
   });
 
   describe('Component Rendering', () => {
-    test('should render dashboard with loading state', () => {
+    test('should render dashboard with loading state', async () => {
       console.log('LOG: TEST-METRICS-DASH-RENDER-1 - Testing initial render');
       
       render(<MetricsDash />);
       
       expect(screen.getByText('Loading metrics...')).toBeInTheDocument();
-      expect(screen.getByText('Metrics Dashboard')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Metrics Dashboard')).toBeInTheDocument();
+      });
     });
 
     test('should render tabs correctly', async () => {
@@ -241,8 +243,8 @@ describe('MetricsDash Component', () => {
       });
       
       await waitFor(() => {
-        expect(screen.getByTestId('line-chart')).toBeInTheDocument();
-        expect(screen.getByTestId('responsive-container')).toBeInTheDocument();
+        const conversionsTabPanel = screen.getByText('Conversion Trends Over Time').closest('.space-y-6');
+        expect(within(conversionsTabPanel).getByTestId('line-chart')).toBeInTheDocument();
       });
     });
 

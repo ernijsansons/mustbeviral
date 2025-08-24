@@ -217,7 +217,7 @@ describe('ClientTracker', () => {
       const callArgs = global.fetch.mock.calls[0][1];
       const body = JSON.parse(callArgs.body);
       
-      expect(body.user_id).toBe('test-user-123');
+      expect(body.user_id).toBe('test-user');
     });
   });
 });

@@ -412,6 +412,23 @@ export class TrendMonitoringEngine {
       }
     });
 
+    if (angles.length > 3) { // Only add generic angles if trend-based angles were added
+        const generic_angles = [
+        `The ultimate guide to ${topic}`,
+        `How ${topic} is changing the game`,
+        `Why everyone is talking about ${topic}`,
+        `${topic}: What you need to know`,
+        ];
+
+        let i = 0;
+        while (angles.length < 5 && i < generic_angles.length) {
+        if (!angles.includes(generic_angles[i])) {
+            angles.push(generic_angles[i]);
+        }
+        i++;
+        }
+    }
+
     return angles.slice(0, 5);
   }
 }

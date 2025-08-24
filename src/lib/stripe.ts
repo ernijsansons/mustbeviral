@@ -53,6 +53,9 @@ export class StripeService {
     return {
       customers: {
         create: async (params: any) => {
+          if (!params.email) {
+            throw new Error('Email is required');
+          }
           console.log('LOG: STRIPE-MOCK-1 - Mock customer creation');
           return {
             id: `cus_test_${Date.now()}`,
@@ -65,6 +68,9 @@ export class StripeService {
       checkout: {
         sessions: {
           create: async (params: any) => {
+            if (!params.customer || !params.line_items) {
+              throw new Error('Customer and line items are required');
+            }
             console.log('LOG: STRIPE-MOCK-2 - Mock checkout session creation');
             return {
               id: `cs_test_${Date.now()}`,
@@ -102,7 +108,7 @@ export class StripeService {
         constructEvent: (payload: string, signature: string, secret: string) => {
           console.log('LOG: STRIPE-MOCK-6 - Mock webhook verification');
           if (signature !== 'test_signature' && secret !== this.webhookSecret) {
-            throw new Error('Invalid signature');
+            throw new Error('Webhook signature verification failed: Invalid signature');
           }
           return JSON.parse(payload);
         }
@@ -184,14 +190,9 @@ export class StripeService {
   verifyWebhookSignature(payload: string, signature: string): any {
     console.log('LOG: STRIPE-WEBHOOK-1 - Verifying webhook signature');
     
-    try {
-      const event = this.stripe.webhooks.constructEvent(payload, signature, this.webhookSecret);
-      console.log('LOG: STRIPE-WEBHOOK-2 - Webhook signature verified, event type:', event.type);
-      return event;
-    } catch (error) {
-      console.error('LOG: STRIPE-WEBHOOK-ERROR-1 - Webhook signature verification failed:', error);
-      throw new Error(`Webhook signature verification failed: ${error}`);
-    }
+    const event = this.stripe.webhooks.constructEvent(payload, signature, this.webhookSecret);
+    console.log('LOG: STRIPE-WEBHOOK-2 - Webhook signature verified, event type:', event.type);
+    return event;
   }
 
   async processWebhook(event: any): Promise<any> {

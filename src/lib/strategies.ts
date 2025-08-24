@@ -175,7 +175,7 @@ export class StrategyGenerator {
         template_id: selectedTemplate.id,
         user_id: request.user_id,
         brand_name: request.brand_name,
-        customized_steps,
+        customized_steps: customizedSteps,
         timeline,
         budget_estimate: budgetEstimate,
         success_probability: successProbability,

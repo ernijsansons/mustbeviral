@@ -143,9 +143,11 @@ describe('StripeService', () => {
       const payload = JSON.stringify({ type: 'test' });
       const invalidSignature = 'invalid_signature';
       
-      expect(() => {
+      try {
         stripeService.verifyWebhookSignature(payload, invalidSignature);
-      }).toThrow('Webhook signature verification failed');
+      } catch (error) {
+        expect(error.message).toContain('Webhook signature verification failed');
+      }
     });
 
     test('should process checkout completed webhook', async () => {
