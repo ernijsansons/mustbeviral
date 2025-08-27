@@ -14,6 +14,7 @@ module.exports = {
       ]
     }]
   },
+  transformIgnorePatterns: ['/node_modules/(?!jose)/'],
   moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json'],
   testMatch: [
     '<rootDir>/__tests__/**/*.test.{js,jsx,ts,tsx}',

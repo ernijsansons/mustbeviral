@@ -1,6 +1,8 @@
 // Database connection and utilities for Cloudflare D1
 // LOG: DB-INIT-1 - Initialize database connection
 
+import { AuthService } from './auth';
+
 export interface User {
   id: string;
   email: string;
@@ -54,6 +56,14 @@ export class DatabaseService {
   // User operations
   async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
     console.log('LOG: DB-USER-1 - Creating new user:', userData.email);
+
+    if (!AuthService.validateEmail(userData.email)) {
+      throw new Error('Invalid email format');
+    }
+
+    if (!AuthService.validateUsername(userData.username).isValid) {
+      throw new Error('Invalid username format');
+    }
     
     try {
       const result = await this.db.prepare(`

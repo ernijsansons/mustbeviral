@@ -2,6 +2,9 @@
 // LOG: TEST-SETUP-1 - Jest test setup
 
 import '@testing-library/jest-dom';
+import { TextEncoder, TextDecoder } from 'util';
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 // Mock console methods to reduce noise in tests
 global.console = {
