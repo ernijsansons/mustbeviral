@@ -41,45 +41,31 @@ async function createServer() {
     vite = await createViteServer({
       server: { 
         middlewareMode: true,
-        host: '0.0.0.0'
+        host: '0.0.0.0',
+        hmr: {
+          port: 5001
+        }
       },
-      appType: 'custom'
+      appType: 'spa'
     });
     
     // Use vite's connect instance as middleware
     app.use(vite.middlewares);
   }
   
-  // Add SPA fallback for HTML requests only
-  app.use(async (req, res, next) => {
-    // Skip API routes
-    if (req.originalUrl.startsWith('/api')) {
-      return next();
-    }
-    
-    // Only handle HTML requests
-    const accept = req.headers.accept || '';
-    if (!accept.includes('text/html')) {
-      return next();
-    }
-    
-    try {
-      // In development, use Vite to transform and serve index.html
-      if (process.env.NODE_ENV !== 'production') {
-        const fs = await import('fs/promises');
-        const template = await fs.readFile('index.html', 'utf-8');
-        const html = await vite.transformIndexHtml(req.originalUrl, template);
-        res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
-      } else {
-        // In production, serve from dist
-        const path = await import('path');
-        res.sendFile(path.resolve('dist/index.html'));
+  // In production, add SPA fallback for non-API routes
+  if (process.env.NODE_ENV === 'production') {
+    app.get(/.*/, (req, res) => {
+      // Skip API routes
+      if (req.originalUrl.startsWith('/api')) {
+        return res.status(404).send('API endpoint not found');
       }
-    } catch (error) {
-      console.error('Error serving SPA:', error);
-      next(error);
-    }
-  });
+      
+      // Serve index.html for all other routes
+      const path = require('path');
+      res.sendFile(path.resolve('dist/index.html'));
+    });
+  }
   
   const port = process.env.PORT || 5000;
   app.listen(port, '0.0.0.0', () => {
