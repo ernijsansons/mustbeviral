@@ -5,11 +5,13 @@ const router = express.Router();
 
 // Subscription checkout (simplified for demo)
 router.get('/', (req, res) => {
-  // In a real app, this would integrate with Stripe
+  console.log('GET /api/subscribe called - redirecting to Stripe');
+  // In a real app, this would integrate with Stripe  
   res.redirect('https://billing.stripe.com/demo?product=premium-plan');
 });
 
 router.post('/', (req, res) => {
+  console.log('POST /api/subscribe called - returning checkout URL');
   // In a real app, this would create a Stripe checkout session
   res.json({ 
     url: 'https://billing.stripe.com/demo?product=premium-plan',
