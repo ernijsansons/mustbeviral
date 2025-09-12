@@ -1,215 +1,134 @@
-        // Stripe integration library for Must Be Viral - Test Mode
-// LOG: STRIPE-INIT-1 - Initialize Stripe service in test mode
+// Main Dashboard Component
+import { useState } from 'react';
+import { LayoutDashboard, FileText, Users, TrendingUp, Settings } from 'lucide-react';
+import { Analytics } from './Analytics';
+import { MetricsDash } from './MetricsDash';
+import { GamificationWidget } from './GamificationWidget';
+import { BoostDashboard } from './BoostDashboard';
+import { EarningsDashboard } from './EarningsDashboard';
 
-export interface SubscriptionTier {
-  id: string;
-  name: string;
-  price_id: string;
-  price_per_month: number;
-  features: string[];
-  limits: {
-    text_tokens: number;
-    image_generations: number;
-    video_seconds: number;
+export function Dashboard() {
+  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'metrics' | 'boost' | 'earnings'>('overview');
+
+  const tabs = [
+    { id: 'overview', name: 'Overview', icon: LayoutDashboard },
+    { id: 'analytics', name: 'Analytics', icon: TrendingUp },
+    { id: 'metrics', name: 'Metrics', icon: FileText },
+    { id: 'boost', name: 'Boost', icon: Users },
+    { id: 'earnings', name: 'Earnings', icon: Settings },
+  ];
+
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case 'analytics':
+        return <Analytics />;
+      case 'metrics':
+        return <MetricsDash />;
+      case 'boost':
+        return <BoostDashboard />;
+      case 'earnings':
+        return <EarningsDashboard />;
+      default:
+        return (
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Dashboard Overview</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                  <h3 className="text-lg font-semibold">Content</h3>
+                  <p className="text-2xl font-bold">24</p>
+                  <p className="text-blue-100">Created this month</p>
+                </div>
+                <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
+                  <h3 className="text-lg font-semibold">Views</h3>
+                  <p className="text-2xl font-bold">12.5K</p>
+                  <p className="text-green-100">Total views</p>
+                </div>
+                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+                  <h3 className="text-lg font-semibold">Engagement</h3>
+                  <p className="text-2xl font-bold">8.2%</p>
+                  <p className="text-purple-100">Average rate</p>
+                </div>
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
+                  <h3 className="text-lg font-semibold">Strategies</h3>
+                  <p className="text-2xl font-bold">15</p>
+                  <p className="text-orange-100">Active strategies</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Content</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">AI-Generated Marketing Strategy</h4>
+                    <p className="text-sm text-gray-500">Created 2 hours ago</p>
+                  </div>
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Published</span>
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Social Media Campaign Ideas</h4>
+                    <p className="text-sm text-gray-500">Created 5 hours ago</p>
+                  </div>
+                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Draft</span>
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Content Calendar Template</h4>
+                    <p className="text-sm text-gray-500">Created 1 day ago</p>
+                  </div>
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Published</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <GamificationWidget compact={true} />
+            </div>
+          </div>
+        );
+    }
   };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    data-testid={`tab-${tab.id}`}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`${
+                      isActive
+                        ? 'border-indigo-500 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{tab.name}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          {renderActiveTab()}
+        </div>
+      </main>
+    </div>
+  );
 }
 
-export interface UserSubscription {
-  user_id: string;
-  stripe_customer_id: string;
-  stripe_subscription_id: string;
-  tier_id: string;
-  status: 'active' | 'canceled' | 'past_due' | 'incomplete';
-  current_period_start: string;
-  current_period_end: string;
-  cancel_at_period_end: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CommissionTransaction {
-  id: string;
-  user_id: string;
-  content_id: string;
-  amount: number;
-  commission_rate: number;
-  commission_amount: number;
-  stripe_transfer_id?: string;
-  status: 'pending' | 'completed' | 'failed';
-  created_at: string;
-}
-
-export class StripeService {
-  private stripe: any; // Mock Stripe in test mode
-  private webhookSecret: string;
-  private testMode: boolean;
-
-  constructor() {
-    console.log('LOG: STRIPE-SERVICE-1 - Initializing Stripe service in test mode');
-    
-    this.testMode = process.env.NODE_ENV !== 'production';
-    this.webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_webhook_secret';
-    
-    if (this.testMode) {
-      this.stripe = this.createMockStripe();
-      console.log('LOG: STRIPE-SERVICE-2 - Running in test mode with mock Stripe');
-    } else {
-      // In production, would initialize real Stripe
-      console.log('LOG: STRIPE-SERVICE-3 - Would initialize real Stripe in production');
-    }
-    console.log('LOG: STRIPE-SERVICE-4 - Stripe service initialized successfully');
-  }
-
-  private createMockStripe() {
-    return {
-      customers: {
-        create: async (params: any) => ({
-          id: `cus_test_${Date.now()}`,
-          email: params.email,
-          name: params.name,
-          metadata: params.metadata
-        })
-      },
-      checkout: {
-        sessions: {
-          create: async (params: any) => ({
-            id: `cs_test_${Date.now()}`,
-            url: `https://checkout.stripe.com/test/${Date.now()}`,
-            customer: params.customer,
-            mode: params.mode,
-            metadata: params.metadata
-          })
-        }
-      },
-      subscriptions: {
-        retrieve: async (id: string) => ({
-          id,
-          customer: `cus_test_${Date.now()}`,
-          status: 'active',
-          current_period_start: Math.floor(Date.now() / 1000),
-          current_period_end: Math.floor(Date.now() / 1000) + 2592000,
-          items: { data: [{ price: { id: 'price_test_standard' } }] }
-        }),
-        cancel: async (id: string) => ({ id, status: 'canceled' }),
-        update: async (id: string, params: any) => ({ id, ...params })
-      },
-      webhooks: {
-        constructEvent: (payload: string, signature: string, secret: string) => {
-          if (signature !== 'test_signature') {
-            throw new Error('Invalid signature');
-          }
-          return JSON.parse(payload);
-        }
-      }
-    };
-  }
-
-  getSubscriptionTiers(): SubscriptionTier[] {
-    console.log('LOG: STRIPE-TIERS-1 - Getting subscription tiers');
-    
-    return [
-      {
-        id: 'free',
-        name: 'Free',
-        price_id: '',
-        price_per_month: 0,
-        features: ['Basic AI tools', 'Open-source models', 'Community support'],
-        limits: { text_tokens: 10000, image_generations: 5, video_seconds: 0 }
-      },
-      {
-        id: 'standard',
-        name: 'Standard',
-        price_id: 'price_test_standard',
-        price_per_month: 19,
-        features: ['Enhanced AI models', 'Mistral & Stable Diffusion', 'Priority support'],
-        limits: { text_tokens: 100000, image_generations: 50, video_seconds: 60 }
-      },
-      {
-        id: 'premium',
-        name: 'Premium',
-        price_id: 'price_test_premium',
-        price_per_month: 49,
-        features: ['All AI models', 'GPT-4 access', 'Advanced analytics', 'Priority support'],
-        limits: { text_tokens: 500000, image_generations: 200, video_seconds: 300 }
-      }
-    ];
-  }
-
-  async createCustomer(email: string, name?: string): Promise<any> {
-    console.log('LOG: STRIPE-CUSTOMER-1 - Creating Stripe customer:', email);
-    
-    try {
-      const customer = await this.stripe.customers.create({
-        email,
-        name,
-        metadata: { platform: 'must-be-viral' }
-      });
-
-      console.log('LOG: STRIPE-CUSTOMER-2 - Customer created:', customer.id);
-      return customer;
-    } catch (error) {
-      console.error('LOG: STRIPE-CUSTOMER-ERROR-1 - Failed to create customer:', error);
-      throw new Error(`Failed to create Stripe customer: ${error}`);
-    }
-  }
-
-  async createCheckoutSession(customerId: string, priceId: string, successUrl: string, cancelUrl: string): Promise<any> {
-    console.log('LOG: STRIPE-CHECKOUT-1 - Creating checkout session for customer:', customerId);
-    
-    try {
-      const session = await this.stripe.checkout.sessions.create({
-        customer: customerId,
-        payment_method_types: ['card'],
-        line_items: [{ price: priceId, quantity: 1 }],
-        mode: 'subscription',
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-        metadata: { platform: 'must-be-viral' }
-      });
-
-      console.log('LOG: STRIPE-CHECKOUT-2 - Checkout session created:', session.id);
-      return session;
-    } catch (error) {
-      console.error('LOG: STRIPE-CHECKOUT-ERROR-1 - Failed to create checkout session:', error);
-      throw new Error(`Failed to create checkout session: ${error}`);
-    }
-  }
-
-  verifyWebhookSignature(payload: string, signature: string): any {
-    console.log('LOG: STRIPE-WEBHOOK-1 - Verifying webhook signature');
-    
-    try {
-      const event = this.stripe.webhooks.constructEvent(payload, signature, this.webhookSecret);
-      console.log('LOG: STRIPE-WEBHOOK-2 - Webhook signature verified, event type:', event.type);
-      return event;
-    } catch (error) {
-      console.error('LOG: STRIPE-WEBHOOK-ERROR-1 - Webhook signature verification failed:', error);
-      throw new Error(`Webhook signature verification failed: ${error}`);
-    }
-  }
-
-  async processWebhook(event: any): Promise<any> {
-    console.log('LOG: STRIPE-WEBHOOK-PROCESS-1 - Processing webhook:', event.type);
-    
-    try {
-      switch (event.type) {
-        case 'checkout.session.completed':
-          return this.handleCheckoutCompleted(event.data.object);
-        case 'customer.subscription.updated':
-          return this.handleSubscriptionUpdated(event.data.object);
-        case 'customer.subscription.deleted':
-          return this.handleSubscriptionDeleted(event.data.object);
-        case 'invoice.payment_succeeded':
-          return this.handlePaymentSucceeded(event.data.object);
-        case 'invoice.payment_failed':
-          return this.handlePaymentFailed(event.data.object);
-        default:
-          console.log('LOG: STRIPE-WEBHOOK-PROCESS-2 - Unhandled event type:', event.type);
-          return { handled: false, event_type: event.type };
-      }
-    } catch (error) {
-      console.error('LOG: STRIPE-WEBHOOK-PROCESS-ERROR-1 - Webhook processing failed:', error);
-      throw new Error(`Webhook processing failed: ${error}`);
-    }
-  }
-}
+export default Dashboard;
