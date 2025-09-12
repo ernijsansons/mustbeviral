@@ -259,7 +259,7 @@ export class KVClient {
     console.log('LOG: CF-KV-4 - Getting JSON value for key:', key);
     
     try {
-      const value = await this.kv.get(key, 'json');
+      const value = await this.kv.get(key, { type: 'json' });
       return value as T | null;
     } catch (error) {
       console.error('LOG: CF-KV-ERROR-2 - Get JSON failed:', error);

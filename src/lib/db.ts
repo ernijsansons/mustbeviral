@@ -1,6 +1,8 @@
 // Database connection and utilities for Cloudflare D1
 // LOG: DB-INIT-1 - Initialize database connection
 
+import { CloudflareService, CloudflareEnv } from './cloudflare';
+
 export interface User {
   id: string;
   email: string;
@@ -42,25 +44,37 @@ export interface Match {
   updated_at: string;
 }
 
-// Database connection wrapper
+// Database service using Cloudflare D1
 export class DatabaseService {
-  private db: any; // D1Database type from Cloudflare
+  private cfService: CloudflareService;
 
-  constructor(database?: any) {
-    this.db = database;
-    console.log('LOG: DB-INIT-2 - Database service initialized');
+  constructor(cloudflareEnv?: CloudflareEnv) {
+    if (cloudflareEnv) {
+      this.cfService = new CloudflareService(cloudflareEnv);
+    }
+    console.log('LOG: DB-INIT-2 - Database service initialized with Cloudflare');
+  }
+
+  // Initialize with Cloudflare environment (for API routes)
+  initWithEnv(cloudflareEnv: CloudflareEnv): void {
+    this.cfService = new CloudflareService(cloudflareEnv);
+    console.log('LOG: DB-INIT-3 - Cloudflare environment initialized');
   }
 
   // User operations
   async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
     console.log('LOG: DB-USER-1 - Creating new user:', userData.email);
     
+    if (!this.cfService?.db) {
+      throw new Error('Cloudflare D1 database not initialized');
+    }
+    
     try {
-      const result = await this.db.prepare(`
+      const result = await this.cfService.db.fetchOne<User>(`
         INSERT INTO users (email, username, password_hash, role, profile_data, ai_preference_level, onboarding_completed)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         RETURNING *
-      `).bind(
+      `, [
         userData.email,
         userData.username,
         userData.password_hash,
@@ -68,10 +82,14 @@ export class DatabaseService {
         userData.profile_data,
         userData.ai_preference_level,
         userData.onboarding_completed
-      ).first();
+      ]);
+
+      if (!result) {
+        throw new Error('Failed to create user - no result returned');
+      }
 
       console.log('LOG: DB-USER-2 - User created successfully:', result.id);
-      return result as User;
+      return result;
     } catch (error) {
       console.error('LOG: DB-USER-ERROR-1 - Failed to create user:', error);
       throw new Error(`Failed to create user: ${error}`);
@@ -81,12 +99,16 @@ export class DatabaseService {
   async getUserByEmail(email: string): Promise<User | null> {
     console.log('LOG: DB-USER-3 - Fetching user by email:', email);
     
+    if (!this.cfService?.db) {
+      throw new Error('Cloudflare D1 database not initialized');
+    }
+    
     try {
-      const result = await this.db.prepare(`
+      const result = await this.cfService.db.fetchOne<User>(`
         SELECT * FROM users WHERE email = ?
-      `).bind(email).first();
+      `, [email]);
 
-      return result as User | null;
+      return result;
     } catch (error) {
       console.error('LOG: DB-USER-ERROR-2 - Failed to fetch user by email:', error);
       throw new Error(`Failed to fetch user: ${error}`);
@@ -96,10 +118,14 @@ export class DatabaseService {
   async updateUserOnboarding(userId: string, completed: boolean): Promise<void> {
     console.log('LOG: DB-USER-4 - Updating user onboarding:', userId, completed);
     
+    if (!this.cfService?.db) {
+      throw new Error('Cloudflare D1 database not initialized');
+    }
+    
     try {
-      await this.db.prepare(`
+      await this.cfService.db.executeQuery(`
         UPDATE users SET onboarding_completed = ? WHERE id = ?
-      `).bind(completed ? 1 : 0, userId).run();
+      `, [completed ? 1 : 0, userId]);
 
       console.log('LOG: DB-USER-5 - Onboarding status updated successfully');
     } catch (error) {
@@ -108,16 +134,56 @@ export class DatabaseService {
     }
   }
 
+  // Session management with KV
+  async cacheUserSession(userId: string, sessionData: any, ttlSeconds: number = 86400): Promise<void> {
+    console.log('LOG: DB-SESSION-1 - Caching user session:', userId);
+    
+    if (!this.cfService?.kv) {
+      console.log('LOG: DB-SESSION-WARN-1 - KV not available, skipping session cache');
+      return;
+    }
+    
+    try {
+      await this.cfService.kv.putJSON(`session:${userId}`, sessionData, {
+        expirationTtl: ttlSeconds
+      });
+      console.log('LOG: DB-SESSION-2 - User session cached successfully');
+    } catch (error) {
+      console.error('LOG: DB-SESSION-ERROR-1 - Failed to cache session:', error);
+      // Don't throw - session caching is not critical
+    }
+  }
+
+  async getUserSession(userId: string): Promise<any | null> {
+    console.log('LOG: DB-SESSION-3 - Getting user session:', userId);
+    
+    if (!this.cfService?.kv) {
+      console.log('LOG: DB-SESSION-WARN-2 - KV not available, no session data');
+      return null;
+    }
+    
+    try {
+      return await this.cfService.kv.getJSON(`session:${userId}`);
+    } catch (error) {
+      console.error('LOG: DB-SESSION-ERROR-2 - Failed to get session:', error);
+      return null;
+    }
+  }
+
   // Content operations
   async createContent(contentData: Omit<Content, 'id' | 'created_at' | 'updated_at'>): Promise<Content> {
     console.log('LOG: DB-CONTENT-1 - Creating new content:', contentData.title);
     
+    if (!this.cfService?.db) {
+      throw new Error('Cloudflare D1 database not initialized');
+    }
+    
     try {
-      const result = await this.db.prepare(`
+      const result = await this.cfService.db.fetchOne<Content>(`
         INSERT INTO content (user_id, title, body, image_url, status, type, generated_by_ai, ai_model_used, ethics_check_status, metadata)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         RETURNING *
-      `).bind(
+      `, [
         contentData.user_id,
         contentData.title,
         contentData.body,
@@ -128,10 +194,14 @@ export class DatabaseService {
         contentData.ai_model_used,
         contentData.ethics_check_status,
         contentData.metadata
-      ).first();
+      ]);
+
+      if (!result) {
+        throw new Error('Failed to create content - no result returned');
+      }
 
       console.log('LOG: DB-CONTENT-2 - Content created successfully:', result.id);
-      return result as Content;
+      return result;
     } catch (error) {
       console.error('LOG: DB-CONTENT-ERROR-1 - Failed to create content:', error);
       throw new Error(`Failed to create content: ${error}`);
@@ -141,12 +211,16 @@ export class DatabaseService {
   async getContentByUserId(userId: string): Promise<Content[]> {
     console.log('LOG: DB-CONTENT-3 - Fetching content for user:', userId);
     
+    if (!this.cfService?.db) {
+      throw new Error('Cloudflare D1 database not initialized');
+    }
+    
     try {
-      const result = await this.db.prepare(`
+      const results = await this.cfService.db.fetchAll<Content>(`
         SELECT * FROM content WHERE user_id = ? ORDER BY created_at DESC
-      `).bind(userId).all();
+      `, [userId]);
 
-      return result.results as Content[];
+      return results;
     } catch (error) {
       console.error('LOG: DB-CONTENT-ERROR-2 - Failed to fetch user content:', error);
       throw new Error(`Failed to fetch content: ${error}`);
@@ -157,8 +231,13 @@ export class DatabaseService {
   async healthCheck(): Promise<boolean> {
     console.log('LOG: DB-HEALTH-1 - Performing database health check');
     
+    if (!this.cfService?.db) {
+      console.log('LOG: DB-HEALTH-WARN-1 - No Cloudflare D1 database available');
+      return false;
+    }
+    
     try {
-      await this.db.prepare('SELECT 1').first();
+      await this.cfService.db.fetchOne('SELECT 1');
       console.log('LOG: DB-HEALTH-2 - Database health check passed');
       return true;
     } catch (error) {

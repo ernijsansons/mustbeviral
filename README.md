@@ -1,15 +1,15 @@
-# Must Be Viral
+# Must Be Viral - AI-Powered Content Creation Platform
 
-AI-powered content creation and influencer matching platform built with Next.js, TypeScript, Tailwind CSS, and Cloudflare.
+Must Be Viral is a full-stack application with Cloudflare Workers backend that connects content creators with influencers through AI-powered matching.
 
-## Tech Stack
+## Architecture
 
-- **Frontend**: Next.js 15, React 18, TypeScript
-- **Styling**: Tailwind CSS, shadcn/ui components
+- **Frontend**: Next.js 15 with TypeScript, Tailwind CSS
 - **Backend**: Cloudflare Workers with D1 Database, KV Cache, R2 Storage
-- **Payments**: Stripe integration
-- **Routing**: wouter for client-side routing
-- **Charts**: Recharts for analytics
+- **Authentication**: JWT tokens with bcrypt password hashing
+- **Database**: Cloudflare D1 (SQLite-based)
+- **Cache**: Cloudflare KV for session management and trends
+- **Storage**: Cloudflare R2 for asset uploads
 
 ## Getting Started
 

@@ -45,9 +45,9 @@ NEXT_PUBLIC_CLOUDFLARE_WORKERS_URL = "http://localhost:8787"
 [env.production.vars]
 NEXT_PUBLIC_CLOUDFLARE_WORKERS_URL = "https://must-be-viral-prod.your-subdomain.workers.dev"
 
-# Build configuration for Workers
-[build]
-command = "npm run build:worker"
+# Build configuration for Workers  
+# [build]
+# command = "npm run build"
 
 # Routes for Workers API (if using custom domain)
 # routes = [

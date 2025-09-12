@@ -23,11 +23,22 @@ export interface SignupData {
   role: 'creator' | 'influencer';
 }
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-);
-
 export class AuthService {
+  private static jwtSecret?: Uint8Array;
+
+  // Initialize JWT secret (call this from Worker or Node.js environment)
+  static initJwtSecret(secret: string): void {
+    this.jwtSecret = new TextEncoder().encode(secret);
+    console.log('LOG: AUTH-SECRET-1 - JWT secret initialized');
+  }
+
+  // Get JWT secret with validation
+  private static getJwtSecret(): Uint8Array {
+    if (!this.jwtSecret) {
+      throw new Error('JWT secret not initialized. Call AuthService.initJwtSecret() first.');
+    }
+    return this.jwtSecret;
+  }
   // Hash password for storage
   static async hashPassword(password: string): Promise<string> {
     console.log('LOG: AUTH-HASH-1 - Hashing password');
@@ -62,6 +73,7 @@ export class AuthService {
     console.log('LOG: AUTH-TOKEN-1 - Generating JWT token for user:', user.id);
     
     try {
+      const secret = this.getJwtSecret();
       const token = await new SignJWT({
         id: user.id,
         email: user.email,
@@ -71,7 +83,7 @@ export class AuthService {
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
         .setExpirationTime('24h')
-        .sign(JWT_SECRET);
+        .sign(secret);
 
       console.log('LOG: AUTH-TOKEN-2 - JWT token generated successfully');
       return token;
@@ -86,7 +98,8 @@ export class AuthService {
     console.log('LOG: AUTH-VERIFY-TOKEN-1 - Verifying JWT token');
     
     try {
-      const { payload } = await jwtVerify(token, JWT_SECRET);
+      const secret = this.getJwtSecret();
+      const { payload } = await jwtVerify(token, secret);
       
       const user: AuthUser = {
         id: payload.id as string,
