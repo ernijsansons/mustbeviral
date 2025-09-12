@@ -6,6 +6,7 @@ import authRoutes from './api/auth.js';
 import contentRoutes from './api/content.js';
 import onboardRoutes from './api/onboard.js';
 import oauthRoutes from './api/oauth.js';
+import subscribeRoutes from './api/subscribe.mjs';
 
 async function createServer() {
   const app = express();
@@ -55,6 +56,7 @@ async function createServer() {
   app.use('/api/content', contentRoutes);
   app.use('/api/onboard', onboardRoutes);
   app.use('/api/oauth', oauthRoutes);
+  app.use('/api/subscribe', subscribeRoutes);
   
   // Create Vite server in middleware mode
   const vite = await createViteServer({
