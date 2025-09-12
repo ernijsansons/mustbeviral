@@ -2,11 +2,11 @@ import { createServer as createViteServer } from 'vite';
 import express from 'express';
 import session from 'express-session';
 import { db } from './db.js';
-import authRoutes from './api/auth.js';
-import contentRoutes from './api/content.js';
+import authRoutes from './api/auth.mjs';
+import contentRoutes from './api/content.mjs';
 import onboardRoutes from './api/onboard.js';
 import oauthRoutes from './api/oauth.js';
-import subscribeRoutes from './api/subscribe.js';
+// import subscribeRoutes from './api/subscribe.mjs';
 
 async function createServer() {
   const app = express();
@@ -56,8 +56,15 @@ async function createServer() {
   app.use('/api/content', contentRoutes);
   app.use('/api/onboard', onboardRoutes);
   app.use('/api/oauth', oauthRoutes);
-  app.use('/api/subscribe', subscribeRoutes);
-  console.log('Mounted /api/subscribe route');
+  // app.use('/api/subscribe', subscribeRoutes);
+  // console.log('Mounted /api/subscribe route');
+  
+  // Temporary inline subscribe route for testing
+  app.get('/api/subscribe', (req, res) => {
+    res.redirect('https://billing.stripe.com/demo?product=premium-plan');
+  });
+  
+  console.log('Mounted inline /api/subscribe route');
   
   // Create Vite server in middleware mode
   const vite = await createViteServer({

@@ -1,14 +1,36 @@
 import { createServer as createViteServer } from 'vite';
 import express from 'express';
+import session from 'express-session';
 import authRoutes from './server/api/auth.mjs';
 import contentRoutes from './server/api/content.mjs';
+// Temporarily disabled - import onboardRoutes from './server/api/onboard.ts';
+// Temporarily disabled - import oauthRoutes from './server/api/oauth.ts';
 import { db } from './server/db.mjs';
 
 async function createServer() {
+  console.log('Starting custom server instead of Vite...');
   const app = express();
+  
+  // Trust proxy for secure cookies when behind proxy/CDN
+  if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+  }
   
   // Parse JSON bodies
   app.use(express.json());
+  
+  // Session configuration for OAuth state management
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'dev-session-secret-change-in-production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 10 * 60 * 1000 // 10 minutes for OAuth flows
+    }
+  }));
   
   // API routes
   app.get('/api/health', (req, res) => {
@@ -28,6 +50,31 @@ async function createServer() {
   // Add authentication and content routes
   app.use('/api/auth', authRoutes);
   app.use('/api/content', contentRoutes);
+  // Temporarily disabled - app.use('/api/onboard', onboardRoutes);
+  // Temporarily disabled - app.use('/api/oauth', oauthRoutes);
+  
+  // Temporary placeholder routes
+  app.get('/api/onboard', (req, res) => {
+    res.json({ message: 'Onboard endpoint - coming soon' });
+  });
+  
+  // OAuth routes temporarily removed
+  
+  // Subscribe route for Stripe checkout
+  app.get('/api/subscribe', (req, res) => {
+    console.log('GET /api/subscribe called - redirecting to Stripe');
+    res.redirect('https://billing.stripe.com/demo?product=premium-plan');
+  });
+  
+  app.post('/api/subscribe', (req, res) => {
+    console.log('POST /api/subscribe called - returning checkout URL');
+    res.json({ 
+      url: 'https://billing.stripe.com/demo?product=premium-plan',
+      message: 'Redirecting to subscription checkout...' 
+    });
+  });
+  
+  console.log('All API routes mounted successfully');
   
   // Serve static files from dist in production
   if (process.env.NODE_ENV === 'production') {
