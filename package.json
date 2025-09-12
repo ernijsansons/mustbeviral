@@ -15,6 +15,7 @@
     "deploy": "wrangler pages deploy dist"
   },
   "dependencies": {
+    "@cloudflare/workers-types": "^4.20250912.0",
     "@langchain/community": "^0.3.53",
     "@langchain/core": "^0.3.72",
     "@neondatabase/serverless": "^1.0.1",
@@ -36,6 +37,7 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.20.5",
     "wouter": "^3.7.1",
+    "wrangler": "^4.36.0",
     "ws": "^8.18.3"
   },
   "devDependencies": {
