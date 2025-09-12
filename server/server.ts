@@ -1,8 +1,8 @@
 import { createServer as createViteServer } from 'vite';
 import express from 'express';
-import authRoutes from './server/api/auth.mjs';
-import contentRoutes from './server/api/content.mjs';
-import { db } from './server/db.mjs';
+import { db } from './db.js';
+import authRoutes from './api/auth.js';
+import contentRoutes from './api/content.js';
 
 async function createServer() {
   const app = express();
@@ -16,15 +16,19 @@ async function createServer() {
   });
   
   app.get('/api/db-test', async (req, res) => {
+    if (!db) {
+      return res.status(500).json({ status: 'Database connection failed', error: 'Could not initialize database' });
+    }
+    
     try {
       const result = await db.execute('SELECT 1 as test');
-      res.json({ status: 'Database connected', result: result.rows });
+      res.json({ status: 'Database connected', result });
     } catch (error) {
       console.error('Database test error:', error);
       res.status(500).json({ status: 'Database connection failed', error: error.message });
     }
   });
-  
+
   // Add authentication and content routes
   app.use('/api/auth', authRoutes);
   app.use('/api/content', contentRoutes);
@@ -33,23 +37,26 @@ async function createServer() {
   const vite = await createViteServer({
     server: { 
       middlewareMode: true,
-      host: '0.0.0.0'
-    },
-    appType: 'spa'
+      hmr: {
+        port: 5001
+      }
+    }
   });
   
   // Use vite's connect instance as middleware
   app.use(vite.ssrFixStacktrace);
   app.use(vite.middlewares);
   
+  return { app, vite };
+}
+
+createServer().then(async ({ app, vite }) => {
   const port = 5000;
   app.listen(port, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${port}`);
     console.log(`API endpoints available at http://0.0.0.0:${port}/api/health`);
   });
-}
-
-createServer().catch((error) => {
-  console.error('Error starting server:', error);
+}).catch((error) => {
+  console.error('Server startup error:', error);
   process.exit(1);
 });
