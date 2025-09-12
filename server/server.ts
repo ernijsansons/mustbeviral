@@ -10,6 +10,11 @@ import oauthRoutes from './api/oauth.js';
 async function createServer() {
   const app = express();
   
+  // Trust proxy for secure cookies when behind proxy/CDN
+  if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+  }
+  
   // Parse JSON bodies
   app.use(express.json());
   
@@ -21,6 +26,7 @@ async function createServer() {
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
+      sameSite: 'lax',
       maxAge: 10 * 60 * 1000 // 10 minutes for OAuth flows
     }
   }));

@@ -2,12 +2,23 @@
 // LOG: OAUTH-INIT-1 - Initialize OAuth routes
 
 import express from 'express';
+import crypto from 'crypto';
 import { db } from '../db.js';
 import { users } from '../../shared/schema.js';
 import { eq } from 'drizzle-orm';
 import { SignJWT } from 'jose';
 
 const router = express.Router();
+
+// Validate required secrets in production
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+  if (!process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET environment variable is required in production');
+  }
+}
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
@@ -29,7 +40,7 @@ router.get('/google', (req, res) => {
     return res.status(500).json({ error: 'Google OAuth not configured' });
   }
   
-  const state = Math.random().toString(36).substring(2);
+  const state = crypto.randomBytes(32).toString('base64url');
   const redirectUri = `${BASE_URL}/api/oauth/google/callback`;
   
   const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
@@ -177,8 +188,11 @@ router.get('/twitter', (req, res) => {
     return res.status(500).json({ error: 'Twitter OAuth not configured' });
   }
   
-  const state = Math.random().toString(36).substring(2);
-  const codeChallenge = Math.random().toString(36).substring(2);
+  const state = crypto.randomBytes(32).toString('base64url');
+  
+  // Generate crypto-secure PKCE parameters
+  const codeVerifier = crypto.randomBytes(32).toString('base64url');
+  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
   const redirectUri = `${BASE_URL}/api/oauth/twitter/callback`;
   
   const twitterAuthUrl = new URL('https://twitter.com/i/oauth2/authorize');
@@ -188,11 +202,11 @@ router.get('/twitter', (req, res) => {
   twitterAuthUrl.searchParams.set('scope', 'tweet.read users.read');
   twitterAuthUrl.searchParams.set('state', state);
   twitterAuthUrl.searchParams.set('code_challenge', codeChallenge);
-  twitterAuthUrl.searchParams.set('code_challenge_method', 'plain');
+  twitterAuthUrl.searchParams.set('code_challenge_method', 'S256');
   
-  // Store state and code challenge in session for PKCE
+  // Store state and code verifier in session for PKCE
   (req as any).session.oauthState = state;
-  (req as any).session.codeChallenge = codeChallenge;
+  (req as any).session.codeVerifier = codeVerifier;
   
   console.log('LOG: OAUTH-TWITTER-2 - Redirecting to Twitter OAuth');
   res.redirect(twitterAuthUrl.toString());
@@ -216,24 +230,31 @@ router.get('/twitter/callback', async (req, res) => {
       return res.redirect('/onboard?error=oauth_failed');
     }
     
-    // Clear state and code challenge from session
-    const codeChallenge = (req as any).session.codeChallenge;
+    // Get code verifier from session
+    const codeVerifier = (req as any).session.codeVerifier;
+    
+    if (!codeVerifier) {
+      console.error('LOG: OAUTH-TWITTER-CALLBACK-ERROR-1B - No code verifier in session');
+      return res.redirect('/onboard?error=oauth_failed');
+    }
+    
+    // Clear state and code verifier from session
     delete (req as any).session.oauthState;
-    delete (req as any).session.codeChallenge;
+    delete (req as any).session.codeVerifier;
     
     // Exchange code for access token
     console.log('LOG: OAUTH-TWITTER-CALLBACK-2 - Exchanging code for token');
     const tokenResponse = await fetch('https://api.twitter.com/2/oauth2/token', {
       method: 'POST',
       headers: { 
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${Buffer.from(`${TWITTER_CLIENT_ID}:${TWITTER_CLIENT_SECRET}`).toString('base64')}`
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: new URLSearchParams({
+        client_id: TWITTER_CLIENT_ID!,
         code: code as string,
         grant_type: 'authorization_code',
         redirect_uri: `${BASE_URL}/api/oauth/twitter/callback`,
-        code_verifier: (req as any).session.codeChallenge || ''
+        code_verifier: codeVerifier
       })
     });
     
