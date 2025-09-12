@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, User, Target, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
+import { ChevronRight, ChevronLeft, User, Target, Sparkles, CheckCircle, AlertCircle, Mail } from 'lucide-react';
 
 interface OnboardingData {
   email: string;
