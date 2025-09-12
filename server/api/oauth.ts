@@ -39,9 +39,8 @@ router.get('/google', (req, res) => {
   googleAuthUrl.searchParams.set('scope', 'openid email profile');
   googleAuthUrl.searchParams.set('state', state);
   
-  // Store state in temporary storage (simplified for demo)
-  // In production, use proper session storage or database
-  const sessionData = { state, timestamp: Date.now() };
+  // Store state in session for CSRF protection
+  (req as any).session.oauthState = state;
   
   console.log('LOG: OAUTH-GOOGLE-2 - Redirecting to Google OAuth');
   res.redirect(googleAuthUrl.toString());
@@ -58,6 +57,15 @@ router.get('/google/callback', async (req, res) => {
       console.error('LOG: OAUTH-GOOGLE-CALLBACK-ERROR-1 - No authorization code received');
       return res.redirect('/onboard?error=oauth_failed');
     }
+    
+    // Validate state to prevent CSRF attacks
+    if (!state || state !== (req as any).session.oauthState) {
+      console.error('LOG: OAUTH-GOOGLE-CALLBACK-ERROR-1A - Invalid state parameter');
+      return res.redirect('/onboard?error=oauth_failed');
+    }
+    
+    // Clear state from session
+    delete (req as any).session.oauthState;
     
     // Exchange code for access token
     console.log('LOG: OAUTH-GOOGLE-CALLBACK-2 - Exchanging code for token');
@@ -138,10 +146,18 @@ router.get('/google/callback', async (req, res) => {
       .setExpirationTime('24h')
       .sign(JWT_SECRET);
     
-    // Redirect to dashboard with token
+    // Set secure HTTP-only cookie instead of exposing token in URL
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
+    
+    // Redirect to appropriate page
     const redirectUrl = user[0].onboardingCompleted 
-      ? `/dashboard?token=${token}` 
-      : `/onboard?token=${token}&step=profile`;
+      ? `/dashboard` 
+      : `/onboard?step=profile`;
     
     console.log('LOG: OAUTH-GOOGLE-CALLBACK-9 - Redirecting user');
     res.redirect(redirectUrl);
@@ -174,9 +190,9 @@ router.get('/twitter', (req, res) => {
   twitterAuthUrl.searchParams.set('code_challenge', codeChallenge);
   twitterAuthUrl.searchParams.set('code_challenge_method', 'plain');
   
-  // Store state and code challenge in temporary storage (simplified for demo)
-  // In production, use proper session storage or database
-  const sessionData = { state, codeChallenge, timestamp: Date.now() };
+  // Store state and code challenge in session for PKCE
+  (req as any).session.oauthState = state;
+  (req as any).session.codeChallenge = codeChallenge;
   
   console.log('LOG: OAUTH-TWITTER-2 - Redirecting to Twitter OAuth');
   res.redirect(twitterAuthUrl.toString());
@@ -194,6 +210,17 @@ router.get('/twitter/callback', async (req, res) => {
       return res.redirect('/onboard?error=oauth_failed');
     }
     
+    // Validate state to prevent CSRF attacks
+    if (!state || state !== (req as any).session.oauthState) {
+      console.error('LOG: OAUTH-TWITTER-CALLBACK-ERROR-1A - Invalid state parameter');
+      return res.redirect('/onboard?error=oauth_failed');
+    }
+    
+    // Clear state and code challenge from session
+    const codeChallenge = (req as any).session.codeChallenge;
+    delete (req as any).session.oauthState;
+    delete (req as any).session.codeChallenge;
+    
     // Exchange code for access token
     console.log('LOG: OAUTH-TWITTER-CALLBACK-2 - Exchanging code for token');
     const tokenResponse = await fetch('https://api.twitter.com/2/oauth2/token', {
@@ -206,7 +233,7 @@ router.get('/twitter/callback', async (req, res) => {
         code: code as string,
         grant_type: 'authorization_code',
         redirect_uri: `${BASE_URL}/api/oauth/twitter/callback`,
-        code_verifier: codeChallenge || ''
+        code_verifier: (req as any).session.codeChallenge || ''
       })
     });
     
@@ -279,10 +306,18 @@ router.get('/twitter/callback', async (req, res) => {
       .setExpirationTime('24h')
       .sign(JWT_SECRET);
     
-    // Redirect to dashboard with token
+    // Set secure HTTP-only cookie instead of exposing token in URL
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
+    
+    // Redirect to appropriate page
     const redirectUrl = user[0].onboardingCompleted 
-      ? `/dashboard?token=${token}` 
-      : `/onboard?token=${token}&step=profile`;
+      ? `/dashboard` 
+      : `/onboard?step=profile`;
     
     console.log('LOG: OAUTH-TWITTER-CALLBACK-9 - Redirecting user');
     res.redirect(redirectUrl);

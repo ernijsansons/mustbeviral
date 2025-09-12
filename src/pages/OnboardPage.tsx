@@ -1,9 +1,22 @@
 // Onboarding Page Component
 import { useLocation } from 'wouter';
+import { useEffect } from 'react';
 import { OnboardFlow } from '../components/OnboardFlow';
 
 export function OnboardPage() {
   const [, setLocation] = useLocation();
+
+  // Check for OAuth token in URL params on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const step = urlParams.get('step');
+    
+    // If user is coming from OAuth and already has a profile step,
+    // they just need to complete additional preferences
+    if (step === 'profile') {
+      console.log('LOG: ONBOARD-OAUTH-1 - User authenticated via OAuth, completing profile');
+    }
+  }, []);
 
   const handleOnboardComplete = () => {
     // Redirect to dashboard after successful onboarding

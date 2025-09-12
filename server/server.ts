@@ -1,5 +1,6 @@
 import { createServer as createViteServer } from 'vite';
 import express from 'express';
+import session from 'express-session';
 import { db } from './db.js';
 import authRoutes from './api/auth.js';
 import contentRoutes from './api/content.js';
@@ -11,6 +12,18 @@ async function createServer() {
   
   // Parse JSON bodies
   app.use(express.json());
+  
+  // Session configuration for OAuth state management
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'dev-session-secret-change-in-production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 10 * 60 * 1000 // 10 minutes for OAuth flows
+    }
+  }));
   
   // API routes
   app.get('/api/health', (req, res) => {
@@ -27,7 +40,7 @@ async function createServer() {
       res.json({ status: 'Database connected', result });
     } catch (error) {
       console.error('Database test error:', error);
-      res.status(500).json({ status: 'Database connection failed', error: error.message });
+      res.status(500).json({ status: 'Database connection failed', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
