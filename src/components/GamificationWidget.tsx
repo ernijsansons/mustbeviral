@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Trophy, Star, Award, TrendingUp, Target, Zap, Users, Gift } from 'lucide-react';
+import { gamificationService } from '../lib/gamification';
 
 interface GamificationProfile {
   points: number;

@@ -1,3 +1,5 @@
+"use client";
+
 // Market Tab Component for Influencer Matching
 import { useState } from 'react';
 import { Users, Star, TrendingUp, MessageCircle } from 'lucide-react';

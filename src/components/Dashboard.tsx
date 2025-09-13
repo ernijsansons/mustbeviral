@@ -1,3 +1,5 @@
+"use client";
+
 // Main Dashboard Component
 import { useState } from 'react';
 import { LayoutDashboard, FileText, Users, TrendingUp, Settings } from 'lucide-react';

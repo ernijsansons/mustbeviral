@@ -1,3 +1,5 @@
+"use client";
+
 import { Router, Route, Switch } from 'wouter';
 import { HomePage } from './pages/HomePage';
 import { OnboardPage } from './pages/OnboardPage';

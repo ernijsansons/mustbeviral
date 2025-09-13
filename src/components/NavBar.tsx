@@ -1,3 +1,5 @@
+"use client";
+
 // Responsive Navigation Bar with Mobile Bottom Navigation
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
