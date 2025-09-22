@@ -130,7 +130,7 @@ export function OnboardFlow({ onComplete }: { onComplete?: (data: OnboardingData
     }
   };
 
-  const updateData = (field: keyof OnboardingData, value: any) => {
+  const updateData = (field: keyof OnboardingData, value: unknown) => {
     setData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));

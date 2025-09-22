@@ -1,0 +1,118 @@
+# Secure Must Be Viral - Cloudflare Workers Configuration
+# Uses proper secrets management and security best practices
+
+name = "must-be-viral-secure"
+main = "src/worker/secure-index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "must-be-viral-db"
+database_id = "14bdc6aa-5ddb-4340-bfb2-59dc68d2c520"
+migrations_dir = "migrations"
+
+# KV namespace for caching and rate limiting
+[[kv_namespaces]]
+binding = "KV"
+id = "b3179266443e4130902b0b9e9e41181f"
+preview_id = "b3179266443e4130902b0b9e9e41181f"
+
+# R2 bucket for asset storage (optional - create bucket first)
+# [[r2_buckets]]
+# binding = "R2"
+# bucket_name = "must-be-viral-assets"
+
+# Environment variables (non-sensitive)
+[vars]
+ENVIRONMENT = "production"
+ALLOWED_ORIGINS = "https://mustbeviral.com,https://www.mustbeviral.com,https://app.mustbeviral.com"
+APP_NAME = "Must Be Viral"
+APP_VERSION = "2.0.0-secure"
+
+# SECRETS CONFIGURATION
+# Use 'wrangler secret put <SECRET_NAME>' to add these secrets
+# These are NOT stored in this file and must be added separately
+
+# Authentication Secrets (REQUIRED)
+# - JWT_SECRET                 (256-bit base64 encoded key for JWT signing)
+# - JWT_REFRESH_SECRET         (256-bit base64 encoded key for refresh tokens)
+
+# Database Encryption (REQUIRED)
+# - ENCRYPTION_KEY             (256-bit base64 encoded key for data encryption)
+
+# Payment Processing (REQUIRED for payment features)
+# - STRIPE_SECRET_KEY          (Stripe secret key from dashboard)
+# - STRIPE_WEBHOOK_SECRET      (Stripe webhook endpoint secret)
+
+# OAuth Integration (OPTIONAL)
+# - GOOGLE_CLIENT_SECRET       (For Google OAuth integration)
+# - GITHUB_CLIENT_SECRET       (For GitHub OAuth integration)
+
+# Cloudflare API (REQUIRED for advanced features)
+# - CLOUDFLARE_API_TOKEN       (For Cloudflare API access)
+
+# AI Services (OPTIONAL)
+# - OPENAI_API_KEY            (For OpenAI integration)
+# - ANTHROPIC_API_KEY         (For Claude integration)
+
+# Monitoring and Analytics (OPTIONAL)
+# - SENTRY_DSN                (For error tracking)
+# - ANALYTICS_KEY             (For usage analytics)
+
+# =============================================================================
+# SECURITY SETUP INSTRUCTIONS
+# =============================================================================
+#
+# 1. Generate secure secrets:
+#    openssl rand -base64 32  # For JWT_SECRET
+#    openssl rand -base64 32  # For JWT_REFRESH_SECRET
+#    openssl rand -base64 32  # For ENCRYPTION_KEY
+#
+# 2. Add secrets to Cloudflare Workers:
+#    wrangler secret put JWT_SECRET
+#    wrangler secret put JWT_REFRESH_SECRET
+#    wrangler secret put ENCRYPTION_KEY
+#    wrangler secret put STRIPE_SECRET_KEY
+#    wrangler secret put STRIPE_WEBHOOK_SECRET
+#
+# 3. Update KV and R2 namespace IDs above with your actual IDs
+#
+# 4. Deploy with security features:
+#    wrangler deploy --config wrangler-secure.toml
+#
+# =============================================================================
+
+# Development environment overrides
+[env.development]
+vars = { ENVIRONMENT = "development", ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173" }
+
+# Staging environment
+[env.staging]
+vars = { ENVIRONMENT = "staging", ALLOWED_ORIGINS = "https://staging.mustbeviral.com" }
+
+# Analytics for monitoring (optional - enable in dashboard first)
+# [[analytics_engine_datasets]]
+# binding = "ANALYTICS"
+
+# Durable Objects for real-time features (optional)
+# [[durable_objects.bindings]]
+# name = "COLLABORATION_ROOM"
+# class_name = "CollaborationRoom"
+# script_name = "websocket-worker"
+
+# Email service binding (optional)
+# [[send_email]]
+# name = "SEND_EMAIL"
+
+# Queue for background processing (optional)
+# [[queues.producers]]
+# queue = "background-tasks"
+# binding = "TASK_QUEUE"
+
+# WebSocket support (optional)
+# [[queues.consumers]]
+# queue = "background-tasks"
+# max_batch_size = 100
+# max_batch_timeout = 30

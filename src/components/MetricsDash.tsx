@@ -738,7 +738,7 @@ export function useMetrics() {
       const responses = await Promise.all(requests);
       const results = await Promise.all(responses.map(r => r.json()));
       
-      const newData: any = {};
+      const newData: unknown = {};
       
       if (type === 'conversions' || type === 'both') {
         if (results[0]?.success) newData.conversions = results[0].data;

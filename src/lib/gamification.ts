@@ -45,7 +45,7 @@ export interface GamificationEvent {
   user_id: string;
   event_type: 'signup' | 'content_created' | 'content_published' | 'workflow_completed' | 'match_accepted' | 'match_completed';
   points_awarded: number;
-  metadata?: any;
+  metadata?: unknown;
 }
 
 export class GamificationService {
@@ -282,7 +282,7 @@ export class GamificationService {
     }
   }
 
-  async awardPoints(userId: string, eventType: GamificationEvent['event_type'], metadata?: any): Promise<{ points_awarded: number; new_achievements: Achievement[]; new_badges: Badge[] }> {
+  async awardPoints(userId: string, eventType: GamificationEvent['event_type'], metadata?: unknown): Promise<{ points_awarded: number; new_achievements: Achievement[]; new_badges: Badge[] }> {
     console.log('LOG: GAMIFICATION-AWARD-1 - Awarding points for event:', eventType, 'User:', userId);
     
     try {
@@ -350,7 +350,7 @@ export class GamificationService {
     return pointsMap[eventType] || { base_points: 10 };
   }
 
-  private updateStats(profile: GamificationProfile, eventType: GamificationEvent['event_type'], metadata?: any): void {
+  private updateStats(profile: GamificationProfile, eventType: GamificationEvent['event_type'], metadata?: unknown): void {
     switch (eventType) {
       case 'content_created':
         profile.stats.content_created++;

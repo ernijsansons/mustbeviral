@@ -322,7 +322,7 @@ export function useTrends() {
   const [trends, setTrends] = useState<TrendData[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchTrends = async (type: string = 'trending', params: any = {}) => {
+  const fetchTrends = async (type: string = 'trending', params: unknown = {}) => {
     console.log('LOG: COMPONENT-TRENDS-6 - Fetching trends via hook:', type);
     setLoading(true);
     

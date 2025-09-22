@@ -1,19 +1,34 @@
 import { Router, Route, Switch } from 'wouter';
-import { HomePage } from './pages/HomePage';
-import { OnboardPage } from './pages/OnboardPage';
-import { Dashboard } from './components/Dashboard';
-import { ContentPage } from './pages/ContentPage';
-import { MatchesPage } from './pages/MatchesPage';
+import { Suspense, lazy, useEffect } from 'react';
 import { NavBar } from './components/NavBar';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { SkipNavigation, MainContent } from './components/SkipNavigation';
+import { LoadingSpinner } from './components/ui/LoadingStates';
+import { initWebVitals } from './lib/analytics/webVitals';
+
+// Lazy load page components for better performance
+const HomePage = lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
+const OnboardPage = lazy(() => import('./pages/OnboardPage').then(module => ({ default: module.OnboardPage })));
+const Dashboard = lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
+const ContentPage = lazy(() => import('./pages/ContentPage').then(module => ({ default: module.ContentPage })));
+const MatchesPage = lazy(() => import('./pages/MatchesPage').then(module => ({ default: module.MatchesPage })));
 
 function App() {
+  // Initialize performance monitoring
+  useEffect(() => {
+    initWebVitals('/api/analytics/vitals', process.env.NODE_ENV === 'production');
+  }, []);
+
   return (
-    <Router>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <NavBar />
-        
-        <main className="min-h-screen">
-          <Switch>
+    <ErrorBoundary level="critical" context="App">
+      <SkipNavigation />
+      <Router>
+        <div className="min-h-screen">
+          <NavBar />
+
+          <MainContent className="min-h-screen">
+            <Suspense fallback={<LoadingSpinner size="large" text="Loading page..." />}>
+              <Switch>
             <Route path="/" component={HomePage} />
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/content" component={ContentPage} />
@@ -37,10 +52,12 @@ function App() {
                 </div>
               </div>
             </Route>
-          </Switch>
-        </main>
-      </div>
-    </Router>
+              </Switch>
+            </Suspense>
+          </MainContent>
+        </div>
+      </Router>
+    </ErrorBoundary>
   );
 }
 

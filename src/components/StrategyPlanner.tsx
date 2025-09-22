@@ -29,7 +29,7 @@ interface PersonalizedStrategy {
   id: string;
   template_id: string;
   brand_name: string;
-  customized_steps: any[];
+  customized_steps: unknown[];
   timeline: string;
   budget_estimate: number;
   success_probability: number;
@@ -44,7 +44,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
   });
   const [generatedStrategy, setGeneratedStrategy] = useState<PersonalizedStrategy | null>(null);
   const [loading, setLoading] = useState(false);
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<unknown>(null);
 
   console.log('LOG: COMPONENT-STRATEGY-2 - StrategyPlanner rendered');
 
@@ -68,7 +68,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: unknown) => {
     console.log('LOG: COMPONENT-STRATEGY-5 - Input changed:', field, value);
     setStrategyRequest(prev => ({ ...prev, [field]: value }));
   };

@@ -1,0 +1,3 @@
+# Jest Cache Directory
+# This directory is used by Jest to cache test results and improve performance
+# It should be added to .gitignore but kept in the project for CI optimization

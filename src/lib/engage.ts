@@ -6,7 +6,7 @@ export interface EngagementEvent {
   content_id: string;
   user_id?: string;
   event_type: 'view' | 'share' | 'click' | 'like' | 'comment';
-  event_data?: any; // Additional event-specific data
+  event_data?: unknown; // Additional event-specific data
   timestamp: string;
   session_id?: string;
   referrer?: string;
@@ -321,7 +321,7 @@ export class ClientTracker {
   }
 
   // Track page view
-  async trackView(contentId: string, additionalData?: any): Promise<void> {
+  async trackView(contentId: string, additionalData?: unknown): Promise<void> {
     return this.sendEvent({
       content_id: contentId,
       user_id: this.userId,

@@ -4,11 +4,12 @@
 import { CloudflareEnv, CloudflareService } from './lib/cloudflare';
 import { DatabaseService } from './lib/db';
 import { AuthService } from './lib/auth';
+import { addSecurityHeaders } from './lib/security/csp';
 
 // Cloudflare Worker types
 declare global {
   interface ExecutionContext {
-    waitUntil(promise: Promise<any>): void;
+    waitUntil(promise: Promise<unknown>): void;
     passThroughOnException(): void;
   }
 }
@@ -79,7 +80,7 @@ export default {
 };
 
 // Handler: User Registration
-async function handleRegister(request: Request, dbService: DatabaseService, corsHeaders: any): Promise<Response> {
+async function handleRegister(request: Request, dbService: DatabaseService, corsHeaders: unknown): Promise<Response> {
   console.log('LOG: WORKER-AUTH-REG-1 - Processing registration');
   
   try {
@@ -198,7 +199,7 @@ async function handleRegister(request: Request, dbService: DatabaseService, cors
 }
 
 // Handler: User Login
-async function handleLogin(request: Request, dbService: DatabaseService, corsHeaders: any): Promise<Response> {
+async function handleLogin(request: Request, dbService: DatabaseService, corsHeaders: unknown): Promise<Response> {
   console.log('LOG: WORKER-AUTH-LOGIN-1 - Processing login');
   
   try {
@@ -274,7 +275,7 @@ async function handleLogin(request: Request, dbService: DatabaseService, corsHea
 }
 
 // Handler: Get Current User
-async function handleGetMe(request: Request, dbService: DatabaseService, corsHeaders: any): Promise<Response> {
+async function handleGetMe(request: Request, dbService: DatabaseService, corsHeaders: unknown): Promise<Response> {
   console.log('LOG: WORKER-AUTH-ME-1 - Processing get user');
   
   try {
@@ -328,7 +329,7 @@ async function handleGetMe(request: Request, dbService: DatabaseService, corsHea
 }
 
 // Handler: User Onboarding
-async function handleOnboard(request: Request, dbService: DatabaseService, corsHeaders: any): Promise<Response> {
+async function handleOnboard(request: Request, dbService: DatabaseService, corsHeaders: unknown): Promise<Response> {
   console.log('LOG: WORKER-ONBOARD-1 - Processing onboarding');
   
   try {
@@ -374,7 +375,7 @@ async function handleOnboard(request: Request, dbService: DatabaseService, corsH
 }
 
 // Handler: Health Check
-async function handleHealth(cloudflareService: CloudflareService, corsHeaders: any): Promise<Response> {
+async function handleHealth(cloudflareService: CloudflareService, corsHeaders: unknown): Promise<Response> {
   console.log('LOG: WORKER-HEALTH-1 - Health check');
   
   try {

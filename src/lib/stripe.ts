@@ -28,7 +28,7 @@ export interface UserSubscription {
 }
 
 export class StripeService {
-  private stripe: any;
+  private stripe: unknown;
   private webhookSecret: string;
   private testMode: boolean;
 
@@ -52,7 +52,7 @@ export class StripeService {
   private createMockStripe() {
     return {
       customers: {
-        create: async (params: any) => {
+        create: async (params: unknown) => {
           console.log('LOG: STRIPE-MOCK-1 - Mock customer creation');
           return {
             id: `cus_test_${Date.now()}`,
@@ -64,7 +64,7 @@ export class StripeService {
       },
       checkout: {
         sessions: {
-          create: async (params: any) => {
+          create: async (params: unknown) => {
             console.log('LOG: STRIPE-MOCK-2 - Mock checkout session creation');
             return {
               id: `cs_test_${Date.now()}`,
@@ -93,7 +93,7 @@ export class StripeService {
           console.log('LOG: STRIPE-MOCK-4 - Mock subscription cancellation');
           return { id, status: 'canceled' };
         },
-        update: async (id: string, params: any) => {
+        update: async (id: string, params: unknown) => {
           console.log('LOG: STRIPE-MOCK-5 - Mock subscription update');
           return { id, ...params };
         }
@@ -141,7 +141,7 @@ export class StripeService {
     ];
   }
 
-  async createCustomer(email: string, name?: string): Promise<any> {
+  async createCustomer(email: string, name?: string): Promise<unknown> {
     console.log('LOG: STRIPE-CUSTOMER-1 - Creating Stripe customer:', email);
     
     try {
@@ -159,7 +159,7 @@ export class StripeService {
     }
   }
 
-  async createCheckoutSession(customerId: string, priceId: string, successUrl: string, cancelUrl: string): Promise<any> {
+  async createCheckoutSession(customerId: string, priceId: string, successUrl: string, cancelUrl: string): Promise<unknown> {
     console.log('LOG: STRIPE-CHECKOUT-1 - Creating checkout session for customer:', customerId);
     
     try {
@@ -194,7 +194,7 @@ export class StripeService {
     }
   }
 
-  async processWebhook(event: any): Promise<any> {
+  async processWebhook(event: unknown): Promise<unknown> {
     console.log('LOG: STRIPE-WEBHOOK-PROCESS-1 - Processing webhook:', event.type);
     
     try {
@@ -219,7 +219,7 @@ export class StripeService {
     }
   }
 
-  private handleCheckoutCompleted(session: any): any {
+  private handleCheckoutCompleted(session: unknown): any {
     console.log('LOG: STRIPE-CHECKOUT-COMPLETE-1 - Handling checkout completion');
     
     const tier = this.getTierByPriceId(session.line_items?.data?.[0]?.price?.id);
@@ -233,7 +233,7 @@ export class StripeService {
     };
   }
 
-  private handleSubscriptionUpdated(subscription: any): any {
+  private handleSubscriptionUpdated(subscription: unknown): any {
     console.log('LOG: STRIPE-SUB-UPDATE-1 - Handling subscription update');
     
     const tier = this.getTierByPriceId(subscription.items?.data?.[0]?.price?.id);
@@ -248,7 +248,7 @@ export class StripeService {
     };
   }
 
-  private handleSubscriptionDeleted(subscription: any): any {
+  private handleSubscriptionDeleted(subscription: unknown): any {
     console.log('LOG: STRIPE-SUB-DELETE-1 - Handling subscription deletion');
     
     return {
@@ -259,7 +259,7 @@ export class StripeService {
     };
   }
 
-  private handlePaymentSucceeded(invoice: any): any {
+  private handlePaymentSucceeded(invoice: unknown): any {
     console.log('LOG: STRIPE-PAYMENT-SUCCESS-1 - Handling payment success');
     
     return {
@@ -270,7 +270,7 @@ export class StripeService {
     };
   }
 
-  private handlePaymentFailed(invoice: any): any {
+  private handlePaymentFailed(invoice: unknown): any {
     console.log('LOG: STRIPE-PAYMENT-FAILED-1 - Handling payment failure');
     
     return {

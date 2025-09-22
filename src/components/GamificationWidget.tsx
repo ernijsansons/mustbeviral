@@ -448,7 +448,7 @@ export function useGamification(userId: string) {
     }
   };
 
-  const awardPoints = async (eventType: string, metadata?: any) => {
+  const awardPoints = async (eventType: string, metadata?: unknown) => {
     console.log('LOG: COMPONENT-GAMIFICATION-7 - Awarding points via hook:', eventType);
     
     try {

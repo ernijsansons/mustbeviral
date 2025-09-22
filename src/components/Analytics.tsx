@@ -129,7 +129,7 @@ export function Analytics() {
     }
   };
 
-  const updateRealTimeMetrics = (event: any) => {
+  const updateRealTimeMetrics = (event: unknown) => {
     if (!analyticsData) return;
     
     setAnalyticsData(prev => {

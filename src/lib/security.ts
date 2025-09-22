@@ -238,7 +238,7 @@ export class SecurityManager {
     return authUrl;
   }
 
-  async exchangeCodeForToken(providerId: string, code: string, redirectUri: string): Promise<any> {
+  async exchangeCodeForToken(providerId: string, code: string, redirectUri: string): Promise<unknown> {
     console.log('LOG: SECURITY-SSO-5 - Exchanging code for token');
     
     const provider = this.ssoProviders.get(providerId);
@@ -476,7 +476,7 @@ export class SecurityManager {
   async logSecurityEvent(event: {
     user_id?: string;
     event_type: string;
-    details: any;
+    details: unknown;
     status: 'success' | 'failure';
     source: string;
   }): Promise<void> {

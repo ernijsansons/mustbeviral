@@ -11,7 +11,7 @@ declare global {
   }
 
   interface D1PreparedStatement {
-    bind(...params: any[]): D1PreparedStatement;
+    bind(...params: unknown[]): D1PreparedStatement;
     first<T = any>(): Promise<T | null>;
     run(): Promise<D1Result>;
     all<T = any>(): Promise<D1Result<T>>;
@@ -41,7 +41,7 @@ declare global {
   }
 
   interface KVNamespace {
-    get(key: string, options?: { type?: 'text' | 'json' | 'arrayBuffer' | 'stream' }): Promise<any>;
+    get(key: string, options?: { type?: 'text' | 'json' | 'arrayBuffer' | 'stream' }): Promise<unknown>;
     put(key: string, value: string | ArrayBuffer | ReadableStream, options?: KVNamespacePutOptions): Promise<void>;
     delete(key: string): Promise<void>;
     list(options?: KVNamespaceListOptions): Promise<KVNamespaceListResult>;
@@ -50,7 +50,7 @@ declare global {
   interface KVNamespacePutOptions {
     expiration?: number;
     expirationTtl?: number;
-    metadata?: any;
+    metadata?: unknown;
   }
 
   interface KVNamespaceListOptions {
@@ -68,7 +68,7 @@ declare global {
   interface KVNamespaceListKey {
     name: string;
     expiration?: number;
-    metadata?: any;
+    metadata?: unknown;
   }
 
   interface R2Bucket {
@@ -159,7 +159,7 @@ export class D1Client {
     console.log('LOG: CF-D1-1 - D1 client initialized');
   }
 
-  async executeQuery(query: string, params: any[] = []): Promise<D1Result> {
+  async executeQuery(query: string, params: unknown[] = []): Promise<D1Result> {
     console.log('LOG: CF-D1-2 - Executing query:', query.substring(0, 50));
     
     try {
@@ -176,7 +176,7 @@ export class D1Client {
     }
   }
 
-  async fetchOne<T>(query: string, params: any[] = []): Promise<T | null> {
+  async fetchOne<T>(query: string, params: unknown[] = []): Promise<T | null> {
     console.log('LOG: CF-D1-4 - Fetching single record');
     
     try {
@@ -192,7 +192,7 @@ export class D1Client {
     }
   }
 
-  async fetchAll<T>(query: string, params: any[] = []): Promise<T[]> {
+  async fetchAll<T>(query: string, params: unknown[] = []): Promise<T[]> {
     console.log('LOG: CF-D1-5 - Fetching multiple records');
     
     try {

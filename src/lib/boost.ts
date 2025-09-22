@@ -84,7 +84,7 @@ export class VisibilityBoostEngine {
   }
 
   // Query Perplexity API for search results
-  private async queryPerplexity(query: string): Promise<any> {
+  private async queryPerplexity(query: string): Promise<unknown> {
     console.log('LOG: BOOST-PERPLEXITY-1 - Querying Perplexity API');
     
     if (!this.perplexityApiKey) {
@@ -259,7 +259,7 @@ export class VisibilityBoostEngine {
     }, {});
     
     const trendingKeywords = Object.entries(keywordCounts)
-      .sort(([,a]: any, [,b]: any) => b - a)
+      .sort(([,a]: any, [,b]: unknown) => b - a)
       .slice(0, 5)
       .map(([word]) => word);
 

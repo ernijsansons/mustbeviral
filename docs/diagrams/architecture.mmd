@@ -1,0 +1,106 @@
+```mermaid
+flowchart TB
+    %% User Interface Layer
+    subgraph "Frontend Layer"
+        UI[React 18 + TypeScript Frontend]
+        PWA[Progressive Web App]
+        Mobile[Mobile Responsive UI]
+    end
+
+    %% Edge Computing Layer
+    subgraph "Cloudflare Edge Network"
+        CDN[Cloudflare CDN<br/>280+ Global Locations]
+        Worker[Cloudflare Workers<br/>Serverless Functions]
+        AI_Worker[AI Workers<br/>Content Generation]
+    end
+
+    %% Application Services
+    subgraph "Core Services"
+        Auth[Authentication Service<br/>JWT + OAuth]
+        Content[Content Generation<br/>AI-Powered]
+        Analytics[Analytics Engine<br/>Real-time Tracking]
+        Campaign[Campaign Management<br/>Workflow Engine]
+        Matching[Influencer Matching<br/>ML Algorithms]
+        Trends[Trend Analysis<br/>Social Media APIs]
+    end
+
+    %% Data Storage Layer
+    subgraph "Cloudflare Storage"
+        D1[(Cloudflare D1<br/>SQLite Database)]
+        KV[(KV Storage<br/>Session & Cache)]
+        R2[(R2 Object Storage<br/>Media & Assets)]
+        Vector[(Vectorize<br/>Content Embeddings)]
+    end
+
+    %% External Integrations
+    subgraph "Third-Party APIs"
+        Stripe[Stripe Payments<br/>Subscriptions]
+        OAuth_Google[Google OAuth<br/>Authentication]
+        OAuth_GitHub[GitHub OAuth<br/>Developer Access]
+        Social[Social Media APIs<br/>Twitter, Instagram, TikTok]
+        Trends_API[Google Trends API<br/>Trend Data]
+    end
+
+    %% Monitoring & Observability
+    subgraph "Monitoring Stack"
+        OTEL[OpenTelemetry<br/>Distributed Tracing]
+        Logs[Cloudflare Analytics<br/>Application Logs]
+        Health[Health Checks<br/>Service Monitoring]
+    end
+
+    %% User Flow
+    Users[Users<br/>Creators & Brands] --> UI
+    UI --> CDN
+    CDN --> Worker
+    Worker --> Auth
+    Worker --> Content
+    Worker --> Analytics
+    Worker --> Campaign
+    Worker --> Matching
+    Worker --> Trends
+
+    %% Data Flow
+    Auth --> KV
+    Content --> D1
+    Content --> R2
+    Content --> Vector
+    Analytics --> D1
+    Campaign --> D1
+    Matching --> Vector
+    Trends --> KV
+
+    %% External Connections
+    Auth --> OAuth_Google
+    Auth --> OAuth_GitHub
+    Worker --> Stripe
+    Trends --> Trends_API
+    Content --> Social
+    Analytics --> Social
+
+    %% AI Processing
+    Content --> AI_Worker
+    AI_Worker --> Vector
+    AI_Worker --> R2
+
+    %% Monitoring Connections
+    Worker --> OTEL
+    Worker --> Logs
+    Auth --> Health
+    Content --> Health
+    Analytics --> Health
+
+    %% Styling
+    classDef frontend fill:#e1f5fe
+    classDef edge fill:#f3e5f5
+    classDef service fill:#e8f5e8
+    classDef storage fill:#fff3e0
+    classDef external fill:#fce4ec
+    classDef monitoring fill:#f1f8e9
+
+    class UI,PWA,Mobile frontend
+    class CDN,Worker,AI_Worker edge
+    class Auth,Content,Analytics,Campaign,Matching,Trends service
+    class D1,KV,R2,Vector storage
+    class Stripe,OAuth_Google,OAuth_GitHub,Social,Trends_API external
+    class OTEL,Logs,Health monitoring
+```

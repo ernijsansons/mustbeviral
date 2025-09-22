@@ -421,10 +421,10 @@ export function BoostDashboard() {
 
 // Hook for using boost data in other components
 export function useBoostData() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
 
-  const fetchBoostData = async (action: string, params: any = {}) => {
+  const fetchBoostData = async (action: string, params: unknown = {}) => {
     console.log('LOG: COMPONENT-BOOST-9 - Fetching boost data via hook:', action);
     setLoading(true);
     

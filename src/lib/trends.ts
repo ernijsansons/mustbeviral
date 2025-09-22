@@ -209,7 +209,7 @@ export class TrendMonitoringEngine {
           trend_score: this.parseTrafficToScore(traffic),
           search_volume: this.estimateSearchVolume(traffic),
           competition_score: Math.random() * 100, // Placeholder
-          related_queries: search.relatedQueries?.map((q: any) => q.query) || [],
+          related_queries: search.relatedQueries?.map((q: unknown) => q.query) || [],
           source: 'google_trends',
           region,
           category: search.articles?.[0]?.source || 'general',
@@ -258,14 +258,14 @@ export class TrendMonitoringEngine {
     }
   }
 
-  private parseRelatedQueries(data: any): string[] {
+  private parseRelatedQueries(data: unknown): string[] {
     try {
       const queries: string[] = [];
       const relatedQueries = data.default?.rankedList || [];
 
-      relatedQueries.forEach((list: any) => {
+      relatedQueries.forEach((list: unknown) => {
         if (list.rankedKeyword) {
-          list.rankedKeyword.forEach((item: any) => {
+          list.rankedKeyword.forEach((item: unknown) => {
             if (item.query) {
               queries.push(item.query);
             }

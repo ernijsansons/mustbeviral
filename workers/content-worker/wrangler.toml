@@ -1,0 +1,122 @@
+# Content Worker - Microservice Configuration
+# Handles content creation, management, and AI generation
+
+name = "must-be-viral-content"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Worker routes
+routes = [
+  { pattern = "content.mustbeviral.com/*", zone_name = "mustbeviral.com" },
+  { pattern = "*/api/content/*", zone_name = "mustbeviral.com" }
+]
+
+# Environment configurations
+[env.development]
+name = "must-be-viral-content-dev"
+vars = {
+  ENVIRONMENT = "development",
+  SERVICE_NAME = "content-worker",
+  LOG_LEVEL = "DEBUG"
+}
+
+[env.staging]
+name = "must-be-viral-content-staging"
+vars = {
+  ENVIRONMENT = "staging",
+  SERVICE_NAME = "content-worker",
+  LOG_LEVEL = "INFO"
+}
+
+[env.production]
+name = "must-be-viral-content-prod"
+vars = {
+  ENVIRONMENT = "production",
+  SERVICE_NAME = "content-worker",
+  LOG_LEVEL = "WARN"
+}
+
+# D1 Database for content data
+[[d1_databases]]
+binding = "CONTENT_DB"
+database_name = "must-be-viral-content"
+database_id = "content-db-id-here"
+migrations_dir = "migrations"
+
+# KV Namespace for content cache
+[[kv_namespaces]]
+binding = "CONTENT_CACHE"
+id = "content-cache-kv-id"
+preview_id = "content-cache-kv-preview"
+
+# KV Namespace for trends data
+[[kv_namespaces]]
+binding = "TRENDS_CACHE"
+id = "trends-cache-kv-id"
+preview_id = "trends-cache-kv-preview"
+
+# R2 Bucket for media storage
+[[r2_buckets]]
+binding = "MEDIA_STORAGE"
+bucket_name = "must-be-viral-media"
+preview_bucket_name = "must-be-viral-media-preview"
+
+# Durable Objects for content collaboration
+[[durable_objects.bindings]]
+name = "CONTENT_COLLABORATOR"
+class_name = "ContentCollaborator"
+script_name = "must-be-viral-content"
+
+[[durable_objects.bindings]]
+name = "AI_PROCESSOR"
+class_name = "AIProcessor"
+script_name = "must-be-viral-content"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["ContentCollaborator", "AIProcessor"]
+
+# Service bindings
+[[services]]
+binding = "AUTH_SERVICE"
+service = "must-be-viral-auth"
+environment = "production"
+
+[[services]]
+binding = "ANALYTICS_SERVICE"
+service = "must-be-viral-analytics"
+environment = "production"
+
+# Queue for AI processing
+[[queues]]
+binding = "AI_PROCESSING_QUEUE"
+queue_name = "ai-processing"
+
+# Queue for content publishing
+[[queues]]
+binding = "CONTENT_PUBLISHING_QUEUE"
+queue_name = "content-publishing"
+
+# AI/ML configuration
+[ai]
+binding = "AI"
+
+# Secrets (use wrangler secret put)
+# OPENAI_API_KEY
+# CONTENT_ENCRYPTION_KEY
+# MEDIA_SIGNING_KEY
+
+[env.development.vars]
+ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:3000"
+MAX_CONTENT_SIZE = "10485760" # 10MB
+MAX_MEDIA_SIZE = "52428800" # 50MB
+AI_TIMEOUT = "30000" # 30 seconds
+CACHE_TTL = "3600" # 1 hour
+
+[env.production.vars]
+ALLOWED_ORIGINS = "https://mustbeviral.com,https://app.mustbeviral.com"
+MAX_CONTENT_SIZE = "52428800" # 50MB
+MAX_MEDIA_SIZE = "104857600" # 100MB
+AI_TIMEOUT = "60000" # 60 seconds
+CACHE_TTL = "21600" # 6 hours

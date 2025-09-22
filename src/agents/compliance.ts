@@ -40,7 +40,7 @@ export interface CommissionTransaction {
 }
 
 export class StripeService {
-  private stripe: any; // Mock Stripe in test mode
+  private stripe: unknown; // Mock Stripe in test mode
   private webhookSecret: string;
   private testMode: boolean;
 
@@ -63,7 +63,7 @@ export class StripeService {
   private createMockStripe() {
     return {
       customers: {
-        create: async (params: any) => ({
+        create: async (params: unknown) => ({
           id: `cus_test_${Date.now()}`,
           email: params.email,
           name: params.name,
@@ -72,7 +72,7 @@ export class StripeService {
       },
       checkout: {
         sessions: {
-          create: async (params: any) => ({
+          create: async (params: unknown) => ({
             id: `cs_test_${Date.now()}`,
             url: `https://checkout.stripe.com/test/${Date.now()}`,
             customer: params.customer,
@@ -91,7 +91,7 @@ export class StripeService {
           items: { data: [{ price: { id: 'price_test_standard' } }] }
         }),
         cancel: async (id: string) => ({ id, status: 'canceled' }),
-        update: async (id: string, params: any) => ({ id, ...params })
+        update: async (id: string, params: unknown) => ({ id, ...params })
       },
       webhooks: {
         constructEvent: (payload: string, signature: string, secret: string) => {
@@ -135,7 +135,7 @@ export class StripeService {
     ];
   }
 
-  async createCustomer(email: string, name?: string): Promise<any> {
+  async createCustomer(email: string, name?: string): Promise<unknown> {
     console.log('LOG: STRIPE-CUSTOMER-1 - Creating Stripe customer:', email);
     
     try {
@@ -153,7 +153,7 @@ export class StripeService {
     }
   }
 
-  async createCheckoutSession(customerId: string, priceId: string, successUrl: string, cancelUrl: string): Promise<any> {
+  async createCheckoutSession(customerId: string, priceId: string, successUrl: string, cancelUrl: string): Promise<unknown> {
     console.log('LOG: STRIPE-CHECKOUT-1 - Creating checkout session for customer:', customerId);
     
     try {
@@ -188,7 +188,7 @@ export class StripeService {
     }
   }
 
-  async processWebhook(event: any): Promise<any> {
+  async processWebhook(event: unknown): Promise<unknown> {
     console.log('LOG: STRIPE-WEBHOOK-PROCESS-1 - Processing webhook:', event.type);
     
     try {
