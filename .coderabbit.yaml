@@ -1,0 +1,64 @@
+# CodeRabbit Configuration for Must Be Viral V2
+# This file configures how CodeRabbit analyzes your code
+
+# Global settings
+language: typescript
+framework: react
+architecture: microservices
+
+# Review settings
+review:
+  # Enable/disable specific review types
+  security: true
+  performance: true
+  best_practices: true
+  code_style: true
+  documentation: true
+  
+  # Customize review depth
+  depth: comprehensive
+  
+  # Focus areas for this project
+  focus_areas:
+    - "React/TypeScript best practices"
+    - "Security vulnerabilities"
+    - "Performance optimizations"
+    - "API design patterns"
+    - "Database query optimization"
+    - "Error handling"
+    - "Testing coverage"
+
+# File patterns to include/exclude
+include_patterns:
+  - "src/**/*.{ts,tsx,js,jsx}"
+  - "server/**/*.{ts,js,mjs}"
+  - "workers/**/*.{ts,js}"
+  - "e2e/**/*.{ts,js}"
+  - "**/*.test.{ts,tsx,js,jsx}"
+
+exclude_patterns:
+  - "node_modules/**"
+  - "dist/**"
+  - "coverage/**"
+  - "**/*.d.ts"
+  - "migrations/**"
+
+# Custom rules for this project
+custom_rules:
+  - "Check for proper error boundaries in React components"
+  - "Verify TypeScript strict mode compliance"
+  - "Ensure proper async/await error handling"
+  - "Validate API response types"
+  - "Check for memory leaks in event listeners"
+  - "Verify proper cleanup in useEffect hooks"
+
+# Chat settings
+chat:
+  enabled: true
+  context_window: large
+  
+# Notification settings
+notifications:
+  pull_request_comments: true
+  summary_reports: true
+  security_alerts: true
