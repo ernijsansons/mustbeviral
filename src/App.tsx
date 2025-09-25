@@ -5,11 +5,21 @@ import { SkipNavigation, MainContent } from './components/SkipNavigation';
 import { initWebVitals } from './lib/analytics/webVitals';
 
 // Lazy load page components for better performance
-const HomePage = lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
-const OnboardPage = lazy(() => import('./pages/OnboardPage').then(module => ({ default: module.OnboardPage })));
-const Dashboard = lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
-const ContentPage = lazy(() => import('./pages/ContentPage').then(module => ({ default: module.ContentPage })));
-const MatchesPage = lazy(() => import('./pages/MatchesPage').then(module => ({ default: module.MatchesPage })));
+const HomePage = lazy(() =>
+  import('./pages/HomePage').then(module => ({ default: module.HomePage }))
+);
+const OnboardPage = lazy(() =>
+  import('./pages/OnboardPage').then(module => ({ default: module.OnboardPage }))
+);
+const Dashboard = lazy(() =>
+  import('./components/Dashboard').then(module => ({ default: module.Dashboard }))
+);
+const ContentPage = lazy(() =>
+  import('./pages/ContentPage').then(module => ({ default: module.ContentPage }))
+);
+const MatchesPage = lazy(() =>
+  import('./pages/MatchesPage').then(module => ({ default: module.MatchesPage }))
+);
 
 function App() {
   // Initialize performance monitoring
@@ -39,7 +49,9 @@ function App() {
                     <div className="px-4 py-6 sm:px-0">
                       <div className="bg-white rounded-lg shadow p-6 text-center">
                         <h2 className="text-2xl font-bold text-gray-900 mb-4">Page Not Found</h2>
-                        <p className="text-gray-600 mb-4">The page you're looking for doesn't exist.</p>
+                        <p className="text-gray-600 mb-4">
+                          The page you're looking for doesn't exist.
+                        </p>
                         <a
                           href="/"
                           className="bg-indigo-600 text-white px-4 py-2 rounded-md font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"

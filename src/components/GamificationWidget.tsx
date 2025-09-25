@@ -4,7 +4,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Trophy, Star, Award, TrendingUp, Target, Zap, Users, Gift, CheckCircle } from 'lucide-react';
+import {
+  Trophy,
+  Star,
+  Award,
+  TrendingUp,
+  Target,
+  Zap,
+  Users,
+  Gift,
+  CheckCircle,
+} from 'lucide-react';
 import { gamificationService } from '../lib/gamification';
 
 interface GamificationProfile {
@@ -38,7 +48,13 @@ interface LeaderboardEntry {
   badges: number;
 }
 
-export function GamificationWidget({ userId = 'demo-user', compact = false }: { userId?: string; compact?: boolean }) {
+export function GamificationWidget({
+  userId = 'demo-user',
+  compact = false,
+}: {
+  userId?: string;
+  compact?: boolean;
+}) {
   const [profile, setProfile] = useState<GamificationProfile | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [allBadges, setAllBadges] = useState<Badge[]>([]);
@@ -70,7 +86,10 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
 
       console.log('LOG: COMPONENT-GAMIFICATION-4 - Gamification data loaded successfully');
     } catch (error) {
-      console.error('LOG: COMPONENT-GAMIFICATION-ERROR-1 - Failed to load gamification data:', error);
+      console.error(
+        'LOG: COMPONENT-GAMIFICATION-ERROR-1 - Failed to load gamification data:',
+        error
+      );
     } finally {
       setLoading(false);
     }
@@ -98,11 +117,16 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
 
   const getBadgeRarityColor = (rarity: string) => {
     switch (rarity) {
-      case 'legendary': return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white';
-      case 'epic': return 'bg-gradient-to-r from-purple-500 to-pink-500 text-white';
-      case 'rare': return 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white';
-      case 'common': return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'legendary':
+        return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white';
+      case 'epic':
+        return 'bg-gradient-to-r from-purple-500 to-pink-500 text-white';
+      case 'rare':
+        return 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white';
+      case 'common':
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white';
+      default:
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -147,7 +171,7 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
             </div>
           </div>
           <div className="flex space-x-1">
-            {profile.badges.slice(0, 3).map((badgeId) => {
+            {profile.badges.slice(0, 3).map(badgeId => {
               const badge = allBadges.find(b => b.id === badgeId);
               return badge ? (
                 <span key={badgeId} className="text-lg" title={badge.name}>
@@ -193,7 +217,7 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
           {[
             { id: 'profile', label: 'Profile', icon: Star },
             { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp },
-            { id: 'achievements', label: 'Achievements', icon: Award }
+            { id: 'achievements', label: 'Achievements', icon: Award },
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -222,9 +246,9 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
+              <div
                 className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-300"
-                style={{ width: `${Math.min(100, (profile.points % 100))}%` }}
+                style={{ width: `${Math.min(100, profile.points % 100)}%` }}
               />
             </div>
           </div>
@@ -255,10 +279,13 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Earned Badges</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {profile.badges.map((badgeId) => {
+              {profile.badges.map(badgeId => {
                 const badge = allBadges.find(b => b.id === badgeId);
                 return badge ? (
-                  <div key={badgeId} className={`p-4 rounded-lg text-center ${getBadgeRarityColor(badge.rarity)}`}>
+                  <div
+                    key={badgeId}
+                    className={`p-4 rounded-lg text-center ${getBadgeRarityColor(badge.rarity)}`}
+                  >
                     <div className="text-3xl mb-2">{badge.icon}</div>
                     <h4 className="font-medium text-sm">{badge.name}</h4>
                     <p className="text-xs opacity-90">{badge.description}</p>
@@ -282,7 +309,7 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
                 { event: 'content_published', label: 'Publish Content', icon: '📢' },
                 { event: 'workflow_completed', label: 'Run Workflow', icon: '🤖' },
                 { event: 'match_accepted', label: 'Accept Match', icon: '🤝' },
-                { event: 'match_completed', label: 'Complete Match', icon: '✅' }
+                { event: 'match_completed', label: 'Complete Match', icon: '✅' },
               ].map(({ event, label, icon }) => (
                 <button
                   key={event}
@@ -303,19 +330,29 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Creators</h3>
           <div className="space-y-3">
             {leaderboard.map((entry, index) => (
-              <div key={entry.user_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div
+                key={entry.user_id}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+              >
                 <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                    index === 0 ? 'bg-yellow-500 text-white' :
-                    index === 1 ? 'bg-gray-400 text-white' :
-                    index === 2 ? 'bg-orange-600 text-white' :
-                    'bg-gray-200 text-gray-700'
-                  }`}>
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                      index === 0
+                        ? 'bg-yellow-500 text-white'
+                        : index === 1
+                          ? 'bg-gray-400 text-white'
+                          : index === 2
+                            ? 'bg-orange-600 text-white'
+                            : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
                     {index + 1}
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">@{entry.username}</h4>
-                    <p className="text-sm text-gray-500">Level {entry.level} • {entry.badges} badges</p>
+                    <p className="text-sm text-gray-500">
+                      Level {entry.level} • {entry.badges} badges
+                    </p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -332,18 +369,23 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">All Achievements</h3>
           <div className="grid gap-4">
-            {gamificationService.getAchievements().map((achievement) => {
+            {gamificationService.getAchievements().map(achievement => {
               const isUnlocked = profile.achievements.includes(achievement.id);
               return (
-                <div key={achievement.id} className={`p-4 border rounded-lg ${
-                  isUnlocked ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-gray-50'
-                }`}>
+                <div
+                  key={achievement.id}
+                  className={`p-4 border rounded-lg ${
+                    isUnlocked ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-gray-50'
+                  }`}
+                >
                   <div className="flex items-center space-x-3">
                     <div className={`text-2xl ${isUnlocked ? '' : 'grayscale opacity-50'}`}>
                       {achievement.icon}
                     </div>
                     <div className="flex-1">
-                      <h4 className={`font-medium ${isUnlocked ? 'text-green-900' : 'text-gray-700'}`}>
+                      <h4
+                        className={`font-medium ${isUnlocked ? 'text-green-900' : 'text-gray-700'}`}
+                      >
                         {achievement.name}
                       </h4>
                       <p className={`text-sm ${isUnlocked ? 'text-green-700' : 'text-gray-500'}`}>
@@ -351,14 +393,14 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className={`font-semibold ${isUnlocked ? 'text-green-600' : 'text-gray-500'}`}>
+                      <p
+                        className={`font-semibold ${isUnlocked ? 'text-green-600' : 'text-gray-500'}`}
+                      >
                         +{achievement.points_reward}
                       </p>
                       <p className="text-xs text-gray-500">points</p>
                     </div>
-                    {isUnlocked && (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                    )}
+                    {isUnlocked && <CheckCircle className="w-5 h-5 text-green-500" />}
                   </div>
                 </div>
               );
