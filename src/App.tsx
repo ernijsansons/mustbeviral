@@ -2,7 +2,6 @@ import React, { Suspense, lazy, useEffect } from 'react';
 import { Router, Route, Switch } from 'wouter';
 import { NavBar } from './components/NavBar';
 import { SkipNavigation, MainContent } from './components/SkipNavigation';
-import { LoadingSpinner } from './components/ui/LoadingStates';
 import { initWebVitals } from './lib/analytics/webVitals';
 
 // Lazy load page components for better performance
@@ -26,7 +25,7 @@ function App() {
           <NavBar />
 
           <MainContent className="min-h-screen">
-            <Suspense fallback={<LoadingSpinner size="large" text="Loading page..." />}>
+            <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
               <Switch>
                 <Route path="/" component={HomePage} />
                 <Route path="/dashboard" component={Dashboard} />
