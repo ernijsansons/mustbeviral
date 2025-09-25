@@ -4,7 +4,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Trophy, Star, Award, TrendingUp, Target, Zap, Users, Gift } from 'lucide-react';
+import { Trophy, Star, Award, TrendingUp, Target, Zap, Users, Gift, CheckCircle } from 'lucide-react';
+import { gamificationService } from '../lib/gamification';
 
 interface GamificationProfile {
   points: number;
@@ -27,15 +28,6 @@ interface Badge {
   description: string;
   icon: string;
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
-}
-
-interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  category: string;
-  points_reward: number;
 }
 
 interface LeaderboardEntry {
@@ -66,27 +58,15 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
     setLoading(true);
 
     try {
-      const [profileResponse, leaderboardResponse, achievementsResponse] = await Promise.all([
-        fetch(`/api/gamification?type=profile&user_id=${userId}`),
-        fetch(`/api/gamification?type=leaderboard&limit=5`),
-        fetch(`/api/gamification?type=achievements`)
+      const [profileResult, leaderboardResult, badgesResult] = await Promise.all([
+        gamificationService.getUserProfile(userId),
+        gamificationService.getLeaderboard(5),
+        Promise.resolve(gamificationService.getBadges()),
       ]);
 
-      const profileResult = await profileResponse.json();
-      const leaderboardResult = await leaderboardResponse.json();
-      const achievementsResult = await achievementsResponse.json();
-
-      if (profileResult.success) {
-        setProfile(profileResult.data);
-      }
-
-      if (leaderboardResult.success) {
-        setLeaderboard(leaderboardResult.data);
-      }
-
-      if (achievementsResult.success) {
-        setAllBadges(achievementsResult.data.badges);
-      }
+      setProfile(profileResult);
+      setLeaderboard(leaderboardResult);
+      setAllBadges(badgesResult);
 
       console.log('LOG: COMPONENT-GAMIFICATION-4 - Gamification data loaded successfully');
     } catch (error) {
@@ -98,32 +78,17 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
 
   const triggerTestEvent = async (eventType: string) => {
     console.log('LOG: COMPONENT-GAMIFICATION-5 - Triggering test event:', eventType);
-    
     try {
-      const response = await fetch('/api/gamification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'award_points',
-          user_id: userId,
-          event_type: eventType
-        })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Show notification for new achievements/badges
-        if (result.data.new_achievements.length > 0 || result.data.new_badges.length > 0) {
+      const result = await gamificationService.awardPoints(userId, eventType as any);
+      if (result) {
+        if (result.new_achievements.length > 0 || result.new_badges.length > 0) {
           setNotification({
             type: 'achievement',
-            message: `🎉 ${result.data.points_awarded} points awarded! ${result.data.new_achievements.length} new achievements unlocked!`
+            message: `🎉 ${result.points_awarded} points awarded! ${result.new_achievements.length} new achievements unlocked!`,
           });
           setShowNotification(true);
           setTimeout(() => setShowNotification(false), 5000);
         }
-
-        // Reload profile to show updated data
         await loadGamificationData();
       }
     } catch (error) {
@@ -201,21 +166,18 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
 
   return (
     <div className="space-y-6">
-      {/* Notification */}
       {showNotification && notification && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce">
           {notification.message}
         </div>
       )}
 
-      {/* Header */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center">
             <Trophy className="w-6 h-6 mr-2 text-indigo-600" />
             Gamification
           </h2>
-          
           <div className="flex items-center space-x-4">
             <div className="text-right">
               <p className="text-2xl font-bold text-indigo-600">{formatNumber(profile.points)}</p>
@@ -227,7 +189,6 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
           {[
             { id: 'profile', label: 'Profile', icon: Star },
@@ -238,7 +199,7 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
               key={id}
               onClick={() => setActiveTab(id as any)}
               className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === id
+                activeTab === (id as any)
                   ? 'bg-white text-indigo-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
@@ -250,10 +211,8 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
         </div>
       </div>
 
-      {/* Profile Tab */}
       {activeTab === 'profile' && (
         <div className="space-y-6">
-          {/* Level Progress */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Level Progress</h3>
             <div className="flex items-center justify-between mb-2">
@@ -265,33 +224,27 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
             <div className="w-full bg-gray-200 rounded-full h-3">
               <div 
                 className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-300"
-                style={{ 
-                  width: `${Math.min(100, (profile.points % 100))}%` 
-                }}
+                style={{ width: `${Math.min(100, (profile.points % 100))}%` }}
               />
             </div>
           </div>
 
-          {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white rounded-lg shadow p-4 text-center">
               <Target className="w-8 h-8 text-blue-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-gray-900">{profile.stats.content_created}</p>
               <p className="text-sm text-gray-600">Content Created</p>
             </div>
-            
             <div className="bg-white rounded-lg shadow p-4 text-center">
               <Zap className="w-8 h-8 text-green-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-gray-900">{profile.stats.content_published}</p>
               <p className="text-sm text-gray-600">Published</p>
             </div>
-            
             <div className="bg-white rounded-lg shadow p-4 text-center">
               <Users className="w-8 h-8 text-purple-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-gray-900">{profile.stats.matches_completed}</p>
               <p className="text-sm text-gray-600">Matches</p>
             </div>
-            
             <div className="bg-white rounded-lg shadow p-4 text-center">
               <Gift className="w-8 h-8 text-orange-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-gray-900">{profile.stats.workflows_run}</p>
@@ -299,7 +252,6 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
             </div>
           </div>
 
-          {/* Badges */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Earned Badges</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -313,7 +265,6 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
                   </div>
                 ) : null;
               })}
-              
               {profile.badges.length === 0 && (
                 <div className="col-span-full text-center py-8 text-gray-500">
                   <Award className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -323,7 +274,6 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
             </div>
           </div>
 
-          {/* Test Events (Development Only) */}
           <div className="bg-gray-50 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Test Events (Demo)</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -348,7 +298,6 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
         </div>
       )}
 
-      {/* Leaderboard Tab */}
       {activeTab === 'leaderboard' && (
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Creators</h3>
@@ -379,7 +328,6 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
         </div>
       )}
 
-      {/* Achievements Tab */}
       {activeTab === 'achievements' && (
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">All Achievements</h3>
@@ -422,7 +370,6 @@ export function GamificationWidget({ userId = 'demo-user', compact = false }: { 
   );
 }
 
-// Hook for using gamification data in other components
 export function useGamification(userId: string) {
   const [profile, setProfile] = useState<GamificationProfile | null>(null);
   const [loading, setLoading] = useState(false);
@@ -430,16 +377,10 @@ export function useGamification(userId: string) {
   const fetchProfile = async () => {
     console.log('LOG: COMPONENT-GAMIFICATION-6 - Fetching profile via hook');
     setLoading(true);
-    
     try {
-      const response = await fetch(`/api/gamification?type=profile&user_id=${userId}`);
-      const result = await response.json();
-      
-      if (result.success) {
-        setProfile(result.data);
-        return result.data;
-      }
-      return null;
+      const result = await gamificationService.getUserProfile(userId);
+      setProfile(result);
+      return result;
     } catch (error) {
       console.error('LOG: COMPONENT-GAMIFICATION-ERROR-3 - Hook fetch failed:', error);
       return null;
@@ -450,26 +391,10 @@ export function useGamification(userId: string) {
 
   const awardPoints = async (eventType: string, metadata?: unknown) => {
     console.log('LOG: COMPONENT-GAMIFICATION-7 - Awarding points via hook:', eventType);
-    
     try {
-      const response = await fetch('/api/gamification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'award_points',
-          user_id: userId,
-          event_type: eventType,
-          metadata
-        })
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        await fetchProfile(); // Refresh profile
-        return result.data;
-      }
-      return null;
+      const result = await gamificationService.awardPoints(userId, eventType as any, metadata);
+      if (result) await fetchProfile();
+      return result;
     } catch (error) {
       console.error('LOG: COMPONENT-GAMIFICATION-ERROR-4 - Award points failed:', error);
       return null;
