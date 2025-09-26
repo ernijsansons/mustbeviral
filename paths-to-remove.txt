@@ -1,0 +1,14 @@
+coverage/
+playwright-report/
+.next/
+dist/
+build/
+tsconfig.tsbuildinfo
+must-be-viral-export-2025-08-22.zip
+__graveyard__/
+*.log
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+*.lcov
