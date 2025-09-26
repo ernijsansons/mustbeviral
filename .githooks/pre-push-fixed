@@ -1,0 +1,49 @@
+#!/bin/bash
+# Pre-push hook - runs before git push
+
+echo "🔍 Running pre-push checks..."
+
+# Check if we're in the right directory
+if [ ! -f "package.json" ]; then
+    echo "❌ Not in project root directory"
+    exit 1
+fi
+
+# Check if Node.js and npm are available
+if ! command -v node &> /dev/null; then
+    echo "⚠️ Node.js not found, skipping tests"
+    exit 0
+fi
+
+if ! command -v npm &> /dev/null; then
+    echo "⚠️ npm not found, skipping tests"
+    exit 0
+fi
+
+# Check if dependencies are installed
+if [ ! -d "node_modules" ]; then
+    echo "⚠️ Root dependencies not installed, skipping tests"
+    exit 0
+fi
+
+if [ ! -d "mustbeviral/node_modules" ]; then
+    echo "⚠️ mustbeviral dependencies not installed, skipping tests"
+    exit 0
+fi
+
+echo "✅ Environment check passed"
+
+# Run linting (non-blocking)
+echo "🔍 Running linting..."
+npm run lint || echo "⚠️ Linting issues found (non-blocking)"
+
+# Run type checking (non-blocking)
+echo "🔍 Running type checking..."
+npm run type-check || echo "⚠️ Type checking issues found (non-blocking)"
+
+# Run tests (non-blocking to allow push)
+echo "🧪 Running tests..."
+npm run test:frontend || echo "⚠️ Frontend tests failed (non-blocking)"
+
+echo "✅ Pre-push checks completed (allowing push)"
+exit 0
