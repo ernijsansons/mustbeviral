@@ -13,6 +13,8 @@
     "preview": "vite preview",
     "test": "jest",
     "test:unit": "jest --testPathPattern=__tests__/unit",
+    "test:frontend": "jest --testPathPattern=src/",
+    "test:integration": "jest --testPathPattern=__tests__/integration/",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:smoke": "playwright test --grep='@smoke'",
