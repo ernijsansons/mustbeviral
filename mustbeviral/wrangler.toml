@@ -1,0 +1,55 @@
+# Must Be Viral - Cloudflare Workers Configuration
+name = "must-be-viral"
+main = "src/worker.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Environment configurations
+[env.development]
+name = "must-be-viral-dev"
+vars = { NODE_ENV = "development" }
+
+[env.production]
+name = "must-be-viral-prod"
+vars = { NODE_ENV = "production" }
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "must-be-viral-db"
+database_id = "your-d1-database-id-here"
+migrations_dir = "migrations"
+
+# KV Namespace for trends cache
+[[kv_namespaces]]
+binding = "TRENDS_CACHE"
+id = "your-kv-namespace-id-here"
+preview_id = "your-kv-preview-id-here"
+
+# R2 Bucket for asset storage
+[[r2_buckets]]
+binding = "ASSETS_STORAGE"
+bucket_name = "must-be-viral-assets"
+preview_bucket_name = "must-be-viral-assets-preview"
+
+# Environment secrets (add via wrangler secret put)
+# Required secrets:
+# - JWT_SECRET
+# - STRIPE_SECRET_KEY
+# - CLOUDFLARE_API_TOKEN
+
+# Local development with Next.js
+[env.development.vars]
+NEXT_PUBLIC_CLOUDFLARE_WORKERS_URL = "http://localhost:8787"
+
+[env.production.vars]
+NEXT_PUBLIC_CLOUDFLARE_WORKERS_URL = "https://must-be-viral-prod.your-subdomain.workers.dev"
+
+# Build configuration for Workers  
+# [build]
+# command = "npm run build"
+
+# Routes for Workers API (if using custom domain)
+# routes = [
+#   { pattern = "mustbeviral.com/api/*", zone_name = "mustbeviral.com" }
+# ]

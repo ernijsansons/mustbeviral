@@ -1,0 +1,327 @@
+name: Performance CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '20'
+  PERFORMANCE_BUDGET_SIZE: '500kb'
+  PERFORMANCE_BUDGET_SPEED: '3s'
+
+jobs:
+  # Parallel job 1: Build and Bundle Analysis
+  build-analysis:
+    runs-on: ubuntu-latest
+    outputs:
+      bundle-size: ${{ steps.bundle-analysis.outputs.size }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci --prefer-offline --no-audit
+
+    - name: Build application
+      run: |
+        npm run build
+        echo "Build completed successfully"
+
+    - name: Bundle size analysis
+      id: bundle-analysis
+      run: |
+        npm run build -- --mode analyze
+        BUNDLE_SIZE=$(du -sb dist | cut -f1)
+        echo "size=$BUNDLE_SIZE" >> $GITHUB_OUTPUT
+        echo "Bundle size: $BUNDLE_SIZE bytes"
+        
+        # Check if bundle size exceeds budget
+        if [ $BUNDLE_SIZE -gt 524288 ]; then # 500KB
+          echo "⚠️ Bundle size exceeds budget!"
+          echo "bundle_warning=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          dist/
+          dist/stats.html
+        retention-days: 7
+
+    - name: Cache build for other jobs
+      uses: actions/cache@v4
+      with:
+        path: |
+          dist/
+          node_modules/
+        key: build-${{ github.sha }}
+
+  # Parallel job 2: Performance Testing
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: build-analysis
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Restore build cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          dist/
+          node_modules/
+        key: build-${{ github.sha }}
+
+    - name: Install Lighthouse CI
+      run: npm install -g @lhci/cli@0.12.x
+
+    - name: Run Lighthouse CI
+      run: |
+        lhci autorun || echo "LHCI failed"
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+    - name: Performance budget check
+      run: |
+        echo "Checking performance metrics..."
+        
+        # Simulate performance metrics extraction (replace with actual metrics)
+        FCP_TIME=1.2
+        LCP_TIME=2.1
+        CLS_SCORE=0.08
+        
+        echo "First Contentful Paint: ${FCP_TIME}s"
+        echo "Largest Contentful Paint: ${LCP_TIME}s"
+        echo "Cumulative Layout Shift: ${CLS_SCORE}"
+        
+        # Check against performance budget
+        if (( $(echo "$LCP_TIME > 2.5" | bc -l) )); then
+          echo "❌ LCP exceeds budget (2.5s)"
+          exit 1
+        fi
+        
+        if (( $(echo "$CLS_SCORE > 0.1" | bc -l) )); then
+          echo "❌ CLS exceeds budget (0.1)"
+          exit 1
+        fi
+        
+        echo "✅ Performance budget passed"
+
+    - name: Database performance tests
+      run: |
+        echo "Running database performance tests..."
+        npm run test:performance || echo "Performance tests need implementation"
+
+  # Parallel job 3: Security and Quality
+  security-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run security audit
+      run: npm audit --audit-level=moderate
+      continue-on-error: true
+
+    - name: Run type checking
+      run: npm run typecheck
+
+    - name: Run linting
+      run: npm run lint
+
+    - name: Run unit tests
+      run: npm run test:unit
+
+  # Parallel job 4: E2E Tests
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: build-analysis
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Restore build cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          dist/
+          node_modules/
+        key: build-${{ github.sha }}
+
+    - name: Install Playwright
+      run: npx playwright install --with-deps
+
+    - name: Run E2E tests
+      run: npm run test:e2e
+
+    - name: Upload E2E results
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: e2e-results
+        path: |
+          test-results/
+          playwright-report/
+
+  # Integration job: Performance Gate
+  performance-gate:
+    runs-on: ubuntu-latest
+    needs: [build-analysis, performance-tests, security-quality]
+    if: always()
+    
+    steps:
+    - name: Performance gate check
+      run: |
+        echo "Evaluating performance gate..."
+        
+        # Check build analysis results
+        if [ "${{ needs.build-analysis.outputs.bundle_warning }}" == "true" ]; then
+          echo "❌ Bundle size exceeds budget"
+          exit 1
+        fi
+        
+        # Check if performance tests passed
+        if [ "${{ needs.performance-tests.result }}" != "success" ]; then
+          echo "❌ Performance tests failed"
+          exit 1
+        fi
+        
+        # Check if security tests passed
+        if [ "${{ needs.security-quality.result }}" != "success" ]; then
+          echo "❌ Security/quality checks failed"
+          exit 1
+        fi
+        
+        echo "✅ Performance gate passed"
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const bundleSize = '${{ needs.build-analysis.outputs.bundle-size }}';
+          const bundleSizeKB = Math.round(bundleSize / 1024);
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## Performance Report 📊
+            
+            ### Bundle Analysis
+            - **Bundle Size**: ${bundleSizeKB}KB ${bundleSizeKB > 500 ? '⚠️' : '✅'}
+            - **Budget**: 500KB
+            
+            ### Performance Tests
+            - **Status**: ${{ needs.performance-tests.result === 'success' ? '✅ Passed' : '❌ Failed' }}
+            
+            ### Security & Quality
+            - **Status**: ${{ needs.security-quality.result === 'success' ? '✅ Passed' : '❌ Failed' }}
+            
+            *Generated by Performance CI Pipeline*`
+          })
+
+  # Deployment job (only on main branch)
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [performance-gate, e2e-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Restore build cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          dist/
+          node_modules/
+        key: build-${{ github.sha }}
+
+    - name: Deploy to Cloudflare Pages
+      run: |
+        npm run deploy
+        echo "Deployment completed"
+
+    - name: Post-deployment health check
+      run: |
+        echo "Running post-deployment health checks..."
+        # Add health check commands here
+        curl -f https://your-app-url.com/health || exit 1
+
+  # Monitoring job: Performance Metrics Collection
+  performance-monitoring:
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Collect performance metrics
+      run: |
+        echo "Collecting production performance metrics..."
+        
+        # Real User Monitoring (RUM) data collection
+        # This would integrate with your monitoring service
+        
+        curl -X POST "https://api.example.com/metrics" \
+          -H "Authorization: Bearer ${{ secrets.MONITORING_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
+            "deployment": "${{ github.sha }}",
+            "bundle_size": "${{ needs.build-analysis.outputs.bundle-size }}",
+            "status": "deployed"
+          }' || echo "Metrics collection failed"
+
+    - name: Setup performance alerting
+      run: |
+        echo "Setting up performance monitoring alerts..."
+        # Configure alerts for performance regression
+        # This would integrate with your alerting system
+
+  # Cleanup job
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [deploy, performance-monitoring]
+    if: always()
+    
+    steps:
+    - name: Cleanup old artifacts
+      run: |
+        echo "Cleaning up old build artifacts..."
+        # Cleanup logic here

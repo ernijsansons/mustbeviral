@@ -1,0 +1,90 @@
+# WebSocket Worker - Real-time Communication
+# Handles WebSocket connections and real-time features
+
+name = "must-be-viral-websocket"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Worker routes
+routes = [
+  { pattern = "ws.mustbeviral.com/*", zone_name = "mustbeviral.com" },
+  { pattern = "*/ws/*", zone_name = "mustbeviral.com" }
+]
+
+# Environment configurations
+[env.development]
+name = "must-be-viral-websocket-dev"
+vars = {
+  ENVIRONMENT = "development",
+  SERVICE_NAME = "websocket-worker",
+  LOG_LEVEL = "DEBUG"
+}
+
+[env.staging]
+name = "must-be-viral-websocket-staging"
+vars = {
+  ENVIRONMENT = "staging",
+  SERVICE_NAME = "websocket-worker",
+  LOG_LEVEL = "INFO"
+}
+
+[env.production]
+name = "must-be-viral-websocket-prod"
+vars = {
+  ENVIRONMENT = "production",
+  SERVICE_NAME = "websocket-worker",
+  LOG_LEVEL = "WARN"
+}
+
+# Durable Objects for WebSocket rooms
+[[durable_objects.bindings]]
+name = "WEBSOCKET_ROOM"
+class_name = "WebSocketRoom"
+script_name = "must-be-viral-websocket"
+
+[[durable_objects.bindings]]
+name = "COLLABORATION_ROOM"
+class_name = "CollaborationRoom"
+script_name = "must-be-viral-websocket"
+
+[[durable_objects.bindings]]
+name = "NOTIFICATION_HUB"
+class_name = "NotificationHub"
+script_name = "must-be-vital-websocket"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["WebSocketRoom", "CollaborationRoom", "NotificationHub"]
+
+# KV for connection metadata
+[[kv_namespaces]]
+binding = "CONNECTION_STORE"
+id = "websocket-connections-kv"
+preview_id = "websocket-connections-kv-preview"
+
+# Service bindings
+[[services]]
+binding = "AUTH_SERVICE"
+service = "must-be-viral-auth"
+environment = "production"
+
+[[services]]
+binding = "CONTENT_SERVICE"
+service = "must-be-viral-content"
+environment = "production"
+
+# Rate limiting configuration
+[env.development.vars]
+MAX_CONNECTIONS_PER_USER = "10"
+MAX_CONNECTIONS_PER_IP = "50"
+MESSAGE_RATE_LIMIT = "100" # messages per minute
+HEARTBEAT_INTERVAL = "30000" # 30 seconds
+CONNECTION_TIMEOUT = "300000" # 5 minutes
+
+[env.production.vars]
+MAX_CONNECTIONS_PER_USER = "5"
+MAX_CONNECTIONS_PER_IP = "20"
+MESSAGE_RATE_LIMIT = "60" # messages per minute
+HEARTBEAT_INTERVAL = "30000" # 30 seconds
+CONNECTION_TIMEOUT = "180000" # 3 minutes

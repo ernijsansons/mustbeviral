@@ -1,0 +1,105 @@
+# Auth Worker - Microservice Configuration
+# Handles all authentication and session management
+
+name = "must-be-viral-auth"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Worker routes
+routes = [
+  { pattern = "auth.mustbeviral.com/*", zone_name = "mustbeviral.com" },
+  { pattern = "*/api/auth/*", zone_name = "mustbeviral.com" }
+]
+
+# Environment configurations
+[env.development]
+name = "must-be-viral-auth-dev"
+vars = {
+  ENVIRONMENT = "development",
+  SERVICE_NAME = "auth-worker",
+  LOG_LEVEL = "DEBUG"
+}
+
+[env.staging]
+name = "must-be-viral-auth-staging"
+vars = {
+  ENVIRONMENT = "staging",
+  SERVICE_NAME = "auth-worker",
+  LOG_LEVEL = "INFO"
+}
+
+[env.production]
+name = "must-be-viral-auth-prod"
+vars = {
+  ENVIRONMENT = "production",
+  SERVICE_NAME = "auth-worker",
+  LOG_LEVEL = "WARN"
+}
+
+# D1 Database for auth data
+[[d1_databases]]
+binding = "AUTH_DB"
+database_name = "must-be-viral-auth"
+database_id = "auth-db-id-here"
+migrations_dir = "migrations"
+
+# KV Namespace for session storage
+[[kv_namespaces]]
+binding = "SESSION_STORE"
+id = "auth-session-kv-id"
+preview_id = "auth-session-kv-preview"
+
+# KV Namespace for refresh tokens
+[[kv_namespaces]]
+binding = "REFRESH_TOKEN_STORE"
+id = "auth-refresh-kv-id"
+preview_id = "auth-refresh-kv-preview"
+
+# KV Namespace for rate limiting
+[[kv_namespaces]]
+binding = "RATE_LIMITER"
+id = "auth-ratelimit-kv-id"
+preview_id = "auth-ratelimit-kv-preview"
+
+# Durable Objects for distributed session management
+[[durable_objects.bindings]]
+name = "SESSION_MANAGER"
+class_name = "SessionManager"
+script_name = "must-be-viral-auth"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["SessionManager"]
+
+# Service bindings to other workers
+[[services]]
+binding = "CONTENT_SERVICE"
+service = "must-be-viral-content"
+environment = "production"
+
+[[services]]
+binding = "ANALYTICS_SERVICE"
+service = "must-be-viral-analytics"
+environment = "production"
+
+# Secrets (use wrangler secret put)
+# JWT_SECRET
+# JWT_REFRESH_SECRET
+# OAUTH_GOOGLE_SECRET
+# OAUTH_GITHUB_SECRET
+# ENCRYPTION_KEY
+
+[env.development.vars]
+ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
+TOKEN_EXPIRY = "3600" # 1 hour
+REFRESH_TOKEN_EXPIRY = "604800" # 7 days
+MAX_LOGIN_ATTEMPTS = "5"
+LOCKOUT_DURATION = "900" # 15 minutes
+
+[env.production.vars]
+ALLOWED_ORIGINS = "https://mustbeviral.com,https://www.mustbeviral.com,https://app.mustbeviral.com"
+TOKEN_EXPIRY = "1800" # 30 minutes
+REFRESH_TOKEN_EXPIRY = "2592000" # 30 days
+MAX_LOGIN_ATTEMPTS = "3"
+LOCKOUT_DURATION = "3600" # 1 hour

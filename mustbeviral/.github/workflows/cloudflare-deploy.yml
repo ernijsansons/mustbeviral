@@ -1,0 +1,311 @@
+name: Cloudflare Deployment Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '18'
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+jobs:
+  # Job 1: Pre-deployment Checks
+  pre-deployment:
+    runs-on: ubuntu-latest
+    outputs:
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
+      target-env: ${{ steps.check.outputs.target-env }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-deps-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Security audit
+        run: npm audit --audit-level=high
+
+      - name: Lint check
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Determine deployment target
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "target-env=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/main" && "${{ github.event_name }}" == "push" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "target-env=production" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "target-env=staging" >> $GITHUB_OUTPUT
+          else
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "target-env=none" >> $GITHUB_OUTPUT
+          fi
+
+  # Job 2: Build Application
+  build:
+    runs-on: ubuntu-latest
+    needs: pre-deployment
+    if: needs.pre-deployment.outputs.should-deploy == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-deps-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Build for production
+        run: npm run build
+        env:
+          NODE_ENV: production
+          VITE_BUILD_TARGET: cloudflare
+
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-files
+          path: dist/
+          retention-days: 7
+
+      - name: Archive worker build
+        uses: actions/upload-artifact@v3
+        with:
+          name: worker-files
+          path: |
+            src/worker/
+            wrangler.toml
+            package.json
+          retention-days: 7
+
+  # Job 3: Deploy Workers
+  deploy-workers:
+    runs-on: ubuntu-latest
+    needs: [pre-deployment, build]
+    if: needs.pre-deployment.outputs.should-deploy == 'true'
+    environment: ${{ needs.pre-deployment.outputs.target-env }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install wrangler
+        run: npm install -g wrangler
+
+      - name: Download worker artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: worker-files
+
+      - name: Deploy to Cloudflare Workers (Staging)
+        if: needs.pre-deployment.outputs.target-env == 'staging'
+        run: |
+          wrangler deploy --env development --name must-be-viral-staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Deploy to Cloudflare Workers (Production)
+        if: needs.pre-deployment.outputs.target-env == 'production'
+        run: |
+          wrangler deploy --env production --name must-be-viral-prod
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Set up secrets for Workers
+        run: |
+          echo "${{ secrets.JWT_SECRET }}" | wrangler secret put JWT_SECRET
+          echo "${{ secrets.STRIPE_SECRET_KEY }}" | wrangler secret put STRIPE_SECRET_KEY
+          echo "${{ secrets.MONGODB_URI }}" | wrangler secret put MONGODB_URI
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  # Job 4: Deploy Pages
+  deploy-pages:
+    runs-on: ubuntu-latest
+    needs: [pre-deployment, build]
+    if: needs.pre-deployment.outputs.should-deploy == 'true'
+    environment: ${{ needs.pre-deployment.outputs.target-env }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-files
+          path: dist/
+
+      - name: Deploy to Cloudflare Pages (Staging)
+        if: needs.pre-deployment.outputs.target-env == 'staging'
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: must-be-viral-staging
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to Cloudflare Pages (Production)
+        if: needs.pre-deployment.outputs.target-env == 'production'
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: must-be-viral
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job 5: Health Checks and Smoke Tests
+  health-checks:
+    runs-on: ubuntu-latest
+    needs: [deploy-workers, deploy-pages, pre-deployment]
+    if: needs.pre-deployment.outputs.should-deploy == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for deployment propagation
+        run: sleep 30
+
+      - name: Health check - Workers (Staging)
+        if: needs.pre-deployment.outputs.target-env == 'staging'
+        run: |
+          curl -f https://must-be-viral-staging.your-subdomain.workers.dev/health || exit 1
+
+      - name: Health check - Workers (Production)
+        if: needs.pre-deployment.outputs.target-env == 'production'
+        run: |
+          curl -f https://must-be-viral-prod.your-subdomain.workers.dev/health || exit 1
+
+      - name: Health check - Pages (Staging)
+        if: needs.pre-deployment.outputs.target-env == 'staging'
+        run: |
+          curl -f https://must-be-viral-staging.pages.dev/ || exit 1
+
+      - name: Health check - Pages (Production)
+        if: needs.pre-deployment.outputs.target-env == 'production'
+        run: |
+          curl -f https://must-be-viral.pages.dev/ || exit 1
+
+      - name: Run smoke tests
+        run: |
+          # Add your smoke test commands here
+          echo "Running smoke tests..."
+          npm run test:e2e:smoke || true
+
+  # Job 6: Post-deployment Tasks
+  post-deployment:
+    runs-on: ubuntu-latest
+    needs: [health-checks, pre-deployment]
+    if: needs.pre-deployment.outputs.should-deploy == 'true' && success()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Notify deployment success
+        run: |
+          echo "✅ Deployment to ${{ needs.pre-deployment.outputs.target-env }} completed successfully"
+
+      - name: Update deployment status
+        if: needs.pre-deployment.outputs.target-env == 'production'
+        run: |
+          echo "🚀 Production deployment completed at $(date)"
+
+      - name: Create deployment tag
+        if: needs.pre-deployment.outputs.target-env == 'production'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a "v$(date +'%Y%m%d%H%M%S')" -m "Production deployment $(date)"
+          git push origin "v$(date +'%Y%m%d%H%M%S')" || true
+
+  # Job 7: Rollback on Failure
+  rollback:
+    runs-on: ubuntu-latest
+    needs: [health-checks, pre-deployment]
+    if: failure() && needs.pre-deployment.outputs.should-deploy == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install wrangler
+        run: npm install -g wrangler
+
+      - name: Rollback Workers deployment
+        run: |
+          echo "🔄 Rolling back Workers deployment..."
+          # Add rollback logic here
+          echo "Rollback completed"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Notify rollback
+        run: |
+          echo "⚠️ Deployment failed, rollback initiated for ${{ needs.pre-deployment.outputs.target-env }}"

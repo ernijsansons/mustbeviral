@@ -1,0 +1,370 @@
+# Performance Alerting Rules for Must Be Viral V2
+# Critical performance thresholds and SLA monitoring
+
+groups:
+  # High-Priority Performance Alerts
+  - name: performance_critical
+    rules:
+      # Response Time Alerts
+      - alert: HighResponseTime
+        expr: http_response_time_avg > 2.0
+        for: 2m
+        labels:
+          severity: critical
+          category: performance
+          service: mustbeviral-app
+        annotations:
+          summary: "High average response time detected"
+          description: "Average response time is {{ $value }}s, which exceeds the 2s threshold for {{ $labels.instance }}"
+          runbook_url: "https://runbooks.mustbeviral.com/high-response-time"
+          dashboard_url: "https://grafana.mustbeviral.com/d/performance-overview"
+
+      - alert: VeryHighResponseTime
+        expr: http_response_time_avg > 5.0
+        for: 1m
+        labels:
+          severity: critical
+          category: performance
+          service: mustbeviral-app
+          pager: "true"
+        annotations:
+          summary: "CRITICAL: Very high response time detected"
+          description: "Average response time is {{ $value }}s, which is critically high for {{ $labels.instance }}"
+          runbook_url: "https://runbooks.mustbeviral.com/critical-response-time"
+
+      # Error Rate Alerts
+      - alert: HighErrorRate
+        expr: http_error_rate * 100 > 5
+        for: 2m
+        labels:
+          severity: warning
+          category: performance
+          service: mustbeviral-app
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }}%, which exceeds the 5% threshold for {{ $labels.instance }}"
+
+      - alert: CriticalErrorRate
+        expr: http_error_rate * 100 > 10
+        for: 1m
+        labels:
+          severity: critical
+          category: performance
+          service: mustbeviral-app
+          pager: "true"
+        annotations:
+          summary: "CRITICAL: Very high error rate"
+          description: "Error rate is {{ $value }}%, which is critically high for {{ $labels.instance }}"
+
+  # Resource Utilization Alerts
+  - name: resource_performance
+    rules:
+      # CPU Performance
+      - alert: HighCPUUsage
+        expr: nodejs_cpu_usage_rate > 80
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+          service: mustbeviral-app
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}, approaching capacity limits"
+
+      - alert: CriticalCPUUsage
+        expr: nodejs_cpu_usage_rate > 95
+        for: 2m
+        labels:
+          severity: critical
+          category: performance
+          service: mustbeviral-app
+        annotations:
+          summary: "CRITICAL: CPU usage extremely high"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}, system may be unresponsive"
+
+      # Memory Performance
+      - alert: HighMemoryUsage
+        expr: nodejs_memory_usage_percentage > 80
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+          service: mustbeviral-app
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value }}% on {{ $labels.instance }}"
+
+      - alert: CriticalMemoryUsage
+        expr: nodejs_memory_usage_percentage > 90
+        for: 2m
+        labels:
+          severity: critical
+          category: performance
+          service: mustbeviral-app
+        annotations:
+          summary: "CRITICAL: Memory usage extremely high"
+          description: "Memory usage is {{ $value }}% on {{ $labels.instance }}, may cause OOM"
+
+      # Memory Leak Detection
+      - alert: PotentialMemoryLeak
+        expr: increase(nodejs_memory_usage_bytes{type="heapUsed"}[1h]) > 50000000
+        for: 0m
+        labels:
+          severity: warning
+          category: performance
+          service: mustbeviral-app
+        annotations:
+          summary: "Potential memory leak detected"
+          description: "Memory usage increased by {{ $value | humanizeBytes }} in the last hour on {{ $labels.instance }}"
+
+  # Cache Performance Alerts
+  - name: cache_performance
+    rules:
+      - alert: LowCacheHitRate
+        expr: redis_cache_hit_rate * 100 < 80
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+          service: redis
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value }}%, which may impact performance"
+
+      - alert: CriticalCacheHitRate
+        expr: redis_cache_hit_rate * 100 < 50
+        for: 2m
+        labels:
+          severity: critical
+          category: performance
+          service: redis
+        annotations:
+          summary: "CRITICAL: Very low cache hit rate"
+          description: "Cache hit rate is {{ $value }}%, severely impacting performance"
+
+  # Database Performance Alerts
+  - name: database_performance
+    rules:
+      - alert: HighDatabaseConnections
+        expr: postgres_connection_pool_usage > 80
+        for: 3m
+        labels:
+          severity: warning
+          category: performance
+          service: postgres
+        annotations:
+          summary: "High database connection pool usage"
+          description: "Database connection pool usage is {{ $value }}% on {{ $labels.instance }}"
+
+      - alert: CriticalDatabaseConnections
+        expr: postgres_connection_pool_usage > 95
+        for: 1m
+        labels:
+          severity: critical
+          category: performance
+          service: postgres
+        annotations:
+          summary: "CRITICAL: Database connection pool nearly exhausted"
+          description: "Database connection pool usage is {{ $value }}% on {{ $labels.instance }}"
+
+      - alert: SlowDatabaseQueries
+        expr: postgres_query_duration_avg > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+          service: postgres
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Average query duration is {{ $value }}s on {{ $labels.instance }}"
+
+  # Traffic and Load Alerts
+  - name: traffic_performance
+    rules:
+      - alert: HighTrafficLoad
+        expr: http_request_rate > 1000
+        for: 2m
+        labels:
+          severity: warning
+          category: performance
+          service: mustbeviral-app
+        annotations:
+          summary: "High traffic load detected"
+          description: "Request rate is {{ $value }} requests/second on {{ $labels.instance }}"
+
+      - alert: TrafficSpike
+        expr: http_request_rate > 2000
+        for: 1m
+        labels:
+          severity: critical
+          category: performance
+          service: mustbeviral-app
+        annotations:
+          summary: "CRITICAL: Traffic spike detected"
+          description: "Request rate is {{ $value }} requests/second on {{ $labels.instance }}"
+
+  # Performance SLA Monitoring
+  - name: sla_performance
+    rules:
+      - alert: SLABreach_ResponseTime
+        expr: (
+          sum(rate(http_request_duration_seconds_bucket{le="2.0"}[5m])) by (service) /
+          sum(rate(http_request_duration_seconds_count[5m])) by (service)
+        ) * 100 < 95
+        for: 5m
+        labels:
+          severity: critical
+          category: sla
+          service: mustbeviral-app
+          pager: "true"
+        annotations:
+          summary: "SLA BREACH: Response time SLA violated"
+          description: "Only {{ $value }}% of requests completed within 2s SLA (target: 95%)"
+
+      - alert: SLABreach_Availability
+        expr: (
+          sum(rate(http_requests_total{status!~"5.."}[5m])) by (service) /
+          sum(rate(http_requests_total[5m])) by (service)
+        ) * 100 < 99.9
+        for: 2m
+        labels:
+          severity: critical
+          category: sla
+          service: mustbeviral-app
+          pager: "true"
+        annotations:
+          summary: "SLA BREACH: Availability SLA violated"
+          description: "Service availability is {{ $value }}% (target: 99.9%)"
+
+  # Predictive Performance Alerts
+  - name: predictive_performance
+    rules:
+      - alert: ResponseTimeGrowthTrend
+        expr: predict_linear(http_response_time_avg[1h], 3600) > 5.0
+        for: 0m
+        labels:
+          severity: warning
+          category: predictive
+          service: mustbeviral-app
+        annotations:
+          summary: "Response time trending upward"
+          description: "Response time is predicted to reach {{ $value }}s in the next hour based on current trend"
+
+      - alert: MemoryGrowthTrend
+        expr: predict_linear(nodejs_memory_usage_bytes{type="heapUsed"}[2h], 7200) > 1000000000
+        for: 0m
+        labels:
+          severity: warning
+          category: predictive
+          service: mustbeviral-app
+        annotations:
+          summary: "Memory usage trending upward"
+          description: "Memory usage predicted to exceed 1GB in next 2 hours based on current trend"
+
+  # Cluster Health and Auto-scaling
+  - name: cluster_performance
+    rules:
+      - alert: UnhealthyWorkers
+        expr: (healthy_workers / total_workers) * 100 < 75
+        for: 3m
+        labels:
+          severity: critical
+          category: cluster
+          service: mustbeviral-cluster
+        annotations:
+          summary: "Too many unhealthy workers"
+          description: "Only {{ $value }}% of workers are healthy (threshold: 75%)"
+
+      - alert: HighWorkerRestartRate
+        expr: rate(worker_restarts_total[5m]) > 1
+        for: 2m
+        labels:
+          severity: warning
+          category: cluster
+          service: mustbeviral-cluster
+        annotations:
+          summary: "High worker restart rate"
+          description: "Workers restarting at {{ $value }} per minute"
+
+      - alert: ScaleUpRecommended
+        expr: |
+          (
+            mustbeviral:http_requests:rate5m > 1000 and 
+            mustbeviral:http_request_duration:p95 > 1.5 and
+            rate(process_cpu_seconds_total[5m]) * 100 > 70
+          )
+        for: 5m
+        labels:
+          severity: info
+          category: autoscaling
+          action: scale-up
+        annotations:
+          summary: "Scale up recommended"
+          description: "High load detected - consider scaling up resources"
+
+      - alert: ScaleDownRecommended  
+        expr: |
+          (
+            mustbeviral:http_requests:rate5m < 100 and
+            mustbeviral:http_request_duration:p95 < 0.5 and 
+            rate(process_cpu_seconds_total[5m]) * 100 < 30
+          )
+        for: 15m
+        labels:
+          severity: info
+          category: autoscaling
+          action: scale-down
+        annotations:
+          summary: "Scale down recommended"
+          description: "Low load detected - consider scaling down resources"
+
+  # Security and Rate Limiting Performance
+  - name: security_performance
+    rules:
+      - alert: SuspiciousTrafficPattern
+        expr: rate(http_requests_total{status="429"}[5m]) > 50
+        for: 2m
+        labels:
+          severity: warning
+          category: security
+          service: ratelimiter
+        annotations:
+          summary: "High rate limiting activity"
+          description: "{{ $value }} requests per second being rate limited"
+
+      - alert: PotentialDDoS
+        expr: rate(http_requests_total[1m]) > 10000
+        for: 30s
+        labels:
+          severity: critical
+          category: security
+          service: traffic
+          pager: "true"
+        annotations:
+          summary: "Potential DDoS attack detected"
+          description: "Extremely high request rate: {{ $value }} requests per second"
+
+  # Node.js Specific Performance
+  - name: nodejs_performance
+    rules:
+      - alert: HighEventLoopLag
+        expr: nodejs_eventloop_lag_seconds > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          category: nodejs
+          service: mustbeviral-app
+        annotations:
+          summary: "High Node.js event loop lag"
+          description: "Event loop lag is {{ $value }}s (threshold: 0.1s)"
+
+      - alert: HighGarbageCollectionTime
+        expr: rate(nodejs_gc_duration_seconds[5m]) > 0.01
+        for: 5m  
+        labels:
+          severity: warning
+          category: nodejs
+          service: mustbeviral-app
+        annotations:
+          summary: "High garbage collection time"
+          description: "GC time is {{ $value }}s per second (threshold: 0.01s)"

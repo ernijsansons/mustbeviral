@@ -1,0 +1,158 @@
+{
+  "name": "Must Be Viral V2",
+  "description": "AI-powered viral marketing platform with Builder.io integration",
+  "version": "1.0.0",
+  "framework": "react",
+  "buildTool": "vite",
+  "port": 5173,
+  "apiKey": "${VITE_BUILDER_API_KEY}",
+  "spaceId": "${VITE_BUILDER_SPACE_ID}",
+  "previewUrl": "http://localhost:5173",
+  "components": {
+    "path": "src/components/builder",
+    "autoImport": true,
+    "typescript": true
+  },
+  "models": {
+    "page": {
+      "name": "Page",
+      "description": "Full page content",
+      "fields": [
+        {
+          "name": "title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "description",
+          "type": "longText"
+        },
+        {
+          "name": "backgroundVariant",
+          "type": "text",
+          "enum": ["cosmic", "plasma", "aurora", "quantum", "energy", "default"]
+        }
+      ]
+    },
+    "hero-section": {
+      "name": "Hero Section",
+      "description": "Hero section with viral styling",
+      "fields": [
+        {
+          "name": "title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "subtitle",
+          "type": "longText"
+        },
+        {
+          "name": "ctaText",
+          "type": "text"
+        },
+        {
+          "name": "ctaVariant",
+          "type": "text",
+          "enum": ["viral", "gold", "cosmic", "plasma", "aurora", "default"]
+        },
+        {
+          "name": "backgroundVariant",
+          "type": "text",
+          "enum": ["cosmic", "plasma", "aurora", "quantum", "energy"]
+        }
+      ]
+    },
+    "feature-section": {
+      "name": "Feature Section",
+      "description": "Feature showcase with cosmic styling",
+      "fields": [
+        {
+          "name": "title",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "features",
+          "type": "list",
+          "subFields": [
+            {
+              "name": "icon",
+              "type": "text"
+            },
+            {
+              "name": "title",
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": "description",
+              "type": "longText"
+            },
+            {
+              "name": "variant",
+              "type": "text",
+              "enum": ["cosmic", "plasma", "aurora", "quantum", "energy", "default"]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "customComponents": [
+    {
+      "name": "ViralHero",
+      "path": "src/components/builder/ViralHero.tsx",
+      "description": "Hero section with viral styling and animations"
+    },
+    {
+      "name": "FeatureGrid",
+      "path": "src/components/builder/FeatureGrid.tsx",
+      "description": "Grid of features with cosmic variants"
+    },
+    {
+      "name": "TestimonialCarousel",
+      "path": "src/components/builder/TestimonialCarousel.tsx",
+      "description": "Testimonial carousel with viral effects"
+    },
+    {
+      "name": "CTASection",
+      "path": "src/components/builder/CTASection.tsx",
+      "description": "Call-to-action section with gradient backgrounds"
+    }
+  ],
+  "designSystem": {
+    "colors": {
+      "primary": "#6366f1",
+      "viral": "#10b981",
+      "gold": "#f59e0b",
+      "space": "#0f172a",
+      "cloud": "#f8fafc"
+    },
+    "fonts": {
+      "heading": "Poppins",
+      "body": "Inter"
+    },
+    "animations": [
+      "float",
+      "pulse-glow",
+      "shimmer",
+      "scale-in",
+      "slide-up",
+      "fade-in"
+    ],
+    "variants": [
+      "cosmic",
+      "plasma",
+      "aurora",
+      "quantum",
+      "energy",
+      "viral",
+      "gold"
+    ]
+  }
+}
+
+
+
+

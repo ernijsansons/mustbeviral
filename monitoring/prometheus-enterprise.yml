@@ -1,0 +1,328 @@
+# Enterprise Prometheus Configuration for Must Be Viral V2
+# Optimized for high-performance monitoring with advanced features
+
+global:
+  scrape_interval: 15s          # How frequently to scrape targets
+  evaluation_interval: 15s      # How frequently to evaluate rules
+  scrape_timeout: 10s          # Scrape timeout
+  
+  # External labels for federation and alerting
+  external_labels:
+    cluster: 'mustbeviral-production'
+    environment: 'production'
+    region: 'us-east-1'
+    datacenter: 'aws'
+    replica: '1'
+
+# Rule files for alerts and recording rules
+rule_files:
+  - "alerts/performance.yml"
+  - "alerts/infrastructure.yml"
+  - "alerts/security.yml"
+  - "alerts/business.yml"
+  - "recording_rules/*.yml"
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+      timeout: 10s
+      api_version: v2
+
+# Remote write configuration for long-term storage
+# remote_write:
+#   - url: "https://prometheus.example.com/api/v1/write"
+#     basic_auth:
+#       username: "username"
+#       password: "password"
+#     write_relabel_configs:
+#       - source_labels: [__name__]
+#         regex: 'expensive_metric.*'
+#         action: drop
+
+# Scrape configuration with service discovery
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+
+  # Main Application Instances
+  - job_name: 'mustbeviral-app'
+    static_configs:
+      - targets: 
+        - 'app:3000'
+        - 'app-replica-1:3000'
+        - 'app-replica-2:3000'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    honor_labels: false
+    honor_timestamps: true
+    
+    # Relabel configuration for better metrics organization
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*):(.*)'
+        target_label: instance
+        replacement: '${1}'
+      - source_labels: [__address__]
+        regex: '(.*):(.*)'
+        target_label: port
+        replacement: '${2}'
+      - source_labels: [instance]
+        regex: 'app-replica-(.*)'
+        target_label: replica_id
+        replacement: '${1}'
+      - source_labels: [instance]
+        regex: '^app$'
+        target_label: replica_id
+        replacement: 'primary'
+    
+    # Metric relabeling for optimization
+    metric_relabel_configs:
+      # Drop high-cardinality debug metrics in production
+      - source_labels: [__name__]
+        regex: 'nodejs_debug_.*'
+        action: drop
+      # Rename metrics for consistency
+      - source_labels: [__name__]
+        regex: 'http_requests_total'
+        target_label: __name__
+        replacement: 'mustbeviral_http_requests_total'
+
+  # Cluster monitoring endpoint
+  - job_name: 'cluster-stats'
+    static_configs:
+      - targets: ['app:3001']
+    metrics_path: '/cluster/stats'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Database Metrics
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'postgres-primary'
+
+  - job_name: 'postgres-replica'
+    static_configs:
+      - targets: ['postgres-replica-exporter:9187']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'postgres-replica'
+
+  # Redis Metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'redis-primary'
+
+  # Nginx Metrics
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+
+  # Node Exporter for system metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  # Docker Container Metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    metrics_path: '/metrics'
+    
+    # Filter out high-cardinality container metrics
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'container_tasks_state'
+        action: drop
+      - source_labels: [__name__]
+        regex: 'container_memory_failures_total'
+        action: drop
+
+  # Elasticsearch Metrics (if deployed)
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch-exporter:9114']
+    scrape_interval: 30s
+    scrape_timeout: 15s
+
+  # Kafka Metrics (if deployed)
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+    scrape_interval: 30s
+    scrape_timeout: 15s
+
+  # Custom Business Metrics
+  - job_name: 'business-metrics'
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: '/api/metrics/business'
+    scrape_interval: 60s  # Less frequent for business metrics
+    scrape_timeout: 30s
+    honor_labels: true
+
+  # Security Metrics
+  - job_name: 'security-metrics'
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: '/api/metrics/security'
+    scrape_interval: 30s
+    scrape_timeout: 15s
+
+  # Load Balancer Metrics (if using external LB)
+  - job_name: 'load-balancer'
+    static_configs:
+      - targets: ['haproxy-exporter:8404']
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    
+  # SSL Certificate Monitoring
+  - job_name: 'ssl-certificates'
+    static_configs:
+      - targets: ['ssl-exporter:9219']
+    scrape_interval: 3600s  # Check once per hour
+    scrape_timeout: 30s
+
+  # Blackbox Exporter for endpoint monitoring
+  - job_name: 'blackbox-http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Look for HTTP 200 response
+    static_configs:
+      - targets:
+        - https://mustbeviral.com
+        - https://api.mustbeviral.com
+        - https://monitoring.mustbeviral.com
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # DNS monitoring
+  - job_name: 'blackbox-dns'
+    metrics_path: /probe
+    params:
+      module: [dns_tcp]
+    static_configs:
+      - targets:
+        - mustbeviral.com
+        - api.mustbeviral.com
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Custom Application Health Checks
+  - job_name: 'health-checks'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - http://app:3000/health
+        - http://app:3000/api/health/database
+        - http://app:3000/api/health/redis
+        - http://app:3000/api/health/external
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Federation from other Prometheus instances (if any)
+  # - job_name: 'federate-staging'
+  #   scrape_interval: 30s
+  #   honor_labels: true
+  #   metrics_path: '/federate'
+  #   params:
+  #     'match[]':
+  #       - '{job=~"mustbeviral-.*"}'
+  #       - '{__name__=~"up|.*_total"}'
+  #   static_configs:
+  #     - targets:
+  #       - 'prometheus-staging:9090'
+
+# Storage configuration
+storage:
+  tsdb:
+    retention:
+      time: 30d        # Keep 30 days of data
+      size: 10GB       # Maximum storage size
+    wal_compression: true
+
+# Query performance optimizations
+query:
+  timeout: 2m
+  max_concurrency: 20
+  max_samples: 50000000
+  lookback_delta: 5m
+
+# Performance and reliability settings
+remote_read: []
+remote_write: []
+
+# Tracing configuration (if using Jaeger)
+tracing:
+  endpoint: "jaeger:14268/api/traces"
+  insecure: true
+  timeout: 30s
+  
+# Web configuration
+web:
+  console:
+    libraries:
+      - /etc/prometheus/console_libraries
+    templates:
+      - /etc/prometheus/consoles
+  enable_lifecycle: true
+  enable_admin_api: true
+  max_connections: 512
+  read_timeout: 30s
+  
+# Runtime flags (set via command line)
+# --web.enable-remote-shutdown=false
+# --query.timeout=2m
+# --query.max-concurrency=20
+# --storage.tsdb.min-block-duration=2h
+# --storage.tsdb.max-block-duration=2h
+# --storage.tsdb.retention.time=30d
+# --storage.tsdb.retention.size=10GB

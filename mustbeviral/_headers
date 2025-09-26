@@ -1,0 +1,166 @@
+# Cloudflare Pages Headers Configuration
+# Optimized for performance, security, and caching
+
+# Global headers for all routes
+/*
+  # Security headers
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()
+  
+  # Performance headers
+  X-DNS-Prefetch-Control: on
+  
+  # Content Security Policy (strict for production)
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' https:; object-src 'none'; frame-src 'self' https:; connect-src 'self' https: wss:; worker-src 'self'; manifest-src 'self'
+
+# Static assets caching (CSS, JS, Images)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
+
+# CSS files
+*.css
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: text/css
+
+# JavaScript files
+*.js
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: application/javascript
+
+# Font files
+*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: font/woff2
+  Access-Control-Allow-Origin: *
+
+*.woff
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: font/woff
+  Access-Control-Allow-Origin: *
+
+# Image optimizations
+*.jpg
+  Cache-Control: public, max-age=31536000
+  Vary: Accept
+  Content-Type: image/jpeg
+
+*.jpeg
+  Cache-Control: public, max-age=31536000
+  Vary: Accept
+  Content-Type: image/jpeg
+
+*.png
+  Cache-Control: public, max-age=31536000
+  Vary: Accept
+  Content-Type: image/png
+
+*.webp
+  Cache-Control: public, max-age=31536000
+  Vary: Accept
+  Content-Type: image/webp
+
+*.avif
+  Cache-Control: public, max-age=31536000
+  Vary: Accept
+  Content-Type: image/avif
+
+*.svg
+  Cache-Control: public, max-age=31536000
+  Content-Type: image/svg+xml
+
+# Service Worker
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  Content-Type: application/javascript
+
+# Manifest file
+/manifest.json
+  Cache-Control: public, max-age=86400
+  Content-Type: application/manifest+json
+
+# API routes (no caching for dynamic content)
+/api/*
+  Cache-Control: no-cache, no-store, must-revalidate
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+
+# HTML files (short cache with revalidation)
+*.html
+  Cache-Control: public, max-age=300, must-revalidate
+  Content-Type: text/html; charset=utf-8
+
+# Root document
+/
+  Cache-Control: public, max-age=300, must-revalidate
+  Content-Type: text/html; charset=utf-8
+
+# Sitemap and robots
+/sitemap.xml
+  Cache-Control: public, max-age=86400
+  Content-Type: application/xml
+
+/robots.txt
+  Cache-Control: public, max-age=86400
+  Content-Type: text/plain
+
+# Progressive Web App files
+/offline.html
+  Cache-Control: public, max-age=86400
+  Content-Type: text/html; charset=utf-8
+
+# Performance monitoring endpoints
+/api/performance/*
+  Cache-Control: no-cache
+  Access-Control-Allow-Origin: https://must-be-viral.pages.dev
+  Access-Control-Allow-Methods: GET, POST, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, Authorization
+
+# Real-time features (WebSocket upgrades handled by Workers)
+/api/ws/*
+  Cache-Control: no-cache
+  Connection: Upgrade
+  Upgrade: websocket
+
+# Health check endpoints
+/health
+  Cache-Control: no-cache, no-store, must-revalidate
+  Content-Type: application/json
+
+/api/health/*
+  Cache-Control: no-cache, no-store, must-revalidate
+  Content-Type: application/json
+
+# Compression hints for Cloudflare
+/assets/css/*
+  Content-Encoding: br
+  Vary: Accept-Encoding
+
+/assets/js/*
+  Content-Encoding: br
+  Vary: Accept-Encoding
+
+# CORS for external API calls
+/api/external/*
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With
+  Access-Control-Max-Age: 86400
+
+# Rate limiting headers (handled by Workers)
+/api/ai/*
+  X-RateLimit-Limit: 100
+  X-RateLimit-Window: 3600
+  Cache-Control: no-cache
+
+# Error pages
+/404.html
+  Cache-Control: public, max-age=3600
+  Content-Type: text/html; charset=utf-8
+
+/500.html
+  Cache-Control: no-cache
+  Content-Type: text/html; charset=utf-8

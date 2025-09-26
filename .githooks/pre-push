@@ -1,0 +1,205 @@
+#!/bin/bash
+
+# Pre-push hook for Must Be Viral V2
+# Ensures code quality before pushing to remote
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}🚀 Running pre-push checks...${NC}"
+
+# Check if we're in a git repository
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    echo -e "${RED}❌ Not in a git repository${NC}"
+    exit 1
+fi
+
+# Get the remote and branch being pushed to
+remote="$1"
+url="$2"
+
+# Get the current branch
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+echo -e "${BLUE}📤 Pushing to: $remote/$current_branch${NC}"
+
+# Run tests before pushing
+echo -e "${BLUE}🧪 Running tests...${NC}"
+
+# Check if we have package.json files
+if [ -f "package.json" ]; then
+    if command -v npm > /dev/null 2>&1; then
+        echo -e "${BLUE}   Running root tests...${NC}"
+        npm test || {
+            echo -e "${RED}❌ Root tests failed${NC}"
+            exit 1
+        }
+    fi
+fi
+
+if [ -f "mustbeviral/package.json" ]; then
+    if command -v npm > /dev/null 2>&1; then
+        echo -e "${BLUE}   Running mustbeviral tests...${NC}"
+        cd mustbeviral
+        npm test || {
+            echo -e "${RED}❌ Mustbeviral tests failed${NC}"
+            exit 1
+        }
+        cd ..
+    fi
+fi
+
+# Check for uncommitted changes
+echo -e "${BLUE}📋 Checking for uncommitted changes...${NC}"
+if ! git diff-index --quiet HEAD --; then
+    echo -e "${RED}❌ You have uncommitted changes${NC}"
+    echo -e "${RED}   Please commit or stash your changes before pushing${NC}"
+    exit 1
+fi
+
+# Check for untracked files
+echo -e "${BLUE}📁 Checking for untracked files...${NC}"
+untracked_files=$(git ls-files --others --exclude-standard)
+if [ -n "$untracked_files" ]; then
+    echo -e "${YELLOW}⚠️  You have untracked files:${NC}"
+    echo "$untracked_files" | sed 's/^/   /'
+    echo -e "${YELLOW}   Consider adding them to .gitignore or committing them${NC}"
+fi
+
+# Check branch protection rules
+echo -e "${BLUE}🛡️  Checking branch protection...${NC}"
+
+# Prevent pushing directly to main branch
+if [ "$current_branch" = "main" ]; then
+    echo -e "${RED}❌ Direct pushes to main branch are not allowed${NC}"
+    echo -e "${RED}   Please create a pull request instead${NC}"
+    exit 1
+fi
+
+# Prevent pushing to production branches without proper naming
+if [[ "$current_branch" =~ ^production ]]; then
+    echo -e "${YELLOW}⚠️  Pushing to production branch: $current_branch${NC}"
+    echo -e "${YELLOW}   Make sure this is intentional and properly tested${NC}"
+    
+    # Ask for confirmation (in interactive mode)
+    if [ -t 0 ]; then
+        read -p "Are you sure you want to push to production? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "${RED}❌ Push cancelled${NC}"
+            exit 1
+        fi
+    fi
+fi
+
+# Check for large files in the entire repository
+echo -e "${BLUE}📏 Checking for large files in repository...${NC}"
+large_files=$(find . -type f -size +10M -not -path './.git/*' -not -path './node_modules/*' -not -path './dist/*' -not -path './build/*' 2>/dev/null || true)
+
+if [ -n "$large_files" ]; then
+    echo -e "${YELLOW}⚠️  Large files found in repository:${NC}"
+    echo "$large_files" | sed 's/^/   /'
+    echo -e "${YELLOW}   Consider using Git LFS for large files${NC}"
+fi
+
+# Check for secrets in the entire repository
+echo -e "${BLUE}🔐 Checking for potential secrets...${NC}"
+secret_patterns=(
+    "password\s*=\s*['\"][^'\"]{8,}['\"]"
+    "secret\s*=\s*['\"][^'\"]{8,}['\"]"
+    "token\s*=\s*['\"][^'\"]{8,}['\"]"
+    "key\s*=\s*['\"][^'\"]{8,}['\"]"
+    "api_key\s*=\s*['\"][^'\"]{8,}['\"]"
+    "private_key\s*=\s*['\"][^'\"]{8,}['\"]"
+)
+
+for pattern in "${secret_patterns[@]}"; do
+    if git grep -E "$pattern" --cached > /dev/null 2>&1; then
+        echo -e "${RED}❌ Potential secret found in staged files${NC}"
+        echo -e "${RED}   Pattern: $pattern${NC}"
+        exit 1
+    fi
+done
+
+# Check for TODO/FIXME comments in production code
+echo -e "${BLUE}📋 Checking for TODO/FIXME comments...${NC}"
+todo_count=$(git grep -E "(TODO|FIXME|HACK|XXX)" --cached | wc -l || echo "0")
+
+if [ "$todo_count" -gt 0 ]; then
+    echo -e "${YELLOW}⚠️  Found $todo_count TODO/FIXME comments in staged files${NC}"
+    echo -e "${YELLOW}   Consider addressing them before pushing to production${NC}"
+fi
+
+# Run security audit
+echo -e "${BLUE}🔒 Running security audit...${NC}"
+if [ -f "package.json" ] && command -v npm > /dev/null 2>&1; then
+    npm audit --audit-level=high || {
+        echo -e "${RED}❌ Security vulnerabilities found${NC}"
+        echo -e "${RED}   Please fix security issues before pushing${NC}"
+        exit 1
+    }
+fi
+
+if [ -f "mustbeviral/package.json" ] && command -v npm > /dev/null 2>&1; then
+    cd mustbeviral
+    npm audit --audit-level=high || {
+        echo -e "${RED}❌ Security vulnerabilities found in mustbeviral${NC}"
+        echo -e "${RED}   Please fix security issues before pushing${NC}"
+        exit 1
+    }
+    cd ..
+fi
+
+# Check Docker images for vulnerabilities (if Docker is available)
+echo -e "${BLUE}🐳 Checking Docker images...${NC}"
+if command -v docker > /dev/null 2>&1; then
+    if [ -f "Dockerfile" ]; then
+        echo -e "${BLUE}   Building Docker image for security scan...${NC}"
+        docker build -t mustbeviral-security-check . > /dev/null 2>&1 || {
+            echo -e "${YELLOW}⚠️  Docker build failed, skipping security scan${NC}"
+        }
+    fi
+fi
+
+# Check for proper commit message format in recent commits
+echo -e "${BLUE}📝 Checking recent commit messages...${NC}"
+recent_commits=$(git log --oneline -5)
+
+while IFS= read -r commit; do
+    if ! echo "$commit" | grep -E "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+" > /dev/null; then
+        echo -e "${YELLOW}⚠️  Commit message doesn't follow conventional format: $commit${NC}"
+    fi
+done <<< "$recent_commits"
+
+# Final checks
+echo -e "${BLUE}🔍 Final checks...${NC}"
+
+# Check if we're pushing to the correct remote
+if [ "$remote" = "origin" ]; then
+    echo -e "${GREEN}✅ Pushing to origin${NC}"
+else
+    echo -e "${YELLOW}⚠️  Pushing to non-origin remote: $remote${NC}"
+fi
+
+# Check if we're on a feature branch
+if [[ "$current_branch" =~ ^(feature|fix|hotfix|release)/ ]]; then
+    echo -e "${GREEN}✅ On feature branch: $current_branch${NC}"
+else
+    echo -e "${YELLOW}⚠️  Not on a feature branch: $current_branch${NC}"
+fi
+
+echo -e "${GREEN}✅ All pre-push checks passed!${NC}"
+echo -e "${GREEN}🚀 Ready to push to $remote/$current_branch${NC}"
+exit 0
+
+
+
+
+
+

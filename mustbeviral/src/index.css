@@ -1,0 +1,482 @@
+/* Optimized font loading with font-display: swap for better performance */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Critical CSS for above-the-fold content */
+@layer critical {
+  /* Preload critical fonts */
+  @font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local('Inter Regular'), local('Inter-Regular');
+  }
+  
+  /* Initial paint optimization */
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+  
+  /* Reduced motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    :root {
+      --color-primary-500: #4338ca;
+      --color-viral-500: #047857;
+      --color-gold-500: #b45309;
+    }
+  }
+  
+  /* Dark mode optimizations */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+    }
+  }
+}
+
+/* Brand Color System - Must Be Viral V2 */
+:root {
+  /* Primary Brand Colors */
+  --color-primary-50: #f0f4ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1; /* Electric Violet - Primary */
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
+
+  /* Viral Green - Secondary */
+  --color-viral-50: #ecfdf5;
+  --color-viral-100: #d1fae5;
+  --color-viral-200: #a7f3d0;
+  --color-viral-300: #6ee7b7;
+  --color-viral-400: #34d399;
+  --color-viral-500: #10b981; /* Viral Green */
+  --color-viral-600: #059669;
+  --color-viral-700: #047857;
+  --color-viral-800: #065f46;
+  --color-viral-900: #064e3b;
+
+  /* Neural Gold - Accent */
+  --color-gold-50: #fffbeb;
+  --color-gold-100: #fef3c7;
+  --color-gold-200: #fde68a;
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #fbbf24;
+  --color-gold-500: #f59e0b; /* Neural Gold */
+  --color-gold-600: #d97706;
+  --color-gold-700: #b45309;
+  --color-gold-800: #92400e;
+  --color-gold-900: #78350f;
+
+  /* Supporting Colors */
+  --color-space: #0f172a; /* Deep Space */
+  --color-cloud: #f8fafc; /* Cloud White */
+
+  /* Semantic Colors */
+  --color-success: var(--color-viral-500);
+  --color-warning: var(--color-gold-500);
+  --color-error: #ef4444;
+  --color-info: var(--color-primary-500);
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Poppins', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
+
+  /* Spacing Scale */
+  --space-px: 1px;
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Border Radius */
+  --radius-sm: 0.125rem;
+  --radius: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-viral: 0 8px 32px rgba(99, 102, 241, 0.2);
+  --shadow-gold: 0 8px 32px rgba(245, 158, 11, 0.15);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-400) 100%);
+  --gradient-viral: linear-gradient(135deg, var(--color-viral-600) 0%, var(--color-viral-400) 100%);
+  --gradient-gold: linear-gradient(135deg, var(--color-gold-600) 0%, var(--color-gold-400) 100%);
+  --gradient-neural: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-viral-500) 50%, var(--color-gold-500) 100%);
+}
+
+/* Base Layer Improvements with Performance Optimizations */
+@layer base {
+  * {
+    @apply border-gray-200;
+  }
+
+  /* Optimized body with CSS containment */
+  body {
+    font-family: var(--font-sans);
+    @apply bg-white text-gray-900;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+    /* CSS containment for performance */
+    contain: layout style;
+    /* Prevent layout shifts */
+    font-synthesis: none;
+    /* Enable GPU acceleration for transforms */
+    will-change: auto;
+  }
+
+  /* Optimized headings with font loading strategy */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.2;
+    /* Prevent FOUT */
+    font-display: swap;
+    /* Optimize text rendering */
+    text-rendering: optimizeSpeed;
+  }
+
+  /* WCAG 2.1 AA compliant focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+    ring-color: var(--color-primary-500);
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      @apply ring-4 ring-offset-4;
+    }
+  }
+  
+  /* Skip link accessibility */
+  .skip-link:focus {
+    @apply absolute top-4 left-4 z-50 px-4 py-2 bg-primary-600 text-white rounded-md;
+  }
+  
+  /* Screen reader only text */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  /* Focus trap for modals */
+  .focus-trap {
+    contain: layout style paint;
+  }
+}
+
+/* Component Layer - Branded Components */
+@layer components {
+  /* Viral Button Styles */
+  .btn-viral {
+    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-medium;
+    @apply rounded-lg transition-all duration-200 focus-visible:outline-none;
+    @apply focus-visible:ring-2 focus-visible:ring-offset-2;
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: var(--shadow-viral);
+  }
+
+  .btn-viral:hover {
+    @apply transform -translate-y-0.5;
+    box-shadow: var(--shadow-xl), var(--shadow-viral);
+  }
+
+  .btn-viral:active {
+    @apply transform translate-y-0;
+  }
+
+  .btn-viral-secondary {
+    @apply btn-viral;
+    background: var(--gradient-viral);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-viral-outline {
+    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-medium;
+    @apply rounded-lg border-2 transition-all duration-200;
+    border-color: var(--color-primary-500);
+    color: var(--color-primary-600);
+    background: transparent;
+  }
+
+  .btn-viral-outline:hover {
+    background: var(--color-primary-50);
+    @apply transform -translate-y-0.5;
+  }
+
+  /* Viral Cards */
+  .card-viral {
+    @apply bg-white rounded-xl border border-gray-200;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s ease;
+  }
+
+  .card-viral:hover {
+    @apply transform -translate-y-1;
+    box-shadow: var(--shadow-xl);
+  }
+
+  .card-viral-gradient {
+    @apply card-viral;
+    background: var(--gradient-neural);
+    color: white;
+    border: none;
+  }
+
+  /* Neural Pattern Background */
+  .bg-neural-pattern {
+    background-image:
+      radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+  }
+
+  /* Viral Score Indicator */
+  .viral-score {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    background: var(--gradient-gold);
+    color: white;
+    box-shadow: var(--shadow-gold);
+  }
+
+  /* Trending Pulse Animation */
+  .trending-pulse {
+    animation: trending-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes trending-pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+
+  /* Success Celebration */
+  .celebration-bounce {
+    animation: celebration-bounce 0.6s ease-in-out;
+  }
+
+  @keyframes celebration-bounce {
+    0%, 20%, 53%, 80%, 100% {
+      transform: translate3d(0,0,0);
+    }
+    40%, 43% {
+      transform: translate3d(0, -8px, 0);
+    }
+    70% {
+      transform: translate3d(0, -4px, 0);
+    }
+    90% {
+      transform: translate3d(0, -2px, 0);
+    }
+  }
+}
+
+/* Utility Layer - Custom Utilities */
+@layer utilities {
+  .text-gradient-viral {
+    background: var(--gradient-neural);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .border-gradient-viral {
+    border: 2px solid transparent;
+    background: linear-gradient(white, white) padding-box,
+                var(--gradient-primary) border-box;
+  }
+
+  .shadow-viral {
+    box-shadow: var(--shadow-viral);
+  }
+
+  .shadow-gold {
+    box-shadow: var(--shadow-gold);
+  }
+
+  /* Brand-specific utilities */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-500 to-viral-500 bg-clip-text text-transparent;
+  }
+
+  .gradient-text-gold {
+    @apply bg-gradient-to-r from-gold-500 to-gold-300 bg-clip-text text-transparent;
+  }
+
+  .hover-lift {
+    @apply transition-transform duration-300 ease-out;
+  }
+
+  .hover-lift:hover {
+    @apply -translate-y-1;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-300 ease-out;
+  }
+
+  .hover-scale:hover {
+    @apply scale-105;
+  }
+
+  .viral-glow {
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
+  }
+
+  .blur-backdrop {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .gradient-border {
+    position: relative;
+    background: linear-gradient(#fff, #fff) padding-box,
+                linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-viral-500) 100%) border-box;
+    border: 2px solid transparent;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-in {
+    animation: fade-in 0.5s ease-out;
+  }
+
+  .slide-in {
+    animation: slide-up 0.5s ease-out;
+  }
+
+  /* Reduced motion support - disable animations for users who prefer reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    /* Keep important focus indicators */
+    *:focus-visible {
+      transition-duration: 0.15s !important;
+    }
+
+    /* Disable floating animations */
+    .animate-float,
+    .animate-pulse-glow,
+    .animate-shimmer,
+    .animate-gradient,
+    .animate-viral-bounce {
+      animation: none !important;
+    }
+
+    /* Disable transform-based animations */
+    .hover-lift:hover,
+    .hover-scale:hover {
+      transform: none !important;
+    }
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .gradient-text,
+    .gradient-text-gold {
+      background: none !important;
+      color: currentColor !important;
+      -webkit-background-clip: unset !important;
+      -webkit-text-fill-color: unset !important;
+    }
+
+    .bg-gradient-to-r,
+    .bg-gradient-to-br,
+    .bg-gradient-viral,
+    .bg-gradient-gold {
+      background: var(--color-primary-600) !important;
+    }
+  }
+
+  /* Focus indicators for better accessibility */
+  .focus-outline {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  /* Screen reader only content */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .focus-within\\:not-sr-only:focus-within {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+}

@@ -1,0 +1,91 @@
+# User Service Worker Configuration
+# Microservice for user management with clean architecture
+
+name = "mustbeviral-user-service"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Worker configuration
+workers_dev = true
+minify = true
+
+# Environment variables
+[vars]
+SERVICE_NAME = "user-service"
+API_VERSION = "1.0.0"
+CORS_ORIGINS = "*"
+LOG_LEVEL = "info"
+
+# Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "mustbeviral-users"
+database_id = "your-database-id"
+
+# KV namespaces for caching
+[[kv_namespaces]]
+binding = "USER_CACHE"
+id = "user-cache-namespace-id"
+
+# Analytics binding
+[analytics]
+binding = "ANALYTICS"
+
+# Secrets (set via Wrangler CLI)
+# wrangler secret put JWT_SECRET
+# wrangler secret put EMAIL_API_KEY
+
+# Development environment
+[env.development]
+name = "mustbeviral-user-service-dev"
+vars = { SERVICE_NAME = "user-service-dev", LOG_LEVEL = "debug" }
+
+[[env.development.d1_databases]]
+binding = "DB"
+database_name = "mustbeviral-users-dev"
+database_id = "dev-database-id"
+
+[[env.development.kv_namespaces]]
+binding = "USER_CACHE"
+id = "dev-user-cache-namespace-id"
+
+# Staging environment
+[env.staging]
+name = "mustbeviral-user-service-staging"
+vars = { SERVICE_NAME = "user-service-staging" }
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "mustbeviral-users-staging"
+database_id = "staging-database-id"
+
+[[env.staging.kv_namespaces]]
+binding = "USER_CACHE"
+id = "staging-user-cache-namespace-id"
+
+# Production environment
+[env.production]
+name = "mustbeviral-user-service-prod"
+vars = { SERVICE_NAME = "user-service-production" }
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "mustbeviral-users-prod"
+database_id = "prod-database-id"
+
+[[env.production.kv_namespaces]]
+binding = "USER_CACHE"
+id = "prod-user-cache-namespace-id"
+
+# Build configuration
+[build]
+command = "npm run build"
+cwd = "."
+watch_dir = ["src", "../../../src/core"]
+
+# Deployment settings
+[deploy]
+compatibility_date = "2024-01-01"
+minify = true
+sourcemap = true

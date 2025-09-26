@@ -1,0 +1,142 @@
+# Shared Cloudflare Workers Configuration
+# Best practices for enterprise Cloudflare Workers deployment
+
+# Global configuration
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat", "streams_enable_constructors"]
+
+# Build configuration
+[build]
+command = "npm run build"
+cwd = "src"
+
+# Environment configurations
+[env.development]
+name = "must-be-viral-dev"
+vars = {
+  ENVIRONMENT = "development",
+  LOG_LEVEL = "DEBUG",
+  DEBUG = "true"
+}
+
+[env.staging]
+name = "must-be-viral-staging"
+vars = {
+  ENVIRONMENT = "staging",
+  LOG_LEVEL = "INFO",
+  DEBUG = "false"
+}
+
+[env.production]
+name = "must-be-viral-prod"
+vars = {
+  ENVIRONMENT = "production",
+  LOG_LEVEL = "WARN",
+  DEBUG = "false"
+}
+
+# D1 Database configurations
+[[d1_databases]]
+binding = "DB"
+database_name = "must-be-viral-main"
+database_id = "main-db-id-here"
+migrations_dir = "migrations"
+
+# KV Namespace configurations
+[[kv_namespaces]]
+binding = "CACHE"
+id = "cache-kv-id"
+preview_id = "cache-kv-preview"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "sessions-kv-id"
+preview_id = "sessions-kv-preview"
+
+[[kv_namespaces]]
+binding = "CONFIG"
+id = "config-kv-id"
+preview_id = "config-kv-preview"
+
+# R2 Bucket configurations
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "must-be-viral-assets"
+preview_bucket_name = "must-be-viral-assets-preview"
+
+[[r2_buckets]]
+binding = "UPLOADS"
+bucket_name = "must-be-viral-uploads"
+preview_bucket_name = "must-be-viral-uploads-preview"
+
+# Durable Objects configurations
+[[durable_objects.bindings]]
+name = "COUNTER"
+class_name = "Counter"
+script_name = "must-be-viral-shared"
+
+[[durable_objects.bindings]]
+name = "SESSION_STORE"
+class_name = "SessionStore"
+script_name = "must-be-viral-shared"
+
+# Queue configurations
+[[queues]]
+binding = "TASK_QUEUE"
+queue_name = "task-processing"
+
+[[queues]]
+binding = "NOTIFICATION_QUEUE"
+queue_name = "notifications"
+
+# AI binding
+[ai]
+binding = "AI"
+
+# Service bindings
+[[services]]
+binding = "AUTH_SERVICE"
+service = "must-be-viral-auth"
+environment = "production"
+
+[[services]]
+binding = "CONTENT_SERVICE"
+service = "must-be-viral-content"
+environment = "production"
+
+[[services]]
+binding = "ANALYTICS_SERVICE"
+service = "must-be-viral-analytics"
+environment = "production"
+
+# Routes configuration
+routes = [
+  { pattern = "api.mustbeviral.com/*", zone_name = "mustbeviral.com" },
+  { pattern = "*/api/*", zone_name = "mustbeviral.com" }
+]
+
+# Custom domains
+[env.production]
+routes = [
+  { pattern = "api.mustbeviral.com/*", zone_name = "mustbeviral.com" },
+  { pattern = "api-staging.mustbeviral.com/*", zone_name = "mustbeviral.com" }
+]
+
+# Limits and quotas
+[limits]
+cpu_ms = 50000
+
+# Secrets (use wrangler secret put)
+# JWT_SECRET
+# ENCRYPTION_KEY
+# DATABASE_URL
+# REDIS_URL
+# SMTP_PASSWORD
+# STRIPE_SECRET_KEY
+# OPENAI_API_KEY
+
+
+
+
+
+

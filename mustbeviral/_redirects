@@ -1,0 +1,100 @@
+# Cloudflare Pages Redirects Configuration
+# Optimized for performance and SEO
+
+# SPA routing - handle client-side routing
+/* /index.html 200
+
+# Legacy URL redirects (if migrating from old system)
+/old-dashboard /dashboard 301
+/old-analytics /analytics 301
+/old-content /content 301
+
+# API proxy to Workers (if needed)
+/api/* https://must-be-viral-prod.your-subdomain.workers.dev/api/:splat 200
+
+# Force HTTPS redirects (backup - Cloudflare handles this automatically)
+http://must-be-viral.pages.dev/* https://must-be-viral.pages.dev/:splat 301!
+
+# Redirect common typos or alternative URLs
+/dash /dashboard 301
+/stats /analytics 301
+/create /content 301
+/boost-payment /boost 301
+
+# Regional redirects (if implementing geo-routing)
+# /api/geo/* https://us-east.must-be-viral.workers.dev/api/:splat 200 Country=US
+# /api/geo/* https://eu-west.must-be-viral.workers.dev/api/:splat 200 Country=GB,DE,FR
+
+# Asset optimization redirects (for legacy browsers)
+/assets/images/*.jpg /assets/images/*.webp 302 Accept=webp
+/assets/images/*.png /assets/images/*.webp 302 Accept=webp
+
+# Feature flag redirects (for A/B testing)
+# /feature-test/* /feature-new/:splat 200 X-Feature-Flag=enabled
+# /feature-test/* /feature-old/:splat 200
+
+# Health check redirects
+/ping /health 301
+/status /health 301
+
+# Short URL redirects (for social sharing)
+/s/:id /content/share/:id 301
+
+# Mobile-specific redirects (if needed)
+# /m/* /:splat 301
+
+# Prerender redirects for SEO (if using prerendering service)
+# /dashboard https://prerender.io/https://must-be-viral.pages.dev/dashboard 200 User-Agent=*bot*,*crawler*,*spider*
+
+# Error page redirects
+/404 /404.html 200
+/500 /500.html 200
+
+# Development/staging redirects (prevent indexing)
+# https://must-be-viral-*.pages.dev/* https://must-be-viral-staging.pages.dev/:splat 301 X-Robots-Tag=noindex
+
+# Security redirects
+/.env 404
+/.env.local 404
+/.env.production 404
+/wp-admin/* 404
+/admin.php 404
+/phpMyAdmin/* 404
+/config/* 404
+
+# Performance optimization - preload critical resources
+/dashboard /index.html 200 Link=</assets/css/dashboard.css>; rel=preload; as=style
+/analytics /index.html 200 Link=</assets/js/analytics.js>; rel=preload; as=script
+
+# Geo-based redirects for CDN optimization
+# /* https://us-east.must-be-viral.pages.dev/:splat 200 Country=US,CA
+# /* https://eu-west.must-be-viral.pages.dev/:splat 200 Country=GB,DE,FR,ES,IT
+# /* https://asia-pacific.must-be-viral.pages.dev/:splat 200 Country=JP,AU,SG
+
+# Social media crawler optimization
+/dashboard /dashboard/share.html 200 User-Agent=*facebookexternalhit*
+/analytics /analytics/share.html 200 User-Agent=*facebookexternalhit*
+/content /content/share.html 200 User-Agent=*facebookexternalhit*
+
+# PWA manifest redirect
+/app.webmanifest /manifest.json 301
+
+# Sitemap redirects
+/sitemap /sitemap.xml 301
+/sitemaps.xml /sitemap.xml 301
+
+# RSS feed redirects (if implementing)
+/feed /api/feed.xml 301
+/rss /api/feed.xml 301
+
+# API versioning redirects
+/api/v1/* /api/:splat 301
+/api/v2/* /api/:splat 200
+
+# Language redirects (if implementing i18n)
+# /en/* /:splat 301
+# /es/* /es/:splat 200
+# /fr/* /fr/:splat 200
+
+# Cache-busting redirects for static assets
+/assets/legacy/* /assets/:splat 301

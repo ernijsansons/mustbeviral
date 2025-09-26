@@ -1,0 +1,142 @@
+# Analytics Worker - Enterprise Analytics & Monitoring
+# Handles analytics, metrics, and business intelligence
+
+name = "must-be-viral-analytics"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Worker routes
+routes = [
+  { pattern = "analytics.mustbeviral.com/*", zone_name = "mustbeviral.com" },
+  { pattern = "*/api/analytics/*", zone_name = "mustbeviral.com" },
+  { pattern = "*/api/metrics/*", zone_name = "mustbeviral.com" }
+]
+
+# Environment configurations
+[env.development]
+name = "must-be-viral-analytics-dev"
+vars = {
+  ENVIRONMENT = "development",
+  SERVICE_NAME = "analytics-worker",
+  LOG_LEVEL = "DEBUG"
+}
+
+[env.staging]
+name = "must-be-viral-analytics-staging"
+vars = {
+  ENVIRONMENT = "staging",
+  SERVICE_NAME = "analytics-worker",
+  LOG_LEVEL = "INFO"
+}
+
+[env.production]
+name = "must-be-viral-analytics-prod"
+vars = {
+  ENVIRONMENT = "production",
+  SERVICE_NAME = "analytics-worker",
+  LOG_LEVEL = "WARN"
+}
+
+# D1 Database for analytics data
+[[d1_databases]]
+binding = "ANALYTICS_DB"
+database_name = "must-be-viral-analytics"
+database_id = "analytics-db-id-here"
+migrations_dir = "migrations"
+
+# KV Namespace for real-time metrics cache
+[[kv_namespaces]]
+binding = "METRICS_CACHE"
+id = "analytics-metrics-kv-id"
+preview_id = "analytics-metrics-kv-preview"
+
+# KV Namespace for user behavior tracking
+[[kv_namespaces]]
+binding = "BEHAVIOR_TRACKING"
+id = "behavior-tracking-kv-id"
+preview_id = "behavior-tracking-kv-preview"
+
+# KV Namespace for A/B testing data
+[[kv_namespaces]]
+binding = "AB_TESTING"
+id = "ab-testing-kv-id"
+preview_id = "ab-testing-kv-preview"
+
+# R2 Bucket for analytics exports
+[[r2_buckets]]
+binding = "ANALYTICS_EXPORTS"
+bucket_name = "must-be-viral-analytics-exports"
+preview_bucket_name = "must-be-viral-analytics-exports-preview"
+
+# Durable Objects for real-time analytics
+[[durable_objects.bindings]]
+name = "REALTIME_ANALYTICS"
+class_name = "RealtimeAnalytics"
+script_name = "must-be-viral-analytics"
+
+[[durable_objects.bindings]]
+name = "EVENT_PROCESSOR"
+class_name = "EventProcessor"
+script_name = "must-be-viral-analytics"
+
+[[durable_objects.bindings]]
+name = "DASHBOARD_AGGREGATOR"
+class_name = "DashboardAggregator"
+script_name = "must-be-viral-analytics"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["RealtimeAnalytics", "EventProcessor", "DashboardAggregator"]
+
+# Service bindings
+[[services]]
+binding = "AUTH_SERVICE"
+service = "must-be-viral-auth"
+environment = "production"
+
+[[services]]
+binding = "CONTENT_SERVICE"
+service = "must-be-viral-content"
+environment = "production"
+
+# Queue for analytics processing
+[[queues]]
+binding = "ANALYTICS_QUEUE"
+queue_name = "analytics-processing"
+
+# Queue for report generation
+[[queues]]
+binding = "REPORT_QUEUE"
+queue_name = "report-generation"
+
+# AI for predictive analytics
+[ai]
+binding = "AI"
+
+# Secrets (use wrangler secret put)
+# GOOGLE_ANALYTICS_KEY
+# MIXPANEL_TOKEN
+# AMPLITUDE_API_KEY
+# SEGMENT_WRITE_KEY
+# ANALYTICS_ENCRYPTION_KEY
+
+[env.development.vars]
+ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:3000"
+BATCH_SIZE = "100"
+PROCESSING_INTERVAL = "60000" # 1 minute
+RETENTION_DAYS = "30"
+REAL_TIME_ENABLED = "true"
+
+[env.production.vars]
+ALLOWED_ORIGINS = "https://mustbeviral.com,https://app.mustbeviral.com"
+BATCH_SIZE = "1000"
+PROCESSING_INTERVAL = "30000" # 30 seconds
+RETENTION_DAYS = "365"
+REAL_TIME_ENABLED = "true"
+
+
+
+
+
+

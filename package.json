@@ -1,0 +1,171 @@
+{
+  "name": "must-be-viral-v2",
+  "version": "1.0.0",
+  "description": "Enterprise-level viral marketing platform with Cloudflare Workers and Docker",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:workers\"",
+    "dev:server": "nodemon server.js",
+    "dev:workers": "cd mustbeviral/workers && npm run dev",
+    "build": "npm run build:workers && npm run build:app",
+    "build:workers": "cd mustbeviral/workers && npm run build",
+    "build:app": "cd mustbeviral && npm run build",
+    "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "test:unit": "jest --testPathPattern=unit",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:e2e": "playwright test",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc --noEmit",
+    "security:audit": "npm audit --audit-level=moderate",
+    "security:scan": "npm audit && snyk test --severity-threshold=medium",
+    "deps:check": "npm outdated",
+    "deps:update": "npm update --save",
+    "bundle:analyze": "npm run build && npx webpack-bundle-analyzer mustbeviral/out",
+    "docker:build": "docker build -t mustbeviral-app .",
+    "docker:build:cloudflare": "docker build -f Dockerfile.cloudflare -t mustbeviral-app-cloudflare .",
+    "docker:run": "docker run -p 3000:3000 mustbeviral-app",
+    "docker:compose": "docker-compose up -d",
+    "docker:compose:cloudflare": "docker-compose -f docker-compose.cloudflare.yml up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:clean": "docker system prune -f && docker volume prune -f",
+    "cloudflare:deploy": "bash scripts/cloudflare-deploy.sh",
+    "cloudflare:deploy:staging": "bash scripts/cloudflare-deploy.sh staging",
+    "cloudflare:deploy:production": "bash scripts/cloudflare-deploy.sh production",
+    "cloudflare:deploy:dry-run": "bash scripts/cloudflare-deploy.sh staging true",
+    "cloudflare:workers:dev": "cd mustbeviral/workers && wrangler dev",
+    "cloudflare:workers:deploy": "cd mustbeviral/workers && wrangler deploy",
+    "cloudflare:pages:deploy": "cd mustbeviral && wrangler pages deploy out",
+    "deploy:staging": "npm run build && npm run cloudflare:deploy:staging",
+    "deploy:production": "npm run build && npm run cloudflare:deploy:production",
+    "monitor": "bash scripts/monitor.sh",
+    "monitor:check": "bash scripts/monitor.sh check",
+    "monitor:report": "bash scripts/monitor.sh report",
+    "health": "curl -f http://localhost:3000/health || exit 1",
+    "health:all": "npm run health && curl -f http://localhost:3001/health && curl -f http://localhost:9090/-/healthy",
+    "setup": "npm run setup:hooks && npm run setup:env",
+    "setup:hooks": "git config core.hooksPath .githooks && chmod +x .githooks/*",
+    "setup:env": "cp env.template .env",
+    "clean": "npm run clean:node_modules && npm run clean:build && npm run clean:logs",
+    "clean:node_modules": "rm -rf node_modules mustbeviral/node_modules",
+    "clean:build": "rm -rf mustbeviral/.next mustbeviral/out mustbeviral/dist",
+    "clean:logs": "rm -rf logs/*.log",
+    "validate": "npm run lint && npm run type-check && npm run test:unit",
+    "validate:ci": "npm run validate && npm run security:audit",
+    "precommit": "npm run validate",
+    "prepush": "npm run validate:ci",
+    "postinstall": "echo 'Post-install completed' && npm run deps:check",
+    "prestart": "npm run security:audit"
+  },
+  "keywords": [
+    "viral-marketing",
+    "cloudflare-workers",
+    "docker",
+    "enterprise",
+    "full-stack",
+    "microservices",
+    "analytics",
+    "real-time"
+  ],
+  "author": "Must Be Viral Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/must-be-viral-v2.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/must-be-viral-v2/issues"
+  },
+  "homepage": "https://mustbeviral.com",
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^24.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.3.0",
+    "@typescript-eslint/parser": "^8.3.0",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.9.1",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "eslint-plugin-security": "^3.0.1",
+    "globals": "^15.9.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2",
+    "playwright": "^1.55.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "dotenv": "^16.6.1",
+    "express-rate-limit": "^7.5.1",
+    "ioredis": "^5.8.0",
+    "node-cache": "^5.1.2",
+    "pino": "^8.21.0"
+  },
+  "optionalDependencies": {
+    "pino-pretty": "^10.3.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run precommit",
+      "pre-push": "npm run prepush"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "**/__tests__/**/*.test.ts"
+    ],
+    "collectCoverageFrom": [
+      "**/*.{js,ts}",
+      "!**/node_modules/**",
+      "!**/dist/**",
+      "!**/build/**"
+    ]
+  },
+  "prettier": {
+    "semi": true,
+    "trailingComma": "es5",
+    "singleQuote": true,
+    "printWidth": 80,
+    "tabWidth": 2
+  },
+  "eslintConfig": {
+    "extends": [
+      "eslint:recommended",
+      "@typescript-eslint/recommended",
+      "prettier"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint",
+      "prettier"
+    ],
+    "rules": {
+      "prettier/prettier": "error",
+      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/no-explicit-any": "warn"
+    }
+  }
+}

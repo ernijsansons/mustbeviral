@@ -1,0 +1,127 @@
+import { createServer as createViteServer } from 'vite';
+import express from 'express';
+import session from 'express-session';
+import authRoutes from './server/api/auth.mjs';
+import contentRoutes from './server/api/content.mjs';
+// Temporarily disabled - import onboardRoutes from './server/api/onboard.ts';
+// Temporarily disabled - import oauthRoutes from './server/api/oauth.ts';
+import { db } from './server/db.mjs';
+
+async function createServer() {
+  console.log('Starting custom server instead of Vite...');
+  const app = express();
+  
+  // Trust proxy for secure cookies when behind proxy/CDN
+  if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+  }
+  
+  // Parse JSON bodies
+  app.use(express.json());
+  
+  // Session configuration for OAuth state management
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'dev-session-secret-change-in-production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 10 * 60 * 1000 // 10 minutes for OAuth flows
+    }
+  }));
+  
+  // API routes
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'OK', message: 'Server running with Vite and API on port 5000' });
+  });
+  
+  app.get('/api/db-test', async (req, res) => {
+    try {
+      const result = await db.execute('SELECT 1 as test');
+      res.json({ status: 'Database connected', result: result.rows });
+    } catch (error) {
+      console.error('Database test error:', error);
+      res.status(500).json({ status: 'Database connection failed', error: error.message });
+    }
+  });
+  
+  // Add authentication and content routes
+  app.use('/api/auth', authRoutes);
+  app.use('/api/content', contentRoutes);
+  // Temporarily disabled - app.use('/api/onboard', onboardRoutes);
+  // Temporarily disabled - app.use('/api/oauth', oauthRoutes);
+  
+  // Temporary placeholder routes
+  app.get('/api/onboard', (req, res) => {
+    res.json({ message: 'Onboard endpoint - coming soon' });
+  });
+  
+  // OAuth routes temporarily removed
+  
+  // Subscribe route for Stripe checkout
+  app.get('/api/subscribe', (req, res) => {
+    console.log('GET /api/subscribe called - redirecting to Stripe');
+    res.redirect('https://billing.stripe.com/demo?product=premium-plan');
+  });
+  
+  app.post('/api/subscribe', (req, res) => {
+    console.log('POST /api/subscribe called - returning checkout URL');
+    res.json({ 
+      url: 'https://billing.stripe.com/demo?product=premium-plan',
+      message: 'Redirecting to subscription checkout...' 
+    });
+  });
+  
+  console.log('All API routes mounted successfully');
+  
+  // Serve static files from dist in production
+  if (process.env.NODE_ENV === 'production') {
+    const path = await import('path');
+    app.use(express.static(path.resolve('dist')));
+  }
+  
+  // Create Vite server in middleware mode only in development
+  let vite;
+  if (process.env.NODE_ENV !== 'production') {
+    vite = await createViteServer({
+      server: { 
+        middlewareMode: true,
+        host: '0.0.0.0',
+        hmr: {
+          port: 5001
+        }
+      },
+      appType: 'spa'
+    });
+    
+    // Use vite's connect instance as middleware
+    app.use(vite.middlewares);
+  }
+  
+  // In production, add SPA fallback for non-API routes
+  if (process.env.NODE_ENV === 'production') {
+    app.get(/.*/, (req, res) => {
+      // Skip API routes
+      if (req.originalUrl.startsWith('/api')) {
+        return res.status(404).send('API endpoint not found');
+      }
+      
+      // Serve index.html for all other routes
+      const { resolve } = await import('path');
+      res.sendFile(resolve('dist/index.html'));
+    });
+  }
+  
+  const port = process.env.PORT || 5000;
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`Server running on http://0.0.0.0:${port}`);
+    console.log(`API endpoints available at http://0.0.0.0:${port}/api/health`);
+  });
+}
+
+createServer().catch((error) => {
+  console.error('Error starting server:', error);
+  process.exit(1);
+});

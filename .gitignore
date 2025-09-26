@@ -1,0 +1,301 @@
+# Must Be Viral V2 - Comprehensive .gitignore
+# Enterprise-level Git ignore patterns for full-stack application
+
+# ===========================================
+# Dependencies & Package Managers
+# ===========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# ===========================================
+# Build Outputs & Distribution
+# ===========================================
+dist/
+dist-ssr/
+build/
+out/
+.next/
+.nuxt/
+.output/
+.vercel/
+.netlify/
+.astro/
+.svelte-kit/
+
+# ===========================================
+# Environment & Configuration
+# ===========================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+.envrc
+.envrc.local
+
+# Cloudflare specific
+.wrangler/
+wrangler.toml.local
+.dev.vars
+
+# ===========================================
+# Logs & Debugging
+# ===========================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+.nyc_output/
+
+# ===========================================
+# IDE & Editor Files
+# ===========================================
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ===========================================
+# Testing & Quality Assurance
+# ===========================================
+test-results/
+playwright-report/
+test-results.json
+coverage/
+.nyc_output/
+junit.xml
+*.coverage
+.coverage
+.pytest_cache/
+.tox/
+.nox/
+
+# ===========================================
+# Docker & Containerization
+# ===========================================
+.dockerignore
+docker-compose.override.yml
+.docker/
+docker-data/
+.dockerignore.local
+
+# ===========================================
+# Database & Storage
+# ===========================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+postgres-data/
+redis-data/
+elasticsearch-data/
+mongodb-data/
+
+# ===========================================
+# Monitoring & Analytics
+# ===========================================
+monitoring-logs/
+grafana-data/
+prometheus-data/
+elasticsearch-data/
+kibana-data/
+logstash-data/
+
+# ===========================================
+# Security & Secrets
+# ===========================================
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+.secrets/
+*.secret
+*.private
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
+
+# ===========================================
+# Temporary & Cache Files
+# ===========================================
+.tmp/
+.temp/
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+.tsbuildinfo
+
+# ===========================================
+# OS Generated Files
+# ===========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ===========================================
+# Cloudflare Specific
+# ===========================================
+.wrangler/
+wrangler.toml.local
+.dev.vars
+cloudflare-tunnel.log
+*.tunnel.log
+
+# ===========================================
+# Backup & Archive Files
+# ===========================================
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+*.swp
+*.tmp
+backups/
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# ===========================================
+# Documentation Build
+# ===========================================
+docs/_build/
+docs/.doctrees/
+site/
+_site/
+
+# ===========================================
+# Performance & Profiling
+# ===========================================
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+*.trace
+*.prof
+
+# ===========================================
+# Local Development Tools
+# ===========================================
+.local/
+.localhost/
+.local/
+dev-server.log
+hot-reload.log
+
+# ===========================================
+# Deployment & CI/CD
+# ===========================================
+.deploy/
+deployment-logs/
+ci-logs/
+.github/workflows/local/
+deploy-*.log
+
+# ===========================================
+# Custom Application Specific
+# ===========================================
+# Add your application-specific ignore patterns here
+uploads/
+media/
+static/uploads/
+user-uploads/
+temp-uploads/
+
+# Generated reports
+reports/
+*.report
+*.analysis
+
+# Local configuration overrides
+config.local.js
+config.local.json
+settings.local.js
+settings.local.json
+
+# ===========================================
+# Build Artifacts & Large Files
+# ===========================================
+# Large build files that shouldn't be tracked
+*.zip
+*.tar.gz
+*.rar
+*.7z
+must-be-viral-export-*.zip
+
+# Node modules in subdirectories
+mustbeviral/node_modules/
+mustbeviral/.next/
+mustbeviral/dist/
+mustbeviral/build/
+mustbeviral/coverage/
+
+# Playwright reports
+mustbeviral/playwright-report/
+mustbeviral/test-results/
+
+# TypeScript build info
+mustbeviral/tsconfig.tsbuildinfo
+
+# Environment files
+mustbeviral/.env.local.example
+
+
+
+
+
+

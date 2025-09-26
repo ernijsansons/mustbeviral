@@ -1,0 +1,499 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Must Be Viral V2 - Performance Dashboard",
+    "tags": ["performance", "nodejs", "optimization"],
+    "timezone": "UTC",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "🚀 Request Rate (RPS)",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 50},
+                {"color": "green", "value": 100}
+              ]
+            },
+            "unit": "reqps"
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "justifyMode": "center",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "targets": [
+          {
+            "expr": "rate(nodejs_request_total[5m])",
+            "refId": "A",
+            "legendFormat": "Requests/sec"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "⚡ Response Times",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 6, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "opacity",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "never",
+              "pointSize": 5,
+              "stacking": {"mode": "none", "group": "A"},
+              "axisPlacement": "auto",
+              "axisLabel": "",
+              "axisColorMode": "text",
+              "scaleDistribution": {"type": "linear"},
+              "axisCenteredZero": false,
+              "hideFrom": {"legend": false, "tooltip": false, "vis": false},
+              "thresholdsStyle": {"mode": "off"}
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 200},
+                {"color": "red", "value": 500}
+              ]
+            },
+            "unit": "ms"
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "single", "sort": "none"},
+          "legend": {"displayMode": "table", "placement": "right", "values": ["last", "max", "mean"]},
+          "displayMode": "table"
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(nodejs_request_duration_seconds_bucket[5m])) * 1000",
+            "refId": "A",
+            "legendFormat": "P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(nodejs_request_duration_seconds_bucket[5m])) * 1000",
+            "refId": "B",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(nodejs_request_duration_seconds_bucket[5m])) * 1000",
+            "refId": "C",
+            "legendFormat": "P99"
+          },
+          {
+            "expr": "avg(nodejs_request_duration_seconds) * 1000",
+            "refId": "D",
+            "legendFormat": "Average"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "💾 Memory Usage",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "gradientMode": "opacity"
+            },
+            "unit": "bytes"
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "multi", "sort": "none"},
+          "legend": {"displayMode": "table", "placement": "right", "values": ["current", "max"]}
+        },
+        "targets": [
+          {
+            "expr": "nodejs_memory_usage_bytes{type=\"heapUsed\"}",
+            "refId": "A",
+            "legendFormat": "Heap Used"
+          },
+          {
+            "expr": "nodejs_memory_usage_bytes{type=\"heapTotal\"}",
+            "refId": "B",
+            "legendFormat": "Heap Total"
+          },
+          {
+            "expr": "nodejs_memory_usage_bytes{type=\"rss\"}",
+            "refId": "C",
+            "legendFormat": "RSS"
+          },
+          {
+            "expr": "nodejs_memory_usage_bytes{type=\"external\"}",
+            "refId": "D",
+            "legendFormat": "External"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "🖥️ CPU Usage",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 8},
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 70},
+                {"color": "red", "value": 90}
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "options": {
+          "reduceOptions": {"values": false, "calcs": ["lastNotNull"], "fields": ""},
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        },
+        "targets": [
+          {
+            "expr": "rate(nodejs_cpu_usage_seconds_total{type=\"user\"}[5m]) * 100",
+            "refId": "A",
+            "legendFormat": "CPU Usage %"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "❌ Error Rate",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8},
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 5}
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "justifyMode": "center",
+          "orientation": "auto",
+          "reduceOptions": {"values": false, "calcs": ["lastNotNull"], "fields": ""},
+          "textMode": "auto"
+        },
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) * 100",
+            "refId": "A",
+            "legendFormat": "Error Rate %"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "🔄 Active Workers",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 12},
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "green", "value": 2}
+              ]
+            },
+            "unit": "short"
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "justifyMode": "center",
+          "orientation": "auto",
+          "reduceOptions": {"values": false, "calcs": ["lastNotNull"], "fields": ""},
+          "textMode": "auto"
+        },
+        "targets": [
+          {
+            "expr": "count(up{job=\"mustbeviral-app\"})",
+            "refId": "A",
+            "legendFormat": "Active Workers"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "🛡️ Rate Limiter Status",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "lineWidth": 1,
+              "fillOpacity": 0,
+              "gradientMode": "none"
+            },
+            "unit": "short"
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "multi", "sort": "none"},
+          "legend": {"displayMode": "table", "placement": "right", "values": ["current", "max"]}
+        },
+        "targets": [
+          {
+            "expr": "rate_limiter_store_size",
+            "refId": "A",
+            "legendFormat": "Rate Limiter Store Size"
+          },
+          {
+            "expr": "rate(http_requests_total{status=\"429\"}[5m])",
+            "refId": "B",
+            "legendFormat": "Rate Limited Requests/sec"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "📊 System Load Average",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "opacity"
+            },
+            "unit": "short"
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "multi", "sort": "none"},
+          "legend": {"displayMode": "table", "placement": "right", "values": ["current", "max"]}
+        },
+        "targets": [
+          {
+            "expr": "nodejs_load_average{period=\"1m\"}",
+            "refId": "A",
+            "legendFormat": "1 minute"
+          },
+          {
+            "expr": "nodejs_load_average{period=\"5m\"}",
+            "refId": "B",
+            "legendFormat": "5 minutes"
+          },
+          {
+            "expr": "nodejs_load_average{period=\"15m\"}",
+            "refId": "C",
+            "legendFormat": "15 minutes"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "🗃️ Cache Performance",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "gradientMode": "opacity"
+            },
+            "unit": "percent"
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "multi", "sort": "none"},
+          "legend": {"displayMode": "table", "placement": "right", "values": ["current", "mean"]}
+        },
+        "targets": [
+          {
+            "expr": "rate(cache_hits_total[5m]) / (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m])) * 100",
+            "refId": "A",
+            "legendFormat": "Cache Hit Rate"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "🔗 Redis Connection Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 24},
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"options": {"0": {"text": "Disconnected", "color": "red"}}, "type": "value"},
+              {"options": {"1": {"text": "Connected", "color": "green"}}, "type": "value"}
+            ],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "green", "value": 1}
+              ]
+            },
+            "unit": "short"
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "justifyMode": "center",
+          "orientation": "auto",
+          "reduceOptions": {"values": false, "calcs": ["lastNotNull"], "fields": ""},
+          "textMode": "name"
+        },
+        "targets": [
+          {
+            "expr": "redis_connection_status",
+            "refId": "A",
+            "legendFormat": "Redis Status"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "📈 Performance Score",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 24},
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 70},
+                {"color": "green", "value": 85}
+              ]
+            },
+            "unit": "short",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "options": {
+          "reduceOptions": {"values": false, "calcs": ["lastNotNull"], "fields": ""},
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        },
+        "targets": [
+          {
+            "expr": "(\n  (nodejs_request_duration_seconds < 0.2) * 25 +\n  (rate_limiter_store_size < 1000) * 25 +\n  (nodejs_memory_usage_bytes{type=\"heapUsed\"} < 100*1024*1024) * 25 +\n  (redis_connection_status == 1) * 25\n)",
+            "refId": "A",
+            "legendFormat": "Performance Score"
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "current": {"selected": false, "text": "All", "value": "$__all"},
+          "hide": 0,
+          "includeAll": true,
+          "label": "Worker",
+          "multi": false,
+          "name": "worker",
+          "options": [],
+          "query": "label_values(nodejs_uptime_seconds, worker)",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 1,
+          "type": "query"
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": {"type": "datasource", "uid": "grafana"},
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "enable": true,
+          "expr": "changes(nodejs_uptime_seconds[5m]) > 0",
+          "iconColor": "red",
+          "name": "Worker Restarts",
+          "titleFormat": "Worker {{worker}} restarted"
+        }
+      ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "links": [],
+    "liveNow": false,
+    "weekStart": ""
+  }
+}

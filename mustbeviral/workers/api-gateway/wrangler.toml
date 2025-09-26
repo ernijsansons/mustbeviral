@@ -1,0 +1,147 @@
+# API Gateway Worker - Enterprise API Orchestration
+# Central gateway for all microservices with rate limiting, authentication, and monitoring
+
+name = "must-be-viral-api-gateway"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Worker routes - Main API gateway
+routes = [
+  { pattern = "api.mustbeviral.com/*", zone_name = "mustbeviral.com" },
+  { pattern = "*/api/*", zone_name = "mustbeviral.com" }
+]
+
+# Environment configurations
+[env.development]
+name = "must-be-viral-api-gateway-dev"
+vars = {
+  ENVIRONMENT = "development",
+  SERVICE_NAME = "api-gateway",
+  LOG_LEVEL = "DEBUG"
+}
+
+[env.staging]
+name = "must-be-viral-api-gateway-staging"
+vars = {
+  ENVIRONMENT = "staging",
+  SERVICE_NAME = "api-gateway",
+  LOG_LEVEL = "INFO"
+}
+
+[env.production]
+name = "must-be-viral-api-gateway-prod"
+vars = {
+  ENVIRONMENT = "production",
+  SERVICE_NAME = "api-gateway",
+  LOG_LEVEL = "WARN"
+}
+
+# KV Namespace for rate limiting
+[[kv_namespaces]]
+binding = "RATE_LIMITER"
+id = "api-gateway-ratelimit-kv-id"
+preview_id = "api-gateway-ratelimit-kv-preview"
+
+# KV Namespace for API keys
+[[kv_namespaces]]
+binding = "API_KEYS"
+id = "api-gateway-keys-kv-id"
+preview_id = "api-gateway-keys-kv-preview"
+
+# KV Namespace for caching
+[[kv_namespaces]]
+binding = "API_CACHE"
+id = "api-gateway-cache-kv-id"
+preview_id = "api-gateway-cache-kv-preview"
+
+# KV Namespace for circuit breaker
+[[kv_namespaces]]
+binding = "CIRCUIT_BREAKER"
+id = "api-gateway-circuit-kv-id"
+preview_id = "api-gateway-circuit-kv-preview"
+
+# Durable Objects for distributed rate limiting
+[[durable_objects.bindings]]
+name = "RATE_LIMITER_DO"
+class_name = "RateLimiter"
+script_name = "must-be-viral-api-gateway"
+
+[[durable_objects.bindings]]
+name = "CIRCUIT_BREAKER_DO"
+class_name = "CircuitBreaker"
+script_name = "must-be-viral-api-gateway"
+
+[[durable_objects.bindings]]
+name = "API_MONITOR_DO"
+class_name = "APIMonitor"
+script_name = "must-be-viral-api-gateway"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["RateLimiter", "CircuitBreaker", "APIMonitor"]
+
+# Service bindings to all microservices
+[[services]]
+binding = "AUTH_SERVICE"
+service = "must-be-viral-auth"
+environment = "production"
+
+[[services]]
+binding = "CONTENT_SERVICE"
+service = "must-be-viral-content"
+environment = "production"
+
+[[services]]
+binding = "ANALYTICS_SERVICE"
+service = "must-be-viral-analytics"
+environment = "production"
+
+[[services]]
+binding = "WEBSOCKET_SERVICE"
+service = "must-be-viral-websocket"
+environment = "production"
+
+# Queue for API monitoring
+[[queues]]
+binding = "API_MONITORING_QUEUE"
+queue_name = "api-monitoring"
+
+# Queue for error tracking
+[[queues]]
+binding = "ERROR_TRACKING_QUEUE"
+queue_name = "error-tracking"
+
+# Secrets (use wrangler secret put)
+# API_GATEWAY_SECRET
+# JWT_PUBLIC_KEY
+# ENCRYPTION_KEY
+# MONITORING_WEBHOOK_URL
+
+[env.development.vars]
+ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
+RATE_LIMIT_REQUESTS = "1000"
+RATE_LIMIT_WINDOW = "3600" # 1 hour
+CACHE_TTL = "300" # 5 minutes
+CIRCUIT_BREAKER_THRESHOLD = "10"
+CIRCUIT_BREAKER_TIMEOUT = "60" # 1 minute
+ENABLE_CACHING = "true"
+ENABLE_RATE_LIMITING = "true"
+ENABLE_CIRCUIT_BREAKER = "true"
+
+[env.production.vars]
+ALLOWED_ORIGINS = "https://mustbeviral.com,https://www.mustbeviral.com,https://app.mustbeviral.com"
+RATE_LIMIT_REQUESTS = "10000"
+RATE_LIMIT_WINDOW = "3600" # 1 hour
+CACHE_TTL = "600" # 10 minutes
+CIRCUIT_BREAKER_THRESHOLD = "50"
+CIRCUIT_BREAKER_TIMEOUT = "300" # 5 minutes
+ENABLE_CACHING = "true"
+ENABLE_RATE_LIMITING = "true"
+ENABLE_CIRCUIT_BREAKER = "true"
+
+
+
+
+
+

@@ -1,0 +1,146 @@
+# Performance-Optimized Prometheus Configuration for Enterprise Monitoring
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  query_log_file: /prometheus/queries.log
+  external_labels:
+    cluster: 'mustbeviral-production'
+    environment: 'production'
+  
+# Storage and performance configuration
+storage:
+  tsdb:
+    retention.time: 30d
+    retention.size: 10GB
+    min_block_duration: 2h
+    max_block_duration: 2h
+    wal_compression: true
+
+rule_files:
+  - "alerts/performance.yml"
+  - "alerts/business.yml"
+  - "alerts/security.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+
+  # Main Application - Performance Focused
+  - job_name: 'mustbeviral-app'
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Cluster Management Monitoring
+  - job_name: 'mustbeviral-cluster'
+    static_configs:
+      - targets: ['app:3001']
+    metrics_path: '/cluster/stats'
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    honor_labels: true
+    metric_relabel_configs:
+      # Keep only performance-critical metrics
+      - source_labels: [__name__]
+        regex: '(http_request_duration_seconds.*|http_requests_total|nodejs_.*|process_.*|up)'
+        action: keep
+      # Add performance labels
+      - target_label: 'service'
+        replacement: 'mustbeviral'
+
+  # Application Health and Performance
+  - job_name: 'mustbeviral-app-health'
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: '/health'
+    scrape_interval: 30s
+    scrape_timeout: 5s
+
+  # Node Exporter (if added)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # PostgreSQL Performance Metrics
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: '(pg_stat_.*|pg_locks_.*|pg_database_.*)'
+        action: keep
+
+  # Redis Performance Metrics
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 15s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: '(redis_.*memory.*|redis_.*cpu.*|redis_connected_clients|redis_commands_processed_total)'
+        action: keep
+
+  # Nginx Performance Metrics
+  - job_name: 'nginx-exporter'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    scrape_interval: 15s
+
+  # Docker Container Performance Metrics
+  - job_name: 'docker-containers'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 30s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: '(container_.*cpu.*|container_.*memory.*|container_.*network.*)'
+        action: keep
+      - source_labels: [container_label_com_docker_compose_service]
+        target_label: 'service'
+        regex: '(.+)'
+        replacement: '${1}'
+
+  # System Performance Metrics
+  - job_name: 'node-system-performance'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: '(node_.*cpu.*|node_.*memory.*|node_.*disk.*|node_.*network.*|node_load.*)'
+        action: keep
+
+  # Business Metrics
+  - job_name: 'mustbeviral-business'
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: '/business-metrics'
+    scrape_interval: 60s
+
+# Recording rules for performance optimization
+recording_rules:
+  - name: "performance_aggregations"
+    interval: 30s
+    rules:
+      - record: mustbeviral:http_requests:rate5m
+        expr: rate(http_requests_total[5m])
+      - record: mustbeviral:http_request_duration:p95
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+      - record: mustbeviral:error_rate:5m
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100
+      - record: mustbeviral:cache_hit_rate
+        expr: (cache_hits_total / (cache_hits_total + cache_misses_total)) * 100
+

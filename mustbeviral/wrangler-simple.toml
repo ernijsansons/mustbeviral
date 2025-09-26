@@ -1,0 +1,17 @@
+# Simplified Must Be Viral - Cloudflare Workers Configuration
+name = "must-be-viral"
+main = "src/worker/simple-index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "must-be-viral-db"
+database_id = "14bdc6aa-5ddb-4340-bfb2-59dc68d2c520"
+migrations_dir = "migrations"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "development"
+ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"

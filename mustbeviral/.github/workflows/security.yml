@@ -1,0 +1,245 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0' # Weekly scan on Sundays
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    # Dependency vulnerability scanning
+    - name: Run npm audit
+      run: |
+        npm ci
+        npm audit --audit-level=moderate
+      continue-on-error: true
+
+    # OWASP Dependency Check
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'must-be-viral-v2'
+        path: '.'
+        format: 'ALL'
+        args: >
+          --enableRetired
+          --enableExperimental
+
+    # CodeQL Analysis
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: javascript, typescript
+        queries: security-and-quality
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+
+    # Snyk Security Scan
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+      continue-on-error: true
+
+    # Semgrep Security Scan
+    - name: Semgrep
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: >
+          p/security-audit
+          p/owasp-top-ten
+          p/nodejs
+          p/typescript
+          p/react
+
+    # Secret Scanning
+    - name: TruffleHog Secret Scan
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
+        extra_args: --debug --only-verified
+
+    # License Compliance Check
+    - name: License Scan
+      uses: fossas/fossa-action@main
+      with:
+        api-key: ${{ secrets.FOSSA_API_KEY }}
+      continue-on-error: true
+
+    # Container Scan (if using Docker)
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+      continue-on-error: true
+
+    - name: Upload Trivy results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    # Custom Security Checks
+    - name: Check for hardcoded secrets
+      run: |
+        echo "Checking for hardcoded secrets..."
+        ! grep -r "api[_-]key.*=.*['\"]" --include="*.js" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules --exclude-dir=.git
+        ! grep -r "password.*=.*['\"]" --include="*.js" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules --exclude-dir=.git
+        ! grep -r "secret.*=.*['\"]" --include="*.js" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules --exclude-dir=.git
+      continue-on-error: true
+
+    # Security Headers Check
+    - name: Check Security Headers
+      run: |
+        echo "Validating security headers implementation..."
+        grep -r "Content-Security-Policy" src/ || echo "Warning: CSP headers not found"
+        grep -r "X-Frame-Options" src/ || echo "Warning: X-Frame-Options not found"
+        grep -r "X-Content-Type-Options" src/ || echo "Warning: X-Content-Type-Options not found"
+      continue-on-error: true
+
+    # Generate Security Report
+    - name: Generate Security Report
+      if: always()
+      run: |
+        echo "# Security Scan Report" > security-report.md
+        echo "Date: $(date)" >> security-report.md
+        echo "Branch: ${{ github.ref }}" >> security-report.md
+        echo "Commit: ${{ github.sha }}" >> security-report.md
+        echo "" >> security-report.md
+        echo "## Scan Results" >> security-report.md
+        echo "- npm audit: Check logs" >> security-report.md
+        echo "- OWASP Dependency Check: Check artifacts" >> security-report.md
+        echo "- CodeQL: Check Security tab" >> security-report.md
+        echo "- Snyk: Check logs" >> security-report.md
+        echo "- Semgrep: Check annotations" >> security-report.md
+        echo "- Secret Scan: Check logs" >> security-report.md
+
+    - name: Upload Security Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-report
+        path: |
+          security-report.md
+          dependency-check-report.*
+          trivy-results.sarif
+
+  sast-analysis:
+    runs-on: ubuntu-latest
+    needs: security-scan
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run ESLint Security Plugin
+      run: |
+        npm install --save-dev eslint-plugin-security
+        npx eslint . --ext .js,.jsx,.ts,.tsx --format json > eslint-security-report.json
+      continue-on-error: true
+
+    - name: TypeScript Security Analysis
+      run: |
+        echo "Running TypeScript strict checks..."
+        npx tsc --noEmit --strict
+      continue-on-error: true
+
+    - name: Check for unsafe operations
+      run: |
+        echo "Checking for unsafe operations..."
+        ! grep -r "eval(" --include="*.js" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules
+        ! grep -r "innerHTML" --include="*.js" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules
+        ! grep -r "dangerouslySetInnerHTML" --include="*.tsx" --exclude-dir=node_modules || echo "Found dangerouslySetInnerHTML usage - ensure it's properly sanitized"
+      continue-on-error: true
+
+    - name: Upload SAST Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: sast-results
+        path: |
+          eslint-security-report.json
+
+  compliance-check:
+    runs-on: ubuntu-latest
+    needs: security-scan
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: GDPR Compliance Check
+      run: |
+        echo "Checking GDPR compliance..."
+        grep -r "personal data" src/ || echo "Note: Ensure personal data handling is GDPR compliant"
+        grep -r "consent" src/ || echo "Warning: No consent mechanism found"
+        grep -r "data deletion" src/ || echo "Warning: No data deletion mechanism found"
+      continue-on-error: true
+
+    - name: SOC 2 Compliance Check
+      run: |
+        echo "Checking SOC 2 compliance..."
+        test -f "src/lib/security/encryption.ts" || echo "Warning: Encryption module not found"
+        test -f "src/lib/audit/logger.ts" || echo "Warning: Audit logging not found"
+        test -f "src/lib/security/accessControl.ts" || echo "Warning: Access control not found"
+      continue-on-error: true
+
+    - name: PCI DSS Compliance Check
+      run: |
+        echo "Checking PCI DSS compliance..."
+        ! grep -r "creditCard" src/ || echo "Found credit card references - ensure PCI compliance"
+        ! grep -r "cardNumber" src/ || echo "Found card number references - ensure PCI compliance"
+        grep -r "stripe" src/ && echo "Stripe integration found - good for PCI compliance"
+      continue-on-error: true
+
+  notify-results:
+    runs-on: ubuntu-latest
+    needs: [security-scan, sast-analysis, compliance-check]
+    if: always()
+
+    steps:
+    - name: Notify on failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '⚠️ Security scan found potential issues. Please review the security tab and artifacts.'
+          })

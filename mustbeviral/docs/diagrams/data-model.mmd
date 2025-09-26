@@ -1,0 +1,325 @@
+```mermaid
+erDiagram
+    %% Core User Management
+    USERS {
+        string id PK "Primary key (UUID)"
+        string email UK "Unique email address"
+        string username UK "Unique username"
+        string password_hash "Hashed password"
+        string role "creator, influencer, admin"
+        string full_name "Display name"
+        text bio "User biography"
+        string avatar_url "Profile image URL"
+        string location "Geographic location"
+        string website "Personal website"
+        boolean onboarding_completed "Onboarding status"
+        integer ai_preference_level "AI usage preference (0-100)"
+        string industry "User industry"
+        string primary_goal "User's main objective"
+        boolean email_verified "Email verification status"
+        boolean is_active "Account active status"
+        boolean is_premium "Premium subscription status"
+        string google_id UK "Google OAuth ID"
+        string github_id UK "GitHub OAuth ID"
+        string twitter_id UK "Twitter OAuth ID"
+        text profile_data "JSON profile metadata"
+        text settings "JSON user settings"
+        timestamp created_at "Account creation time"
+        timestamp updated_at "Last profile update"
+        timestamp last_login_at "Last login time"
+        timestamp deleted_at "Soft deletion time"
+    }
+
+    %% Session Management
+    SESSIONS {
+        string id PK "Session identifier"
+        string user_id FK "Reference to users table"
+        string token UK "JWT access token"
+        string refresh_token UK "JWT refresh token"
+        string ip_address "Client IP address"
+        text user_agent "Client user agent"
+        string device_type "Device type (mobile/desktop)"
+        timestamp expires_at "Token expiration time"
+        timestamp refresh_expires_at "Refresh token expiration"
+        timestamp created_at "Session creation time"
+        timestamp last_activity_at "Last activity time"
+        timestamp revoked_at "Session revocation time"
+    }
+
+    %% Content Management
+    CONTENT {
+        string id PK "Content identifier"
+        string user_id FK "Content owner"
+        string title "Content title"
+        string slug UK "URL-friendly slug"
+        text body "Main content body"
+        text excerpt "Content summary"
+        string type "blog_post, social_post, video_script, email, ad_copy"
+        string status "draft, published, scheduled, archived, pending_review"
+        string visibility "public, private, unlisted"
+        string featured_image_url "Main image URL"
+        text images "JSON array of image URLs"
+        string video_url "Video content URL"
+        boolean generated_by_ai "AI generation flag"
+        string ai_model_used "AI model identifier"
+        text ai_prompt "Original AI prompt"
+        text ai_parameters "JSON AI generation parameters"
+        string ethics_check_status "pending, passed, failed, manual_review"
+        text ethics_check_details "JSON ethics check results"
+        string meta_title "SEO title"
+        text meta_description "SEO description"
+        text keywords "JSON array of keywords"
+        string canonical_url "Canonical URL"
+        timestamp published_at "Publication time"
+        timestamp scheduled_for "Scheduled publication time"
+        integer view_count "Total views"
+        integer like_count "Total likes"
+        integer share_count "Total shares"
+        integer comment_count "Total comments"
+        real engagement_rate "Calculated engagement rate"
+        text metadata "JSON additional metadata"
+        timestamp created_at "Content creation time"
+        timestamp updated_at "Last content update"
+        timestamp deleted_at "Soft deletion time"
+    }
+
+    %% Content Categorization
+    TAGS {
+        string id PK "Tag identifier"
+        string name UK "Tag name"
+        string slug UK "URL-friendly slug"
+        text description "Tag description"
+        integer usage_count "Number of times used"
+        timestamp created_at "Tag creation time"
+    }
+
+    CONTENT_TAGS {
+        string content_id FK "Reference to content"
+        string tag_id FK "Reference to tags"
+        timestamp created_at "Association creation time"
+    }
+
+    %% Analytics and Tracking
+    ANALYTICS {
+        string id PK "Event identifier"
+        string user_id FK "User who triggered event"
+        string content_id FK "Related content"
+        string event_type "view, click, share, like, comment, conversion, signup, purchase"
+        text event_value "JSON event-specific data"
+        string source "Traffic source"
+        string medium "Traffic medium"
+        string campaign "Campaign identifier"
+        string referrer "Referring URL"
+        string ip_address "Client IP"
+        text user_agent "Client user agent"
+        string device_type "Device type"
+        string browser "Browser type"
+        string os "Operating system"
+        string country "Country code"
+        string region "Region/state"
+        string city "City name"
+        string session_id "Session identifier"
+        timestamp timestamp "Event timestamp"
+    }
+
+    %% Subscription Management
+    SUBSCRIPTIONS {
+        string id PK "Subscription identifier"
+        string user_id UK "Reference to users table"
+        string stripe_customer_id UK "Stripe customer ID"
+        string stripe_subscription_id UK "Stripe subscription ID"
+        string stripe_price_id "Stripe price ID"
+        string status "trialing, active, canceled, incomplete, past_due, unpaid"
+        string tier "free, starter, professional, enterprise"
+        timestamp current_period_start "Current billing period start"
+        timestamp current_period_end "Current billing period end"
+        boolean cancel_at_period_end "Cancellation flag"
+        timestamp canceled_at "Cancellation time"
+        integer monthly_text_tokens "Text generation limit"
+        integer monthly_image_generations "Image generation limit"
+        integer monthly_video_seconds "Video generation limit"
+        integer used_text_tokens "Used text tokens"
+        integer used_image_generations "Used image generations"
+        integer used_video_seconds "Used video seconds"
+        timestamp usage_reset_at "Usage reset time"
+        integer last_payment_amount "Last payment (cents)"
+        timestamp last_payment_date "Last payment date"
+        timestamp next_payment_date "Next payment date"
+        text metadata "JSON subscription metadata"
+        timestamp created_at "Subscription creation time"
+        timestamp updated_at "Last subscription update"
+        timestamp expires_at "Subscription expiration"
+    }
+
+    %% Audit and Compliance
+    AUDIT_LOGS {
+        string id PK "Audit log identifier"
+        string user_id FK "User who performed action"
+        string action "Action performed"
+        string entity_type "Type of entity affected"
+        string entity_id "ID of affected entity"
+        text old_values "JSON previous values"
+        text new_values "JSON new values"
+        string ip_address "Client IP address"
+        text user_agent "Client user agent"
+        string request_id "Request identifier"
+        string status "success, failure, error"
+        text error_message "Error details if failed"
+        timestamp timestamp "Action timestamp"
+    }
+
+    %% Multi-tenancy and Organizations (Future Extension)
+    ORGANIZATIONS {
+        string id PK "Organization identifier"
+        string name "Organization name"
+        string slug UK "URL-friendly slug"
+        text description "Organization description"
+        string type "agency, enterprise, startup"
+        string status "active, suspended, trial"
+        integer member_limit "Maximum members allowed"
+        text settings "JSON organization settings"
+        text metadata "JSON additional metadata"
+        timestamp created_at "Organization creation time"
+        timestamp updated_at "Last organization update"
+        timestamp deleted_at "Soft deletion time"
+    }
+
+    ORGANIZATION_MEMBERS {
+        string id PK "Membership identifier"
+        string organization_id FK "Reference to organizations"
+        string user_id FK "Reference to users"
+        string role "owner, admin, member, viewer"
+        string status "active, pending, suspended"
+        text permissions "JSON role permissions"
+        timestamp invited_at "Invitation timestamp"
+        timestamp joined_at "Join timestamp"
+        timestamp left_at "Leave timestamp"
+        timestamp created_at "Membership creation time"
+        timestamp updated_at "Last membership update"
+    }
+
+    %% Relationships
+    USERS ||--o{ SESSIONS : "has many"
+    USERS ||--o{ CONTENT : "creates"
+    USERS ||--o| SUBSCRIPTIONS : "has one"
+    USERS ||--o{ ANALYTICS : "generates"
+    USERS ||--o{ AUDIT_LOGS : "performs"
+    USERS ||--o{ ORGANIZATION_MEMBERS : "belongs to"
+
+    CONTENT ||--o{ CONTENT_TAGS : "has many"
+    TAGS ||--o{ CONTENT_TAGS : "used by"
+    CONTENT ||--o{ ANALYTICS : "tracked by"
+
+    ORGANIZATIONS ||--o{ ORGANIZATION_MEMBERS : "has many"
+
+    %% Content Collaboration (Future Extension)
+    CONTENT_COLLABORATORS {
+        string id PK "Collaboration identifier"
+        string content_id FK "Reference to content"
+        string user_id FK "Collaborator user"
+        string role "editor, reviewer, viewer"
+        string status "active, pending, removed"
+        text permissions "JSON collaboration permissions"
+        timestamp invited_at "Invitation timestamp"
+        timestamp accepted_at "Acceptance timestamp"
+        timestamp created_at "Collaboration creation time"
+        timestamp updated_at "Last collaboration update"
+    }
+
+    CONTENT ||--o{ CONTENT_COLLABORATORS : "has collaborators"
+    USERS ||--o{ CONTENT_COLLABORATORS : "collaborates on"
+
+    %% Campaign Management (Extended Schema)
+    CAMPAIGNS {
+        string id PK "Campaign identifier"
+        string organization_id FK "Owning organization"
+        string created_by FK "Creator user ID"
+        string name "Campaign name"
+        text description "Campaign description"
+        text objectives "JSON campaign objectives"
+        text budget "JSON budget allocation"
+        text timeline "JSON timeline details"
+        text requirements "JSON campaign requirements"
+        string status "draft, active, paused, completed, canceled"
+        text metadata "JSON additional metadata"
+        timestamp start_date "Campaign start date"
+        timestamp end_date "Campaign end date"
+        timestamp application_deadline "Application deadline"
+        timestamp created_at "Campaign creation time"
+        timestamp updated_at "Last campaign update"
+        timestamp deleted_at "Soft deletion time"
+    }
+
+    CAMPAIGN_APPLICATIONS {
+        string id PK "Application identifier"
+        string campaign_id FK "Reference to campaigns"
+        string influencer_id FK "Applicant user ID"
+        string status "pending, approved, rejected, withdrawn"
+        text proposal "Application proposal"
+        text portfolio_samples "JSON portfolio URLs"
+        text proposed_rate "JSON rate proposal"
+        text terms "JSON terms and conditions"
+        timestamp application_date "Application timestamp"
+        timestamp response_deadline "Response deadline"
+        timestamp responded_at "Response timestamp"
+        timestamp created_at "Application creation time"
+        timestamp updated_at "Last application update"
+    }
+
+    ORGANIZATIONS ||--o{ CAMPAIGNS : "runs"
+    USERS ||--o{ CAMPAIGNS : "creates"
+    CAMPAIGNS ||--o{ CAMPAIGN_APPLICATIONS : "receives"
+    USERS ||--o{ CAMPAIGN_APPLICATIONS : "submits"
+
+    %% Vector Embeddings (AI/ML Features)
+    CONTENT_EMBEDDINGS {
+        string id PK "Embedding identifier"
+        string content_id FK "Reference to content"
+        string model_version "Embedding model version"
+        blob embedding_vector "Vector embedding data"
+        real similarity_threshold "Similarity threshold"
+        text metadata "JSON embedding metadata"
+        timestamp created_at "Embedding creation time"
+        timestamp updated_at "Last embedding update"
+    }
+
+    CONTENT ||--o| CONTENT_EMBEDDINGS : "has embedding"
+
+    %% Trend Tracking
+    TREND_ANALYSIS {
+        string id PK "Trend identifier"
+        string topic "Trending topic"
+        text hashtags "JSON hashtag array"
+        string platform "Social media platform"
+        string region "Geographic region"
+        integer volume "Mention volume"
+        real growth_rate "Growth percentage"
+        string sentiment "positive, negative, neutral"
+        real relevance_score "Relevance score (0-100)"
+        timestamp peak_time "Peak trending time"
+        timestamp created_at "Analysis creation time"
+        timestamp expires_at "Trend expiration time"
+    }
+
+    %% Social Media Integrations
+    SOCIAL_ACCOUNTS {
+        string id PK "Social account identifier"
+        string user_id FK "Reference to users"
+        string platform "instagram, twitter, tiktok, linkedin, youtube"
+        string platform_user_id "Platform-specific user ID"
+        string handle "Platform handle/username"
+        string access_token "OAuth access token (encrypted)"
+        string refresh_token "OAuth refresh token (encrypted)"
+        boolean verified "Platform verification status"
+        integer follower_count "Current follower count"
+        real engagement_rate "Platform engagement rate"
+        text platform_data "JSON platform-specific data"
+        timestamp connected_at "Connection timestamp"
+        timestamp last_sync_at "Last data sync time"
+        timestamp token_expires_at "Token expiration time"
+        timestamp created_at "Account creation time"
+        timestamp updated_at "Last account update"
+    }
+
+    USERS ||--o{ SOCIAL_ACCOUNTS : "connects"
+```

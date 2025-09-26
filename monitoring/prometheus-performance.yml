@@ -1,0 +1,167 @@
+# High-Performance Prometheus Configuration
+# Optimized for monitoring Must Be Viral V2 performance metrics
+
+global:
+  scrape_interval: 15s          # Scrape targets every 15 seconds
+  evaluation_interval: 15s      # Evaluate rules every 15 seconds
+  external_labels:
+    cluster: 'mustbeviral-production'
+    environment: 'production'
+
+# Rule files for alerting
+rule_files:
+  - "alerts/performance.yml"
+  - "alerts/application.yml"
+  - "alerts/infrastructure.yml"
+
+# Alert manager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Scraping configurations
+scrape_configs:
+  # Application Performance Metrics
+  - job_name: 'mustbeviral-app'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: /metrics
+    honor_labels: false
+    params:
+      format: ['prometheus']
+
+  # Node.js Application Metrics (detailed)
+  - job_name: 'nodejs-app-detailed'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: /metrics
+    params:
+      collect[]: ['nodejs_memory_usage_bytes', 'nodejs_cpu_usage_seconds', 'nodejs_uptime_seconds']
+
+  # Redis Performance Metrics
+  - job_name: 'redis'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['redis:6379']
+    metrics_path: /metrics
+
+  # PostgreSQL Performance Metrics
+  - job_name: 'postgres'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['postgres:5432']
+    metrics_path: /metrics
+
+  # Nginx Performance Metrics
+  - job_name: 'nginx'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: /nginx_status
+    params:
+      format: ['prometheus']
+
+  # System Metrics (Node Exporter)
+  - job_name: 'node-exporter'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Docker Container Metrics
+  - job_name: 'cadvisor'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # Application Health Checks
+  - job_name: 'health-checks'
+    scrape_interval: 5s
+    scrape_timeout: 3s
+    metrics_path: /health
+    static_configs:
+      - targets: ['app:3000']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - target_label: __metrics_path__
+        replacement: /health
+
+  # Performance Testing Metrics (when running)
+  - job_name: 'k6-performance'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['k6:6565']
+    honor_labels: true
+
+  # Custom Application Metrics
+  - job_name: 'custom-metrics'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: /custom-metrics
+    params:
+      format: ['prometheus']
+
+# Recording rules for performance optimization
+recording_rules:
+  - name: performance_aggregations
+    interval: 30s
+    rules:
+      # CPU Usage Rate
+      - record: nodejs_cpu_usage_rate
+        expr: rate(nodejs_cpu_usage_seconds_total[5m]) * 100
+
+      # Memory Usage Percentage
+      - record: nodejs_memory_usage_percentage
+        expr: (nodejs_memory_usage_bytes{type="heapUsed"} / nodejs_memory_usage_bytes{type="heapTotal"}) * 100
+
+      # Request Rate
+      - record: http_request_rate
+        expr: rate(http_requests_total[5m])
+
+      # Average Response Time
+      - record: http_response_time_avg
+        expr: rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])
+
+      # Error Rate
+      - record: http_error_rate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])
+
+      # Redis Hit Rate
+      - record: redis_cache_hit_rate
+        expr: rate(redis_keyspace_hits_total[5m]) / (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m]))
+
+      # Database Connection Pool Usage
+      - record: postgres_connection_pool_usage
+        expr: (postgres_connections_active / postgres_connections_max) * 100
+
+# Storage configuration for performance
+storage:
+  tsdb:
+    path: /prometheus
+    retention.time: 15d
+    retention.size: 50GB
+    min-block-duration: 2h
+    max-block-duration: 25h
+    wal-compression: true
+
+# Remote write for long-term storage (optional)
+# remote_write:
+#   - url: https://your-remote-storage-endpoint
+#     write_relabel_configs:
+#       - source_labels: [__name__]
+#         regex: 'nodejs_.*|http_.*|redis_.*'
+#         action: keep
+
+# Web UI configuration
+web:
+  enable-lifecycle: true
+  enable-admin-api: true
+  page-title: "Must Be Viral V2 - Performance Monitoring"
+  external-url: "http://localhost:9090"
+  route-prefix: /

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Must Be Viral</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+        
+        .offline-container {
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .offline-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 32px;
+            opacity: 0.9;
+        }
+        
+        .offline-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+        
+        .offline-subtitle {
+            font-size: 1.25rem;
+            margin-bottom: 32px;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        
+        .offline-features {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 32px 0;
+            text-align: left;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            font-size: 1rem;
+        }
+        
+        .feature-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .feature-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            opacity: 0.8;
+        }
+        
+        .retry-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .retry-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .network-status {
+            margin-top: 24px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .network-status.online {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            display: block;
+        }
+        
+        .network-status.offline {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            display: block;
+        }
+        
+        @media (max-width: 640px) {
+            .offline-title {
+                font-size: 2rem;
+            }
+            
+            .offline-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .offline-features {
+                padding: 20px;
+            }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon pulse">
+            <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="60" cy="60" r="50" stroke="currentColor" stroke-width="3" fill="none" opacity="0.3"/>
+                <path d="M30 60 L50 80 L90 40" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="60" cy="60" r="8" fill="currentColor"/>
+            </svg>
+        </div>
+        
+        <h1 class="offline-title">You're Offline</h1>
+        <p class="offline-subtitle">
+            Don't worry! Must Be Viral works offline too. 
+            Your content is saved locally and will sync when you're back online.
+        </p>
+        
+        <div class="offline-features">
+            <div class="feature-item">
+                <svg class="feature-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span>Create and edit content offline</span>
+            </div>
+            <div class="feature-item">
+                <svg class="feature-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                </svg>
+                <span>Auto-sync when connection returns</span>
+            </div>
+            <div class="feature-item">
+                <svg class="feature-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                </svg>
+                <span>Access recently viewed content</span>
+            </div>
+            <div class="feature-item">
+                <svg class="feature-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+                <span>View cached analytics and insights</span>
+            </div>
+        </div>
+        
+        <button class="retry-button" onclick="retryConnection()">
+            Try Again
+        </button>
+        
+        <div class="network-status" id="networkStatus">
+            <span id="statusText">Checking connection...</span>
+        </div>
+    </div>
+
+    <script>
+        // Network status monitoring
+        function updateNetworkStatus() {
+            const statusEl = document.getElementById('networkStatus');
+            const statusText = document.getElementById('statusText');
+            
+            if (navigator.onLine) {
+                statusEl.className = 'network-status online';
+                statusText.textContent = '✓ Connection restored! Refreshing...';
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                statusEl.className = 'network-status offline';
+                statusText.textContent = '✗ Still offline. Will retry automatically.';
+            }
+        }
+        
+        function retryConnection() {
+            updateNetworkStatus();
+            if (navigator.onLine) {
+                window.location.reload();
+            }
+        }
+        
+        // Listen for network changes
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        
+        // Initial status check
+        setTimeout(updateNetworkStatus, 1000);
+        
+        // Auto-retry every 30 seconds
+        setInterval(() => {
+            if (navigator.onLine) {
+                updateNetworkStatus();
+            }
+        }, 30000);
+        
+        // Try to load cached content
+        if ('caches' in window) {
+            caches.match('/').then(response => {
+                if (response) {
+                    const cachedSection = document.createElement('div');
+                    cachedSection.innerHTML = `
+                        <div style="margin-top: 24px; padding: 16px; background: rgba(255,255,255,0.1); border-radius: 12px;">
+                            <p style="font-size: 0.9rem; opacity: 0.9;">
+                                💾 Some content is available from cache. 
+                                <a href="/" style="color: white; text-decoration: underline;">View cached version</a>
+                            </p>
+                        </div>
+                    `;
+                    document.querySelector('.offline-container').appendChild(cachedSection);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

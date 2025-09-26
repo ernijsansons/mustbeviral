@@ -1,0 +1,498 @@
+﻿# Enterprise Docker Compose Configuration
+version: '3.8'
+
+services:
+  # Main Application - Performance Optimized
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      cache_from:
+        - node:20-alpine3.19
+        - mustbeviral-app:latest
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    container_name: mustbeviral-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/mustbeviral?sslmode=disable&pool_max_conns=20&pool_min_conns=5&pool_max_conn_idle_time=300s
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - CLUSTER_SIZE=${CLUSTER_SIZE:-8}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CACHE_TTL=${CACHE_TTL:-300}
+      - MEMORY_THRESHOLD=${MEMORY_THRESHOLD:-3221225472}
+      - CPU_THRESHOLD=${CPU_THRESHOLD:-85}
+      - WORKER_MEMORY_LIMIT=${WORKER_MEMORY_LIMIT:-671088640}
+      - ADAPTIVE_SCALING=true
+      - UV_THREADPOOL_SIZE=32
+      - NODE_OPTIONS=--max-old-space-size=3072 --optimize-for-size --enable-source-maps=false --no-deprecation
+      - V8_OPTIONS=--max_old_space_size=3072 --optimize_for_size --gc_interval=100
+      - OTEL_TRACES_EXPORTER=none
+      - OTEL_METRICS_EXPORTER=none
+      - MALLOC_ARENA_MAX=2
+      - MALLOC_MMAP_THRESHOLD_=131072
+      - MALLOC_TRIM_THRESHOLD_=131072
+      - MALLOC_TOP_PAD_=131072
+      - MALLOC_MMAP_MAX_=65536
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '6.0'
+          pids: 4096
+        reservations:
+          memory: 2G
+          cpus: '3.0'
+      restart_policy:
+        condition: on-failure
+        delay: 3s
+        max_attempts: 5
+        window: 180s
+      update_config:
+        parallelism: 2
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0.3
+      rollback_config:
+        parallelism: 1
+        delay: 0s
+        failure_action: pause
+        monitor: 5s
+        max_failure_ratio: 0.3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    volumes:
+      - app-logs:/app/logs
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 512M
+          mode: 0755
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+      - apparmor:unconfined
+    read_only: true
+    user: "1001:1001"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+      memlock:
+        soft: -1
+        hard: -1
+
+  # PostgreSQL Database - Performance Optimized
+  postgres:
+    image: postgres:15-alpine
+    container_name: mustbeviral-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=mustbeviral
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 --data-checksums
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    command: >
+      postgres
+      -c shared_buffers=1GB
+      -c effective_cache_size=3GB
+      -c work_mem=32MB
+      -c maintenance_work_mem=256MB
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=300
+      -c max_worker_processes=16
+      -c max_parallel_workers_per_gather=8
+      -c max_parallel_workers=16
+      -c max_parallel_maintenance_workers=4
+      -c wal_buffers=64MB
+      -c max_wal_size=4GB
+      -c min_wal_size=512MB
+      -c checkpoint_completion_target=0.9
+      -c wal_compression=on
+      -c wal_keep_size=1GB
+      -c shared_preload_libraries=pg_stat_statements,pg_buffercache
+      -c max_connections=300
+      -c superuser_reserved_connections=3
+      -c tcp_keepalives_idle=600
+      -c tcp_keepalives_interval=30
+      -c tcp_keepalives_count=3
+      -c log_statement=mod
+      -c log_duration=off
+      -c log_min_duration_statement=5000
+      -c log_checkpoints=on
+      -c log_connections=off
+      -c log_disconnections=off
+      -c log_lock_waits=on
+      -c log_temp_files=10MB
+      -c log_autovacuum_min_duration=0
+      -c autovacuum_max_workers=6
+      -c autovacuum_naptime=15s
+      -c autovacuum_vacuum_threshold=25
+      -c autovacuum_analyze_threshold=10
+      -c autovacuum_vacuum_scale_factor=0.1
+      -c autovacuum_analyze_scale_factor=0.05
+      -c autovacuum_vacuum_cost_delay=10ms
+      -c autovacuum_vacuum_cost_limit=1000
+      -c vacuum_cost_page_hit=1
+      -c vacuum_cost_page_miss=10
+      -c vacuum_cost_page_dirty=20
+      -c bgwriter_delay=50ms
+      -c bgwriter_lru_maxpages=200
+      -c bgwriter_lru_multiplier=4.0
+      -c checkpoint_timeout=15min
+      -c commit_delay=10000
+      -c commit_siblings=10
+      -c deadlock_timeout=1s
+      -c default_statistics_target=500
+      -c from_collapse_limit=12
+      -c join_collapse_limit=12
+      -c max_locks_per_transaction=256
+      -c max_pred_locks_per_transaction=256
+      -c temp_buffers=32MB
+      -c track_activities=on
+      -c track_counts=on
+      -c track_io_timing=on
+      -c track_functions=pl
+      -c wal_level=replica
+      -c archive_mode=on
+      -c archive_command='test ! -f /var/lib/postgresql/data/archive/%f && cp %p /var/lib/postgresql/data/archive/%f'
+      -c max_wal_senders=3
+      -c wal_sender_timeout=60s
+      -c synchronous_commit=off
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d
+      - postgres-archive:/var/lib/postgresql/data/archive
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '4.0'
+          pids: 1000
+        reservations:
+          memory: 2G
+          cpus: '2.0'
+      restart_policy:
+        condition: on-failure
+        delay: 3s
+        max_attempts: 5
+        window: 180s
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mustbeviral -t 1"]
+      interval: 5s
+      timeout: 2s
+      retries: 3
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+      memlock:
+        soft: -1
+        hard: -1
+
+  # Redis Cache - Performance Optimized
+  redis:
+    image: redis:7-alpine
+    container_name: mustbeviral-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --tcp-keepalive 60
+      --tcp-backlog 511
+      --timeout 0
+      --databases 1
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --hz 10
+      --client-output-buffer-limit normal 0 0 0
+      --client-output-buffer-limit replica 256mb 64mb 60
+      --client-output-buffer-limit pubsub 32mb 8mb 60
+    volumes:
+      - redis-data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: mustbeviral-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      - app
+    networks:
+      - app-network
+    security_opt:
+      - no-new-privileges:true
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mustbeviral-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - app-network
+    security_opt:
+      - no-new-privileges:true
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mustbeviral-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - app-network
+    security_opt:
+      - no-new-privileges:true
+
+  # Log Aggregation - ELK Stack
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: mustbeviral-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - app-network
+    security_opt:
+      - no-new-privileges:true
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: mustbeviral-logstash
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./monitoring/logstash/config:/usr/share/logstash/config:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-network
+    security_opt:
+      - no-new-privileges:true
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: mustbeviral-kibana
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-network
+    security_opt:
+      - no-new-privileges:true
+
+  # Security Scanning
+  trivy:
+    image: aquasec/trivy:latest
+    container_name: mustbeviral-trivy
+    restart: "no"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - trivy-cache:/root/.cache/trivy
+    command: ["image", "--exit-code", "1", "--severity", "HIGH,CRITICAL", "mustbeviral-app"]
+
+  # Performance Monitoring - Node Exporter
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: mustbeviral-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - app-network
+    security_opt:
+      - no-new-privileges:true
+
+  # cAdvisor for container metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: mustbeviral-cadvisor
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg
+    networks:
+      - app-network
+    security_opt:
+      - no-new-privileges:true
+
+  # Redis Exporter for Redis metrics
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: mustbeviral-redis-exporter
+    restart: unless-stopped
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+      - app-network
+    security_opt:
+      - no-new-privileges:true
+
+  # PostgreSQL Exporter
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: mustbeviral-postgres-exporter
+    restart: unless-stopped
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/mustbeviral?sslmode=disable
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+    security_opt:
+      - no-new-privileges:true
+
+  # Alertmanager for handling alerts
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: mustbeviral-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager:/etc/alertmanager
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    networks:
+      - app-network
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  app-logs:
+    driver: local
+  nginx-logs:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  elasticsearch-data:
+    driver: local
+  trivy-cache:
+    driver: local
+  alertmanager-data:
+    driver: local

@@ -1,0 +1,123 @@
+# Docker Compose Override Example
+# Copy this file to docker-compose.override.yml for local development customization
+# This file is automatically ignored by Git to prevent committing local configurations
+
+version: '3.8'
+
+services:
+  # Override app service for local development
+  app:
+    build:
+      target: development  # Use development target instead of production
+    environment:
+      - NODE_ENV=development
+      - DEBUG=true
+      - LOG_LEVEL=debug
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      - /app/node_modules
+      - /app/mustbeviral/node_modules
+    ports:
+      # Expose additional ports for development
+      - "3000:3000"
+      - "9229:9229"  # Node.js debug port
+    command: ["npm", "run", "dev"]
+
+  # Override postgres for local development
+  postgres:
+    environment:
+      - POSTGRES_PASSWORD=dev_password
+      - POSTGRES_DB=mustbeviral_dev
+    ports:
+      # Expose postgres port for local access
+      - "5432:5432"
+    volumes:
+      # Use local postgres data directory
+      - ./data/postgres:/var/lib/postgresql/data
+
+  # Override redis for local development
+  redis:
+    command: redis-server --appendonly yes --requirepass dev_password
+    ports:
+      # Expose redis port for local access
+      - "6379:6379"
+    volumes:
+      # Use local redis data directory
+      - ./data/redis:/data
+
+  # Override nginx for local development
+  nginx:
+    ports:
+      # Use different ports to avoid conflicts
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      # Use local nginx configuration
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+
+  # Override monitoring services for local development
+  prometheus:
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.dev.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=true
+
+  # Disable heavy services for local development
+  elasticsearch:
+    profiles:
+      - monitoring
+
+  logstash:
+    profiles:
+      - monitoring
+
+  kibana:
+    profiles:
+      - monitoring
+
+  trivy:
+    profiles:
+      - security
+
+# Override networks for local development
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Override volumes for local development
+volumes:
+  postgres-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data/postgres
+  redis-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data/redis
+  app-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/logs
+
+
+
+
+
+
