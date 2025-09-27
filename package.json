@@ -85,9 +85,9 @@
     "type": "git",
     "url": "https://github.com/ernijsansons/mustbeviral.git"
   },
-  "bugs": {
-    "url": "https://github.com/your-org/must-be-viral-v2/issues"
-  },
+    "bugs": {
+      "url": "https://github.com/ernijsansons/mustbeviral/issues"
+    },
   "homepage": "https://mustbeviral.com",
   "devDependencies": {
     "@babel/plugin-transform-class-properties": "^7.27.1",

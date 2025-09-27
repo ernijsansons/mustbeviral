@@ -204,7 +204,7 @@ export class PerformanceMonitor {
     }
 
     // Get active alerts
-    const activeAlerts = this.alerts.filter(a => !a.acknowledged);
+    const activeAlerts = this.alerts.filter(alert => !alert.acknowledged);
 
     return {
       responseTime: responseTimeStats,
