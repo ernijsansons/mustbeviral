@@ -81,7 +81,7 @@ export function ThemeProvider({ children, defaultMode = 'auto', enableSystemThem
 
   // Listen to system theme changes
   useEffect_(() => {
-    if (!enableSystemTheme ?? mode !== 'auto') {return;}
+    if (!enableSystemTheme || mode !== 'auto') {return;}
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
