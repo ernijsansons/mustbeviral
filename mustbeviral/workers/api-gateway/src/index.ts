@@ -44,13 +44,19 @@ interface Env {
   ENABLE_CIRCUIT_BREAKER: string;
 }
 
-// CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key, X-Request-ID',
-  'Access-Control-Max-Age': '86400',
-};
+// Dynamic CORS headers based on environment
+function getCorsHeaders(env: Env, origin?: string): Record<string, string> {
+  const allowedOrigins = env.ALLOWED_ORIGINS ? env.ALLOWED_ORIGINS.split(',') : ['*'];
+  const isAllowedOrigin = origin && allowedOrigins.includes(origin);
+
+  return {
+    'Access-Control-Allow-Origin': isAllowedOrigin ? origin : (allowedOrigins.includes('*') ? '*' : 'null'),
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key, X-Request-ID',
+    'Access-Control-Allow-Credentials': isAllowedOrigin ? 'true' : 'false',
+    'Access-Control-Max-Age': '86400',
+  };
+}
 
 // Service routing configuration
 const serviceRoutes = {
@@ -66,6 +72,8 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
+    const origin = request.headers.get('Origin');
+    const corsHeaders = getCorsHeaders(env, origin);
     const requestId = request.headers.get('X-Request-ID') ?? generateRequestId();
 
     // Add request ID to headers
@@ -103,7 +111,7 @@ export default {
       const targetService = findTargetService(path);
       if (!targetService) {
         return new Response(
-          JSON.stringify({ error: 'Service not found', path }),
+          JSON.stringify({ error: 'Service not found' }),
           { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -229,14 +237,14 @@ export default {
       await gatewayController.logError(enhancedRequest, error, requestId);
       
       return new Response(
-        JSON.stringify({ 
-          error: 'Internal Server Error', 
+        JSON.stringify({
+          error: 'Internal Server Error',
           requestId,
           timestamp: new Date().toISOString()
         }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 500,
+          headers: { ...getCorsHeaders(env), 'Content-Type': 'application/json' }
         }
       );
     }

@@ -1,5 +1,7 @@
-// AI Content Generator
-// Integrates with Cloudflare AI and external AI services for content generation
+// AI Content Generator - Orchestrates modular content generation pipeline
+import { AIModelSelector, ContentType, ContentLength } from './core/AIModelSelector';
+import { PromptBuilder } from './core/PromptBuilder';
+import { ContentEnhancer } from './enhancement/ContentEnhancer';
 
 export interface ContentGenerationRequest {
   type: 'article' | 'social_post' | 'headline' | 'description' | 'script' | 'email';
@@ -48,40 +50,33 @@ interface AIService {
 export class ContentGenerator {
   private ai: AIService;
   private env: Record<string, any>;
+  private modelSelector: AIModelSelector;
+  private promptBuilder: PromptBuilder;
+  private contentEnhancer: ContentEnhancer;
 
   constructor(ai: AIService, env: Record<string, any>) {
     this.ai = ai;
     this.env = env;
+    this.modelSelector = new AIModelSelector();
+    this.promptBuilder = new PromptBuilder();
+    this.contentEnhancer = new ContentEnhancer(ai);
   }
 
   async generateContent(request: ContentGenerationRequest): Promise<ContentGenerationResult> {
     try {
-      // Build the prompt based on request parameters
-      const prompt = this.buildPrompt(request);
+      const prompt = this.promptBuilder.build(request);
+      const model = this.modelSelector.selectModel(request.type);
+      const maxTokens = this.modelSelector.getMaxTokens(request.length);
 
-      // Choose the best AI model for the task
-      const model = this.selectModel(request);
-
-      // Generate content using Cloudflare AI
       let result: unknown;
-
       if (model.startsWith('@cf/')) {
-        // Use Cloudflare AI models
-        result = await this.ai.run(model, {
-          prompt,
-          max_tokens: this.getMaxTokens(request.length)
-        });
+        result = await this.ai.run(model, { prompt, max_tokens: maxTokens });
       } else {
-        // Use external AI service (OpenAI, Anthropic, etc.)
         result = await this.callExternalAI(model, prompt, request);
       }
 
-      // Process and enhance the generated content
       const content = this.extractContent(result);
-      const enhanced = await this.enhanceContent(content, request);
-
-      return enhanced;
-
+      return await this.contentEnhancer.enhance(content, request, model);
     } catch (error: unknown) {
       throw new Error(`Content generation failed: ${error instanceof Error ? error.message : error}`);
     }
@@ -184,88 +179,7 @@ Optimized content:`;
     };
   }
 
-  private buildPrompt(request: ContentGenerationRequest): string {
-    const basePrompts = {
-      article: 'Write a comprehensive article about',
-      social_post: 'Create an engaging social media post about',
-      headline: 'Generate a compelling headline for',
-      description: 'Write a clear and engaging description for',
-      script: 'Create a video script about',
-      email: 'Write an email newsletter about'
-    };
-
-    const toneInstructions = {
-      professional: 'Use a professional, authoritative tone',
-      casual: 'Use a casual, conversational tone',
-      humorous: 'Use humor and wit appropriately',
-      urgent: 'Create a sense of urgency',
-      inspiring: 'Use inspiring and motivational language',
-      educational: 'Use clear, educational language'
-    };
-
-    const audienceInstructions = {
-      general: 'for a general audience',
-      professionals: 'for industry professionals',
-      students: 'for students and learners',
-      seniors: 'for senior adults',
-      teenagers: 'for teenagers and young adults'
-    };
-
-    const lengthInstructions = {
-      short: 'Keep it concise and to the point (under 200 words)',
-      medium: 'Provide moderate detail (200-500 words)',
-      long: 'Be comprehensive and detailed (500+ words)'
-    };
-
-    let prompt = `${basePrompts[request.type]} "${request.topic}".
-
-${toneInstructions[request.tone]} ${audienceInstructions[request.audience]}.
-${lengthInstructions[request.length]}.`;
-
-    if (request.keywords && request.keywords.length > 0) {
-      prompt += `nnInclude these keywords naturally: ${request.keywords.join(', ')}.`;
-    }
-
-    if (request.platform) {
-      prompt += `nnOptimize for ${request.platform}.`;
-    }
-
-    if (request.context) {
-      prompt += `nnAdditional context: ${request.context}`;
-    }
-
-    if (request.style) {
-      prompt += `nnStyle guidelines: ${request.style}`;
-    }
-
-    prompt += '\n\nContent:';
-
-    return prompt;
-  }
-
-  private selectModel(request: ContentGenerationRequest): string {
-    // Choose AI model based on content type and complexity
-    const modelMap = {
-      article: '@cf/meta/llama-2-7b-chat-int8',
-      social_post: '@cf/mistral/mistral-7b-instruct-v0.1',
-      headline: '@cf/microsoft/phi-2',
-      description: '@cf/meta/llama-2-7b-chat-int8',
-      script: '@cf/meta/llama-2-7b-chat-int8',
-      email: '@cf/mistral/mistral-7b-instruct-v0.1'
-    };
-
-    return modelMap[request.type]  ?? '@cf/meta/llama-2-7b-chat-int8';
-  }
-
-  private getMaxTokens(length: string): number {
-    const tokenLimits = {
-      short: 200,
-      medium: 500,
-      long: 1000
-    };
-
-    return tokenLimits[length as keyof typeof tokenLimits]  ?? 500;
-  }
+  // Removed: buildPrompt, selectModel, getMaxTokens - moved to AIModelSelector and PromptBuilder
 
   private async callExternalAI(model: string, prompt: string, request: ContentGenerationRequest): Promise<unknown> {
     // Placeholder for external AI service calls (OpenAI, Anthropic, etc.)

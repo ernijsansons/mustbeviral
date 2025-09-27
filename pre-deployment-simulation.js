@@ -7,9 +7,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
-const http = require('http');
-const { spawn, exec } = require('child_process');
 const crypto = require('crypto');
 
 class PreDeploymentSimulator {
@@ -463,8 +460,8 @@ class PreDeploymentSimulator {
 
     // Calculate latency percentiles
     const sortedLatencies = this.metrics.latencies.sort((a, b) => a - b);
-    const p50 = this.getPercentile(sortedLatencies, 50);
-    const p95 = this.getPercentile(sortedLatencies, 95);
+    const _p50 = this.getPercentile(sortedLatencies, 50);
+    const _p95 = this.getPercentile(sortedLatencies, 95);
     const p99 = this.getPercentile(sortedLatencies, 99);
 
     // Calculate security metrics
