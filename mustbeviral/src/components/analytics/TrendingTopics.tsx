@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../../lib/utils';
+import { motion, AnimatePresence} from 'framer-motion';
+import { cn} from '../../lib/utils';
 
 interface TrendingTopicsProps {
   onTopicClick?: (topic: Topic) => void;
@@ -30,11 +30,8 @@ interface TopicCategory {
   color: string;
 }
 
-export function TrendingTopics({
-  onTopicClick,
-  autoRefresh = true,
-  refreshInterval = 30000,
-  className
+export function TrendingTopics(_{
+  onTopicClick, autoRefresh = true, refreshInterval = 30000, className
 }: TrendingTopicsProps) {
   const [topics, setTopics] = useState<Topic[]>(generateMockTopics());
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -52,10 +49,10 @@ export function TrendingTopics({
   ];
 
   // Simulate live updates
-  useEffect(() => {
-    if (!isLive) return;
+  useEffect_(() => {
+    if (!isLive) {return;}
 
-    const interval = setInterval(() => {
+    const interval = setInterval_(() => {
       setTopics(generateMockTopics());
       setLastUpdate(new Date());
     }, refreshInterval);
@@ -64,8 +61,8 @@ export function TrendingTopics({
   }, [isLive, refreshInterval]);
 
   // Animate new entries
-  useEffect(() => {
-    const timer = setTimeout(() => {
+  useEffect_(() => {
+    const timer = setTimeout_(() => {
       // Simulate a new viral topic appearing
       if (Math.random() > 0.7) {
         const newViralTopic = generateViralTopic();
@@ -97,17 +94,31 @@ export function TrendingTopics({
   };
 
   const formatVolume = (volume: number): string => {
-    if (volume >= 1000000) return `${(volume / 1000000).toFixed(1)}M`;
-    if (volume >= 1000) return `${(volume / 1000).toFixed(1)}K`;
+    if (volume >= 1000000) {
+    return `${(volume / 1000000).toFixed(1)}M`;
+  }
+    if (volume >= 1000) {
+    return `${(volume / 1000).toFixed(1)}K`;
+  }
     return volume.toString();
   };
 
   const getChangeIcon = (change: number) => {
-    if (change > 50) return '🚀';
-    if (change > 20) return '📈';
-    if (change > 0) return '↗️';
-    if (change < -20) return '📉';
-    if (change < 0) return '↘️';
+    if (change > 50) {
+    return '🚀';
+  }
+    if (change > 20) {
+    return '📈';
+  }
+    if (change > 0) {
+    return '↗️';
+  }
+    if (change < -20) {
+    return '📉';
+  }
+    if (change < 0) {
+    return '↘️';
+  }
     return '→';
   };
 

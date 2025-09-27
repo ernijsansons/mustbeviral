@@ -23,8 +23,7 @@ export class AuthController {
   private emailService: EmailService;
   private validationService: ValidationService;
 
-  constructor(
-    private env: Env,
+  constructor(private env: Env,
     private logger: Logger,
     private metrics: MetricsCollector
   ) {
@@ -98,7 +97,7 @@ export class AuthController {
       });
 
       // Generate tokens
-      const { _accessToken, refreshToken } = await this.tokenService.generateTokenPair({
+      const { accessToken: _accessToken, refreshToken } = await this.tokenService.generateTokenPair({
         userId: user.id,
         email: user.email,
         role: user.role
@@ -108,8 +107,8 @@ export class AuthController {
       await this.sessionService.create({
         userId: user.id,
         refreshToken,
-        userAgent: request.headers.get('User-Agent') || 'unknown',
-        ip: request.headers.get('CF-Connecting-IP') || 'unknown'
+        userAgent: request.headers.get('User-Agent')  ?? 'unknown',
+        ip: request.headers.get('CF-Connecting-IP')  ?? 'unknown'
       });
 
       // Send verification email
@@ -161,7 +160,7 @@ export class AuthController {
       const { _email, password, mfaCode } = body;
 
       // Validate input
-      if (!email || !password) {
+      if (!email  ?? !password) {
         return new Response(JSON.stringify({
           error: 'Email and password are required'
         }), {
@@ -171,7 +170,7 @@ export class AuthController {
       }
 
       // Check login attempts
-      const clientId = request.headers.get('CF-Connecting-IP') || email;
+      const clientId = request.headers.get('CF-Connecting-IP')  ?? email;
       const attempts = await this.getLoginAttempts(clientId);
 
       if (attempts >= parseInt(this.env.MAX_LOGIN_ATTEMPTS)) {
@@ -249,7 +248,7 @@ export class AuthController {
       await this.resetLoginAttempts(clientId);
 
       // Generate tokens
-      const { _accessToken, refreshToken } = await this.tokenService.generateTokenPair({
+      const { accessToken: _accessToken, refreshToken } = await this.tokenService.generateTokenPair({
         userId: user.id,
         email: user.email,
         role: user.role
@@ -259,8 +258,8 @@ export class AuthController {
       await this.sessionService.create({
         userId: user.id,
         refreshToken,
-        userAgent: request.headers.get('User-Agent') || 'unknown',
-        ip: request.headers.get('CF-Connecting-IP') || 'unknown'
+        userAgent: request.headers.get('User-Agent')  ?? 'unknown',
+        ip: request.headers.get('CF-Connecting-IP')  ?? 'unknown'
       });
 
       // Update last login
@@ -687,8 +686,8 @@ export class AuthController {
       await this.sessionService.create({
         userId: user.id,
         refreshToken,
-        userAgent: request.headers.get('User-Agent') || 'unknown',
-        ip: request.headers.get('CF-Connecting-IP') || 'unknown'
+        userAgent: request.headers.get('User-Agent')  ?? 'unknown',
+        ip: request.headers.get('CF-Connecting-IP')  ?? 'unknown'
       });
 
       // Redirect to frontend with tokens
@@ -770,8 +769,8 @@ export class AuthController {
       await this.sessionService.create({
         userId: user.id,
         refreshToken,
-        userAgent: request.headers.get('User-Agent') || 'unknown',
-        ip: request.headers.get('CF-Connecting-IP') || 'unknown'
+        userAgent: request.headers.get('User-Agent')  ?? 'unknown',
+        ip: request.headers.get('CF-Connecting-IP')  ?? 'unknown'
       });
 
       // Redirect to frontend with tokens

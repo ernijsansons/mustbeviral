@@ -5,13 +5,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  BarChart3, TrendingUp, Users, FileText, Target, Clock, 
-  DollarSign, CheckCircle, AlertCircle, Calendar, Filter 
-} from 'lucide-react';
+  BarChart3, TrendingUp, Users, FileText, Target, Clock, DollarSign, CheckCircle, AlertCircle, Calendar, Filter} from 'lucide-react';
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
-} from 'recharts';
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer} from 'recharts';
 
 interface ConversionMetrics {
   overview: {
@@ -65,7 +61,6 @@ interface MatchMetrics {
   }>;
 }
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
 
 export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
   const [activeTab, setActiveTab] = useState<'conversions' | 'matches' | 'overview'>('overview');
@@ -77,7 +72,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
 
   console.log('LOG: METRICS-DASH-2 - MetricsDash rendered for user:', userId);
 
-  useEffect(() => {
+  useEffect_(() => {
     loadMetricsData();
   }, [timeRange, userId]);
 
@@ -112,8 +107,12 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
   };
 
   const formatNumber = (num: number): string => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`;
+  }
+    if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}K`;
+  }
     return num.toString();
   };
 
@@ -129,7 +128,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
       'completed': '#3B82F6',
       'cancelled': '#6B7280'
     };
-    return colorMap[status] || '#6B7280';
+    return colorMap[status]  ?? '#6B7280';
   };
 
   if (loading && !conversionData && !matchData) {
@@ -219,7 +218,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Total Signups</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {formatNumber(conversionData.overview.total_signups)}
+                      {formatNumber(conversionData.overview.totalsignups)}
                     </p>
                   </div>
                 </div>
@@ -233,7 +232,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Published Content</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {formatNumber(conversionData.overview.total_published)}
+                      {formatNumber(conversionData.overview.totalpublished)}
                     </p>
                   </div>
                 </div>
@@ -251,7 +250,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Total Matches</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {formatNumber(matchData.overview.total_matches)}
+                      {formatNumber(matchData.overview.totalmatches)}
                     </p>
                   </div>
                 </div>
@@ -265,7 +264,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Acceptance Rate</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {formatPercentage(matchData.overview.acceptance_rate)}
+                      {formatPercentage(matchData.overview.acceptancerate)}
                     </p>
                   </div>
                 </div>
@@ -285,7 +284,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
                 <div>
                   <p className="text-sm font-medium text-gray-600">User Signups</p>
                   <p className="text-3xl font-bold text-blue-600">
-                    {formatNumber(conversionData.overview.total_signups)}
+                    {formatNumber(conversionData.overview.totalsignups)}
                   </p>
                 </div>
                 <Users className="w-8 h-8 text-blue-600" />
@@ -297,7 +296,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Published Content</p>
                   <p className="text-3xl font-bold text-green-600">
-                    {formatNumber(conversionData.overview.total_published)}
+                    {formatNumber(conversionData.overview.totalpublished)}
                   </p>
                 </div>
                 <FileText className="w-8 h-8 text-green-600" />
@@ -309,7 +308,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
                   <p className="text-3xl font-bold text-purple-600">
-                    {formatPercentage(conversionData.overview.conversion_rate)}
+                    {formatPercentage(conversionData.overview.conversionrate)}
                   </p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-purple-600" />
@@ -378,7 +377,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Matches</p>
                   <p className="text-3xl font-bold text-indigo-600">
-                    {formatNumber(matchData.overview.total_matches)}
+                    {formatNumber(matchData.overview.totalmatches)}
                   </p>
                 </div>
                 <Target className="w-8 h-8 text-indigo-600" />
@@ -402,7 +401,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Acceptance Rate</p>
                   <p className="text-3xl font-bold text-green-600">
-                    {formatPercentage(matchData.overview.acceptance_rate)}
+                    {formatPercentage(matchData.overview.acceptancerate)}
                   </p>
                 </div>
                 <CheckCircle className="w-8 h-8 text-green-600" />
@@ -414,7 +413,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Completion Rate</p>
                   <p className="text-3xl font-bold text-purple-600">
-                    {formatPercentage(matchData.overview.completion_rate)}
+                    {formatPercentage(matchData.overview.completionrate)}
                   </p>
                 </div>
                 <Clock className="w-8 h-8 text-purple-600" />
@@ -430,7 +429,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie
-                    data={matchData.status_breakdown}
+                    data={matchData.statusbreakdown}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -491,7 +490,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Content by Matches</h3>
               <div className="space-y-3">
                 {matchData.top_content.slice(0, 5).map((content, index) => (
-                  <div key={content.content_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={content.contentid} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <div className="flex items-center justify-center w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full text-sm font-semibold">
                         {index + 1}
@@ -519,7 +518,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Influencers by Matches</h3>
               <div className="space-y-3">
                 {matchData.top_influencers.slice(0, 5).map((influencer, index) => (
-                  <div key={influencer.user_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={influencer.userid} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <div className="flex items-center justify-center w-6 h-6 bg-green-100 text-green-600 rounded-full text-sm font-semibold">
                         {index + 1}
@@ -592,14 +591,14 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
                     <div className="text-right">
                       <span className="font-bold text-gray-900">{formatNumber(stage.count)}</span>
                       <span className="text-sm text-gray-500 ml-2">
-                        ({formatPercentage(stage.conversion_rate)})
+                        ({formatPercentage(stage.conversionrate)})
                       </span>
                     </div>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
                     <div 
                       className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-300"
-                      style={{ width: `${stage.conversion_rate}%` }}
+                      style={{ width: `${stage.conversionrate}%` }}
                     />
                   </div>
                 </div>
@@ -662,7 +661,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Content</h3>
               <div className="space-y-3">
                 {matchData.top_content.slice(0, 3).map((content, index) => (
-                  <div key={content.content_id} className="p-3 bg-blue-50 rounded-lg">
+                  <div key={content.contentid} className="p-3 bg-blue-50 rounded-lg">
                     <div className="flex items-center space-x-2 mb-1">
                       <span className="text-xs font-bold text-blue-600">#{index + 1}</span>
                       <h4 className="font-medium text-gray-900 text-sm truncate">
@@ -683,7 +682,7 @@ export function MetricsDash({ userId = 'demo-user' }: { userId?: string }) {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Influencers</h3>
               <div className="space-y-3">
                 {matchData.top_influencers.slice(0, 3).map((influencer, index) => (
-                  <div key={influencer.user_id} className="p-3 bg-green-50 rounded-lg">
+                  <div key={influencer.userid} className="p-3 bg-green-50 rounded-lg">
                     <div className="flex items-center space-x-2 mb-1">
                       <span className="text-xs font-bold text-green-600">#{index + 1}</span>
                       <h4 className="font-medium text-gray-900 text-sm">
@@ -727,12 +726,12 @@ export function useMetrics() {
     try {
       const requests = [];
       
-      if (type === 'conversions' || type === 'both') {
-        requests.push(fetch(`/api/get-metrics?type=conversions&timeRange=${timeRange}`));
+      if (type === 'conversions'  ?? type === 'both') {
+        requests.push(fetch(`/api/get-metrics?type = conversions&timeRange=${timeRange}`));
       }
       
-      if (type === 'matches' || type === 'both') {
-        requests.push(fetch(`/api/get-metrics?type=matches&timeRange=${timeRange}`));
+      if (type === 'matches'  ?? type === 'both') {
+        requests.push(fetch(`/api/get-metrics?type = matches&timeRange=${timeRange}`));
       }
 
       const responses = await Promise.all(requests);
@@ -740,13 +739,13 @@ export function useMetrics() {
       
       const newData: unknown = {};
       
-      if (type === 'conversions' || type === 'both') {
-        if (results[0]?.success) newData.conversions = results[0].data;
+      if (type === 'conversions'  ?? type === 'both') {
+        if (results[0]?.success) {newData.conversions = results[0].data;}
       }
       
-      if (type === 'matches' || type === 'both') {
+      if (type === 'matches'  ?? type === 'both') {
         const matchIndex = type === 'both' ? 1 : 0;
-        if (results[matchIndex]?.success) newData.matches = results[matchIndex].data;
+        if (results[matchIndex]?.success) {newData.matches = results[matchIndex].data;}
       }
       
       setData(newData);

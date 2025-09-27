@@ -28,10 +28,10 @@ export type {
 } from './queryOptimizer';
 
 import type { CloudflareEnv } from '../cloudflare';
-import { DatabaseConnectionPool, getConnectionPool } from './connectionPool';
-import { QueryCache, queryCache } from './queryCache';
-import { DatabaseMonitor, databaseMonitor } from './monitor';
-import { QueryOptimizer, queryOptimizer } from './queryOptimizer';
+import { DatabaseConnectionPool, getConnectionPool} from './connectionPool';
+import { QueryCache, queryCache} from './queryCache';
+import { DatabaseMonitor, databaseMonitor} from './monitor';
+import { QueryOptimizer, queryOptimizer} from './queryOptimizer';
 
 /**
  * Integrated Database Service
@@ -72,7 +72,7 @@ export class DatabaseService {
     }
   ): Promise<T[]> {
     const startTime = Date.now();
-    const cacheKey = options?.cacheKey || await this.generateCacheKey(sql, params);
+    const cacheKey = options?.cacheKey ?? await this.generateCacheKey(sql, params);
 
     try {
       // Try cache first if caching is enabled
@@ -95,7 +95,7 @@ export class DatabaseService {
       );
 
       const duration = Date.now() - startTime;
-      const rows = result.results || [];
+      const rows = result.results ?? [];
 
       // Cache result if caching is enabled
       if (options?.cache !== false && result.success) {

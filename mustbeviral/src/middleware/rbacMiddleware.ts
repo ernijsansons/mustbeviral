@@ -1,9 +1,9 @@
 // RBAC Middleware
 // Enforces role-based access control on API endpoints
 
-import { RBACService } from '../lib/rbac/rbacService';
-import { IsolatedRequest } from './dataIsolation';
-import { log } from '../lib/monitoring/logger';
+import { RBACService} from '../lib/rbac/rbacService';
+import { IsolatedRequest} from './dataIsolation';
+import { log} from '../lib/monitoring/logger';
 
 export interface RBACRequirement {
   permission?: string;
@@ -22,7 +22,7 @@ export class RBACMiddleware {
     return async (request: IsolatedRequest): Promise<boolean> => {
       try {
         // Check if user is authenticated and has tenant context
-        if (!request.tenantContext || !request.user) {
+        if (!request.tenantContext  ?? !request.user) {
           log.warn('RBAC check failed - no tenant context', {
             action: 'rbac_no_context',
             metadata: { url: request.url }
@@ -30,7 +30,7 @@ export class RBACMiddleware {
           return false;
         }
 
-        const { _userId, organizationId } = request.tenantContext;
+        const { userId, organizationId} = request.tenantContext;
 
         // Single permission check
         if (requirement.permission) {
@@ -42,7 +42,7 @@ export class RBACMiddleware {
 
           log.debug('RBAC permission check', {
             action: 'rbac_permission_check',
-            metadata: { _userId,
+            metadata: { userId,
               organizationId,
               permission: requirement.permission,
               hasPermission
@@ -81,10 +81,10 @@ export class RBACMiddleware {
 
           log.debug('RBAC multiple permissions check', {
             action: 'rbac_multiple_permissions_check',
-            metadata: { _userId,
+            metadata: { userId,
               organizationId,
               permissions: requirement.permissions,
-              requireAll: requirement.requireAll || false,
+              requireAll: requirement.requireAll ?? false,
               hasPermissions
             }
           });
@@ -103,7 +103,7 @@ export class RBACMiddleware {
 
           log.debug('RBAC resource access check', {
             action: 'rbac_resource_access_check',
-            metadata: { _userId,
+            metadata: { userId,
               organizationId,
               resource: requirement.resource,
               action: requirement.action,
@@ -120,7 +120,7 @@ export class RBACMiddleware {
 
           log.debug('RBAC custom validation', {
             action: 'rbac_custom_validation',
-            metadata: { _userId,
+            metadata: { userId,
               organizationId,
               isValid
             }
@@ -132,7 +132,7 @@ export class RBACMiddleware {
         // No requirements specified
         log.warn('RBAC check called with no requirements', {
           action: 'rbac_no_requirements',
-          metadata: { _userId, organizationId }
+          metadata: { userId, organizationId }
         });
 
         return false;
@@ -154,7 +154,9 @@ export class RBACMiddleware {
   requireOwner() {
     return this.requirePermission({
       customValidator: async (request: IsolatedRequest) => {
-        if (!request.tenantContext) return false;
+        if (!request.tenantContext) {
+    return false;
+  }
         return request.tenantContext.userRole === 'owner';
       }
     });
@@ -164,7 +166,9 @@ export class RBACMiddleware {
   requireAdmin() {
     return this.requirePermission({
       customValidator: async (request: IsolatedRequest) => {
-        if (!request.tenantContext) return false;
+        if (!request.tenantContext) {
+    return false;
+  }
         return ['owner', 'admin'].includes(request.tenantContext.userRole);
       }
     });
@@ -174,7 +178,9 @@ export class RBACMiddleware {
   requireManager() {
     return this.requirePermission({
       customValidator: async (request: IsolatedRequest) => {
-        if (!request.tenantContext) return false;
+        if (!request.tenantContext) {
+    return false;
+  }
         return ['owner', 'admin', 'manager'].includes(request.tenantContext.userRole);
       }
     });
@@ -216,12 +222,14 @@ export class RBACMiddleware {
   requireUserManagement(targetUserIdParam: string = 'userId') {
     return this.requirePermission({
       customValidator: async (request: IsolatedRequest) => {
-        if (!request.tenantContext) return false;
+        if (!request.tenantContext) {
+    return false;
+  }
 
         // Extract target user ID from URL parameters
         const url = new URL(request.url);
         const pathSegments = url.pathname.split('/');
-        const targetUserId = pathSegments.find((segment, _index) => {
+        const targetUserId = pathSegments.find((segment, index) => {
           const prevSegment = pathSegments[index - 1];
           return prevSegment === targetUserIdParam.replace(':', '');
         });
@@ -243,12 +251,14 @@ export class RBACMiddleware {
   requireContentAccess(action: 'view' | 'edit' | 'delete' | 'publish', contentIdParam: string = 'contentId') {
     return this.requirePermission({
       customValidator: async (request: IsolatedRequest) => {
-        if (!request.tenantContext) return false;
+        if (!request.tenantContext) {
+    return false;
+  }
 
         // Extract content ID from URL parameters
         const url = new URL(request.url);
         const pathSegments = url.pathname.split('/');
-        const contentId = pathSegments.find((segment, _index) => {
+        const contentId = pathSegments.find((segment, index) => {
           const prevSegment = pathSegments[index - 1];
           return prevSegment === contentIdParam.replace(':', '');
         });
@@ -271,12 +281,14 @@ export class RBACMiddleware {
   requireTeamAccess(teamIdParam: string = 'teamId') {
     return this.requirePermission({
       customValidator: async (request: IsolatedRequest) => {
-        if (!request.tenantContext) return false;
+        if (!request.tenantContext) {
+    return false;
+  }
 
         // Extract team ID from URL parameters
         const url = new URL(request.url);
         const pathSegments = url.pathname.split('/');
-        const teamId = pathSegments.find((segment, _index) => {
+        const teamId = pathSegments.find((segment, index) => {
           const prevSegment = pathSegments[index - 1];
           return prevSegment === teamIdParam.replace(':', '');
         });
@@ -291,7 +303,7 @@ export class RBACMiddleware {
         }
 
         // Check if user is member of the specific team
-        return request.tenantContext.teamIds?.includes(teamId) || false;
+        return request.tenantContext.teamIds?.includes(teamId)  ?? false;
       }
     });
   }
@@ -303,8 +315,8 @@ export function createRBACResponse(
   message: string = '',
   statusCode: number = success ? 200 : 403
 ): Response {
-  const responseBody = { _success,
-    error: success ? undefined : (message || 'Insufficient permissions'),
+  const responseBody = { success,
+    error: success ? undefined : (message ?? 'Insufficient permissions'),
     timestamp: new Date().toISOString()
   };
 
@@ -352,10 +364,12 @@ export function withRBAC(requirement: RBACRequirement, rbacService: RBACService)
 export async function isResourceOwner(
   request: IsolatedRequest,
   resourceOwnerIdField: string,
-  resourceId: string,
-  rbacService: RBACService
+  _resourceId: string,
+  _rbacService: RBACService
 ): Promise<boolean> {
-  if (!request.tenantContext) return false;
+  if (!request.tenantContext) {
+    return false;
+  }
 
   // Implementation would depend on how ownership is stored
   // This is a simplified version
@@ -364,7 +378,9 @@ export async function isResourceOwner(
 
 // Check if user has elevated permissions (admin or owner)
 export function hasElevatedPermissions(request: IsolatedRequest): boolean {
-  if (!request.tenantContext) return false;
+  if (!request.tenantContext) {
+    return false;
+  }
   return ['owner', 'admin'].includes(request.tenantContext.userRole);
 }
 
@@ -374,7 +390,9 @@ export async function canPerformOrganizationAction(
   action: string,
   rbacService: RBACService
 ): Promise<boolean> {
-  if (!request.tenantContext) return false;
+  if (!request.tenantContext) {
+    return false;
+  }
 
   return rbacService.hasPermission(
     request.tenantContext.userId,

@@ -71,7 +71,7 @@ async function handlePaymentAPI(request: Request, path: string, method: string):
   try {
     const authHeader = request.headers.get('Authorization');
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return Response.json({ error: 'Authorization required' }, { status: 401 });
     }
 
@@ -187,7 +187,7 @@ async function handleEarningsAPI(request: Request, path: string, method: string)
   try {
     const authHeader = request.headers.get('Authorization');
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return Response.json({ error: 'Authorization required' }, { status: 401 });
     }
 
@@ -276,7 +276,7 @@ async function handlePayoutAPI(request: Request, path: string, method: string): 
   try {
     const authHeader = request.headers.get('Authorization');
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return Response.json({ error: 'Authorization required' }, { status: 401 });
     }
 
@@ -377,7 +377,7 @@ async function handleStripeAPI(request: Request, path: string, method: string): 
     if (path === '/api/stripe/connect' && method === 'POST') {
       const authHeader = request.headers.get('Authorization');
 
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (!authHeader?.startsWith('Bearer ')) {
         return Response.json({ error: 'Authorization required' }, { status: 401 });
       }
 

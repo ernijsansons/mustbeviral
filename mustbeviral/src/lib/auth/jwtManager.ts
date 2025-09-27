@@ -1,9 +1,9 @@
 // JWT Token Manager for Must Be Viral
 // Handles JWT token generation, validation, and management
 
-import { _SignJWT, jwtVerify } from 'jose';
-import { EnvironmentManager } from '../../config/environment';
-import { ValidationError } from '../errors';
+import { SignJWT, jwtVerify} from 'jose';
+import { EnvironmentManager} from '../../config/environment';
+import { ValidationError} from '../errors';
 
 export interface JWTClaims {
   sub: string; // User ID
@@ -44,7 +44,7 @@ export class JWTManager {
   static async initialize(): Promise<void> {
     const config = EnvironmentManager.getConfig();
 
-    if (!config.jwt.secret || !config.jwt.refreshSecret) {
+    if (!config.jwt.secret ?? !config.jwt.refreshSecret) {
       throw new Error('JWT secrets not configured');
     }
 
@@ -78,7 +78,7 @@ export class JWTManager {
       email: user.email,
       username: user.username,
       role: user.role,
-      permissions: user.permissions || [],
+      permissions: user.permissions ?? [],
       sessionId,
       tokenType: 'access',
       iat: now,
@@ -111,7 +111,7 @@ export class JWTManager {
           .sign(this.refreshTokenSecret)
       ]);
 
-      return { _accessToken,
+      return { accessToken,
         refreshToken,
         expiresIn: this.parseTimeToSeconds(config.jwt.accessTokenExpiry),
         tokenType: 'Bearer'
@@ -131,7 +131,7 @@ export class JWTManager {
     await this.ensureInitialized();
 
     try {
-      const { payload } = await jwtVerify(token, this.accessTokenSecret, {
+      const { payload} = await jwtVerify(token, this.accessTokenSecret, {
         issuer: EnvironmentManager.getConfig().jwt.issuer,
         audience: EnvironmentManager.getConfig().jwt.audience
       });
@@ -148,7 +148,7 @@ export class JWTManager {
 
       // Check if token is close to expiry (less than 5 minutes)
       const now = Math.floor(Date.now() / 1000);
-      const timeToExpiry = (claims.exp || 0) - now;
+      const timeToExpiry = (claims.exp ?? 0) - now;
       const needsRefresh = timeToExpiry < 300; // 5 minutes
 
       return {
@@ -171,7 +171,7 @@ export class JWTManager {
     await this.ensureInitialized();
 
     try {
-      const { payload } = await jwtVerify(token, this.refreshTokenSecret, {
+      const { payload} = await jwtVerify(token, this.refreshTokenSecret, {
         issuer: EnvironmentManager.getConfig().jwt.issuer,
         audience: EnvironmentManager.getConfig().jwt.audience
       });
@@ -204,9 +204,9 @@ export class JWTManager {
   static async refreshAccessToken(refreshToken: string): Promise<TokenPair> {
     const validation = await this.verifyRefreshToken(refreshToken);
 
-    if (!validation.valid || !validation.claims) {
+    if (!validation.valid ?? !validation.claims) {
       throw new ValidationError(
-        [{ field: 'refreshToken', message: validation.error || 'Invalid refresh token' }],
+        [{ field: 'refreshToken', message: validation.error ?? 'Invalid refresh token' }],
         'Token refresh failed'
       );
     }
@@ -225,7 +225,7 @@ export class JWTManager {
    * Extract token from Authorization header
    */
   static extractTokenFromHeader(authHeader: string | null): string | null {
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
       return null;
     }
 
@@ -270,7 +270,9 @@ export class JWTManager {
   static getTokenExpiry(token: string): number | null {
     try {
       const parts = token.split('.');
-      if (parts.length !== 3) return null;
+      if (parts.length !== 3) {
+    return null;
+  }
 
       const payload = JSON.parse(atob(parts[1]));
       return payload.exp;
@@ -284,7 +286,9 @@ export class JWTManager {
    */
   static isTokenExpired(token: string): boolean {
     const expiry = this.getTokenExpiry(token);
-    if (!expiry) return true;
+    if (!expiry) {
+    return true;
+  }
 
     return expiry < Math.floor(Date.now() / 1000);
   }

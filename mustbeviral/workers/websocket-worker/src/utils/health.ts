@@ -148,7 +148,7 @@ export class HealthCheck {
     const healthStatus: HealthStatus = {
       status: overallStatus,
       timestamp: Date.now(),
-      service: env.SERVICE_NAME || 'websocket-worker',
+      service: env.SERVICE_NAME  ?? 'websocket-worker',
       version: '1.0.0',
       checks: {
         ...checks,

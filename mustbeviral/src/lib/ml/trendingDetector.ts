@@ -108,7 +108,7 @@ export class TrendingDetector {
     }
 
     // Sort by score and return top trends
-    const sortedTrends = trends.sort((a, _b) => b.score - a.score);
+    const sortedTrends = trends.sort((a, b) => b.score - a.score);
 
     // Cache results
     if (this.kv) {
@@ -143,7 +143,7 @@ export class TrendingDetector {
     // Generate recommendations
     const recommendations = this.generateViralRecommendations(factors);
 
-    return { _contentId,
+    return { contentId,
       currentScore,
       predictedScore,
       confidence,
@@ -165,7 +165,7 @@ export class TrendingDetector {
     // Group by content
     const contentGroups = new Map<string, EngagementMetrics[]>();
     for (const engagement of recentEngagement) {
-      const existing = contentGroups.get(engagement.contentId) || [];
+      const existing = contentGroups.get(engagement.contentId)  ?? [];
       existing.push(engagement);
       contentGroups.set(engagement.contentId, existing);
     }
@@ -176,7 +176,7 @@ export class TrendingDetector {
       anomalies.push(...contentAnomalies);
     }
 
-    return anomalies.sort((a, _b) => b.confidence - a.confidence);
+    return anomalies.sort((a, b) => b.confidence - a.confidence);
   }
 
   async addEngagementData(metrics: EngagementMetrics): Promise<void> {
@@ -201,7 +201,7 @@ export class TrendingDetector {
 
   async getTopicTrends(topic: string, timeWindow: '1h' | '6h' | '24h' | '7d' = '24h'): Promise<TrendMetrics | null> {
     const trends = await this.detectTrends(timeWindow);
-    return trends.find(t => t.topic.toLowerCase() === topic.toLowerCase()) || null;
+    return trends.find(t => t.topic.toLowerCase() === topic.toLowerCase())  ?? null;
   }
 
   async getEmergingTopics(limit: number = 10): Promise<TrendMetrics[]> {
@@ -210,7 +210,7 @@ export class TrendingDetector {
 
     return trends
       .filter(t => t.acceleration > 0.5) // High acceleration threshold
-      .sort((a, _b) => b.acceleration - a.acceleration)
+      .sort((a, b) => b.acceleration - a.acceleration)
       .slice(0, limit);
   }
 
@@ -225,7 +225,7 @@ export class TrendingDetector {
 
     for (const trend of trends) {
       for (const keyword of trend.keywords) {
-        const existing = keywordMap.get(keyword) || { score: 0, growth: 0, count: 0 };
+        const existing = keywordMap.get(keyword)  ?? { score: 0, growth: 0, count: 0 };
         existing.score += trend.score;
         existing.growth += trend.velocity;
         existing.count += trend.contentIds.length;
@@ -234,12 +234,12 @@ export class TrendingDetector {
     }
 
     return Array.from(keywordMap.entries())
-      .map(([keyword, data]) => ({ _keyword,
+      .map(([keyword, data]) => ({ keyword,
         score: data.score,
         growth: data.growth,
         contentCount: data.count
       }))
-      .sort((a, _b) => b.score - a.score);
+      .sort((a, b) => b.score - a.score);
   }
 
   // Implementation methods
@@ -251,7 +251,7 @@ export class TrendingDetector {
       '7d': 7 * 24 * 60 * 60 * 1000
     };
 
-    return windows[timeWindow as keyof typeof windows] || windows['24h'];
+    return windows[timeWindow as keyof typeof windows]  ?? windows['24h'];
   }
 
   private groupEngagementByTopic(engagements: EngagementMetrics[]): Map<string, EngagementMetrics[]> {
@@ -261,7 +261,7 @@ export class TrendingDetector {
       // Extract topic from content ID or use platform as grouping
       const topic = this.extractTopic(engagement);
 
-      const existing = groups.get(topic) || [];
+      const existing = groups.get(topic)  ?? [];
       existing.push(engagement);
       groups.set(topic, existing);
     }
@@ -271,7 +271,7 @@ export class TrendingDetector {
 
   private extractTopic(engagement: EngagementMetrics): string {
     // Placeholder - in real implementation, would extract topic from content metadata
-    return engagement.platform || 'general';
+    return engagement.platform ?? 'general';
   }
 
   private async calculateTrendMetrics(
@@ -281,7 +281,7 @@ export class TrendingDetector {
   ): Promise<TrendMetrics> {
     const totalEngagements = engagements.length;
     const totalVolume = engagements.reduce(
-      (sum, _e) => sum + e.views + e.likes + e.shares + e.comments,
+      (sum, e) => sum + e.views + e.likes + e.shares + e.comments,
       0
     );
 
@@ -306,7 +306,7 @@ export class TrendingDetector {
     // Calculate sustainability
     const sustainabilityScore = this.calculateSustainabilityScore(engagements, velocity);
 
-    return { _topic,
+    return { topic,
       contentIds: [...new Set(engagements.map(e => e.contentId))],
       category: this.categorizeContent(topic),
       score,
@@ -323,15 +323,17 @@ export class TrendingDetector {
   }
 
   private calculateVelocity(engagements: EngagementMetrics[], timeWindow: string): number {
-    if (engagements.length < 2) return 0;
+    if (engagements.length < 2) {
+    return 0;
+  }
 
     // Sort by timestamp
-    const sorted = engagements.sort((a, _b) => a.timestamp - b.timestamp);
+    const sorted = engagements.sort((a, b) => a.timestamp - b.timestamp);
 
     // Calculate engagement rate over time
     const timeSpan = sorted[sorted.length - 1].timestamp - sorted[0].timestamp;
     const totalEngagement = sorted.reduce(
-      (sum, _e) => sum + e.views + e.likes + e.shares + e.comments,
+      (sum, e) => sum + e.views + e.likes + e.shares + e.comments,
       0
     );
 
@@ -340,8 +342,10 @@ export class TrendingDetector {
   }
 
   private calculateAcceleration(topic: string, currentVelocity: number): number {
-    const history = this.trendHistory.get(topic) || [];
-    if (history.length === 0) return 0;
+    const history = this.trendHistory.get(topic) ?? [];
+    if (history.length === 0) {
+      return 0;
+    }
 
     const previousVelocity = history[history.length - 1].velocity;
     return currentVelocity - previousVelocity;
@@ -372,7 +376,7 @@ export class TrendingDetector {
 
     for (const engagement of engagements) {
       const platform = engagement.platform;
-      platforms[platform] = (platforms[platform] || 0) + 1;
+      platforms[platform] = (platforms[platform]  ?? 0) + 1;
     }
 
     return platforms;
@@ -380,14 +384,18 @@ export class TrendingDetector {
 
   private analyzeSentiment(engagements: EngagementMetrics[]): 'positive' | 'neutral' | 'negative' {
     // Simplified sentiment analysis based on engagement patterns
-    const avgLikes = engagements.reduce((sum, _e) => sum + e.likes, 0) / engagements.length;
-    const avgShares = engagements.reduce((sum, _e) => sum + e.shares, 0) / engagements.length;
-    const avgComments = engagements.reduce((sum, _e) => sum + e.comments, 0) / engagements.length;
+    const avgLikes = engagements.reduce((sum, e) => sum + e.likes, 0) / engagements.length;
+    const avgShares = engagements.reduce((sum, e) => sum + e.shares, 0) / engagements.length;
+    const avgComments = engagements.reduce((sum, e) => sum + e.comments, 0) / engagements.length;
 
     const positivityScore = (avgLikes + avgShares) / Math.max(avgComments, 1);
 
-    if (positivityScore > 2) return 'positive';
-    if (positivityScore < 0.5) return 'negative';
+    if (positivityScore > 2) {
+    return 'positive';
+  }
+    if (positivityScore < 0.5) {
+    return 'negative';
+  }
     return 'neutral';
   }
 
@@ -401,9 +409,10 @@ export class TrendingDetector {
     velocity: number
   ): number {
     // Higher sustainability for consistent engagement over time
-    if (engagements.length < 3) return 0.3;
+    if (engagements.length < 3) {
+    return 0.3;
+  }
 
-    const timeSpan = Math.max(...engagements.map(e => e.timestamp)) -
                     Math.min(...engagements.map(e => e.timestamp));
 
     const consistency = this.calculateEngagementConsistency(engagements);
@@ -414,8 +423,8 @@ export class TrendingDetector {
 
   private calculateEngagementConsistency(engagements: EngagementMetrics[]): number {
     const values = engagements.map(e => e.views + e.likes + e.shares + e.comments);
-    const mean = values.reduce((sum, _v) => sum + v, 0) / values.length;
-    const variance = values.reduce((sum, _v) => sum + Math.pow(v - mean, 2), 0) / values.length;
+    const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+    const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
     const stdDev = Math.sqrt(variance);
 
     // Lower standard deviation relative to mean indicates higher consistency
@@ -456,7 +465,7 @@ export class TrendingDetector {
       '7d': 0.2
     };
 
-    return thresholds[timeWindow as keyof typeof thresholds] || 0.3;
+    return thresholds[timeWindow as keyof typeof thresholds]  ?? 0.3;
   }
 
   private getContentEngagement(contentId: string, windowMs: number): EngagementMetrics[] {
@@ -467,10 +476,8 @@ export class TrendingDetector {
   }
 
   private calculateViralFactors(engagements: EngagementMetrics[]): ViralPrediction['factors'] {
-    const totalEngagements = engagements.length;
-    const totalViews = engagements.reduce((sum, _e) => sum + e.views, 0);
-    const totalShares = engagements.reduce((sum, _e) => sum + e.shares, 0);
-    const totalComments = engagements.reduce((sum, _e) => sum + e.comments, 0);
+    const totalViews = engagements.reduce((sum, e) => sum + e.views, 0);
+    const totalShares = engagements.reduce((sum, e) => sum + e.shares, 0);
 
     return {
       earlyEngagement: this.calculateEarlyEngagement(engagements),
@@ -483,11 +490,13 @@ export class TrendingDetector {
   }
 
   private calculateCurrentViralScore(engagements: EngagementMetrics[]): number {
-    if (engagements.length === 0) return 0;
+    if (engagements.length === 0) {
+    return 0;
+  }
 
-    const totalViews = engagements.reduce((sum, _e) => sum + e.views, 0);
+    const totalViews = engagements.reduce((sum, e) => sum + e.views, 0);
     const totalEngagement = engagements.reduce(
-      (sum, _e) => sum + e.likes + e.shares + e.comments,
+      (sum, e) => sum + e.likes + e.shares + e.comments,
       0
     );
 
@@ -532,12 +541,16 @@ export class TrendingDetector {
     const velocity = this.calculateVelocity(engagements, '1h');
     const viralThreshold = 0.8; // Threshold for viral status
 
-    if (velocity <= 0) return -1; // Cannot estimate
+    if (velocity <= 0) {
+    return -1;
+  } // Cannot estimate
 
     const currentScore = this.calculateCurrentViralScore(engagements);
     const scoreNeeded = viralThreshold - currentScore;
 
-    if (scoreNeeded <= 0) return 0; // Already viral
+    if (scoreNeeded <= 0) {
+    return 0;
+  } // Already viral
 
     // Estimate based on current velocity
     return (scoreNeeded / velocity) * 60; // Convert to minutes
@@ -577,14 +590,16 @@ export class TrendingDetector {
     const anomalies: AnomalyDetection[] = [];
     const baseline = this.getBaseline(contentId);
 
-    if (!baseline) return anomalies;
+    if (!baseline) {
+    return anomalies;
+  }
 
     // Check for sudden spikes
     const currentEngagement = this.calculateCurrentEngagement(engagements);
     const expectedEngagement = baseline.average;
 
     if (currentEngagement > expectedEngagement * 3) {
-      anomalies.push({ _contentId,
+      anomalies.push({ contentId,
         type: 'sudden_spike',
         severity: 'high',
         confidence: 0.8,
@@ -600,7 +615,7 @@ export class TrendingDetector {
 
     // Check for unusual drops
     if (currentEngagement < expectedEngagement * 0.3) {
-      anomalies.push({ _contentId,
+      anomalies.push({ contentId,
         type: 'unusual_drop',
         severity: 'medium',
         confidence: 0.7,
@@ -624,11 +639,13 @@ export class TrendingDetector {
       e => e.timestamp >= Date.now() - 60 * 60 * 1000
     );
 
-    if (firstHour.length === 0) return 0;
+    if (firstHour.length === 0) {
+    return 0;
+  }
 
-    const totalViews = firstHour.reduce((sum, _e) => sum + e.views, 0);
+    const totalViews = firstHour.reduce((sum, e) => sum + e.views, 0);
     const totalEngagement = firstHour.reduce(
-      (sum, _e) => sum + e.likes + e.shares + e.comments,
+      (sum, e) => sum + e.likes + e.shares + e.comments,
       0
     );
 
@@ -637,7 +654,7 @@ export class TrendingDetector {
 
   private calculateCommentQuality(engagements: EngagementMetrics[]): number {
     // Placeholder - would analyze comment content quality
-    const avgComments = engagements.reduce((sum, _e) => sum + e.comments, 0) / engagements.length;
+    const avgComments = engagements.reduce((sum, e) => sum + e.comments, 0) / engagements.length;
     return Math.min(avgComments / 10, 1);
   }
 
@@ -649,15 +666,15 @@ export class TrendingDetector {
   private calculateTimingScore(engagements: EngagementMetrics[]): number {
     // Score based on optimal posting times
     const optimalHours = [9, 12, 15, 18, 21]; // Peak hours
-    const postHour = new Date(engagements[0]?.timestamp || Date.now()).getHours();
+    const postHour = new Date(engagements[0]?.timestamp ?? Date.now()).getHours();
 
     return optimalHours.includes(postHour) ? 0.8 : 0.4;
   }
 
   private calculateContentQuality(engagements: EngagementMetrics[]): number {
     // Quality based on engagement patterns
-    const avgTimeSpent = engagements.reduce((sum, _e) => sum + e.timeSpent, 0) / engagements.length;
-    const avgBounceRate = engagements.reduce((sum, _e) => sum + e.bounceRate, 0) / engagements.length;
+    const avgTimeSpent = engagements.reduce((sum, e) => sum + e.timeSpent, 0) / engagements.length;
+    const avgBounceRate = engagements.reduce((sum, e) => sum + e.bounceRate, 0) / engagements.length;
 
     const timeScore = Math.min(avgTimeSpent / 60, 1); // Normalize to 1 minute
     const bounceScore = 1 - avgBounceRate;
@@ -667,33 +684,35 @@ export class TrendingDetector {
 
   private calculateFactorConsistency(factors: ViralPrediction['factors']): number {
     const values = Object.values(factors);
-    const mean = values.reduce((sum, _v) => sum + v, 0) / values.length;
-    const variance = values.reduce((sum, _v) => sum + Math.pow(v - mean, 2), 0) / values.length;
+    const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+    const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
 
     return 1 - Math.sqrt(variance); // Lower variance = higher consistency
   }
 
   private calculateCurrentEngagement(engagements: EngagementMetrics[]): number {
     return engagements.reduce(
-      (sum, _e) => sum + e.views + e.likes + e.shares + e.comments,
+      (sum, e) => sum + e.views + e.likes + e.shares + e.comments,
       0
     );
   }
 
   private getBaseline(contentId: string): { average: number; variance: number } | null {
     const baseline = this.baselineMetrics.get(contentId);
-    if (!baseline || baseline.length < 5) return null;
+    if (!baseline ?? baseline.length < 5) {
+    return null;
+  }
 
-    const average = baseline.reduce((sum, _v) => sum + v, 0) / baseline.length;
-    const variance = baseline.reduce((sum, _v) => sum + Math.pow(v - average, 2), 0) / baseline.length;
+    const average = baseline.reduce((sum, v) => sum + v, 0) / baseline.length;
+    const variance = baseline.reduce((sum, v) => sum + Math.pow(v - average, 2), 0) / baseline.length;
 
-    return { _average, variance };
+    return { average, variance };
   }
 
   // Utility methods
   private async updateBaselines(metrics: EngagementMetrics): Promise<void> {
     const engagement = metrics.views + metrics.likes + metrics.shares + metrics.comments;
-    const existing = this.baselineMetrics.get(metrics.contentId) || [];
+    const existing = this.baselineMetrics.get(metrics.contentId)  ?? [];
 
     existing.push(engagement);
 
@@ -720,7 +739,7 @@ export class TrendingDetector {
   }
 
   private async persistEngagementData(metrics: EngagementMetrics): Promise<void> {
-    if (!this.kv) return;
+    if (!this.kv) {return;}
 
     const key = `engagement:${metrics.contentId}:${metrics.timestamp}`;
     await this.kv.put(key, JSON.stringify(metrics), {
@@ -729,7 +748,7 @@ export class TrendingDetector {
   }
 
   private async cacheTrends(trends: TrendMetrics[], timeWindow: string): Promise<void> {
-    if (!this.kv) return;
+    if (!this.kv) {return;}
 
     const key = `trends:${timeWindow}:${Date.now()}`;
     await this.kv.put(key, JSON.stringify(trends), {

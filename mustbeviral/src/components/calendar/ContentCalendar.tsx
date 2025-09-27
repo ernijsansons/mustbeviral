@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence, useDragControls } from 'framer-motion';
-import { cn } from '../../lib/utils';
+import { motion, AnimatePresence, useDragControls} from 'framer-motion';
+import { cn} from '../../lib/utils';
 
 interface ContentCalendarProps {
   onEventClick?: (event: CalendarEvent) => void;
@@ -56,7 +56,7 @@ const stickyColors = [
   'bg-orange-200'
 ];
 
-export function ContentCalendar({ onEventClick, onDateClick, className }: ContentCalendarProps) {
+export function ContentCalendar(_{ onEventClick, onDateClick, className }: ContentCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
@@ -311,8 +311,7 @@ export function ContentCalendar({ onEventClick, onDateClick, className }: Conten
 
                 {/* Event Pills */}
                 <div className="space-y-1">
-                  {dayEvents.slice(0, 2).map((event) => (
-                    <motion.div
+                  {dayEvents.slice(0, 2).map((event) => (<motion.div
                       key={event.id}
                       onClick={(e) => {
                         e.stopPropagation();

@@ -3,8 +3,8 @@
  * Validates clean microservices architecture without circular dependencies
  */
 
-import { DIContainer, ServiceLifetime } from '../infrastructure/DIContainerFixed';
-import { createSimpleServiceRegistry, SimpleUserApplicationService } from '../infrastructure/ServiceRegistrySimple';
+import { DIContainer, ServiceLifetime} from '../infrastructure/DIContainerFixed';
+import { createSimpleServiceRegistry, SimpleUserApplicationService} from '../infrastructure/ServiceRegistrySimple';
 
 // Mock environment for testing
 const mockEnv = {
@@ -13,15 +13,15 @@ const mockEnv = {
   ANALYTICS: {} as AnalyticsEngineDataset
 };
 
-describe('Simple Architecture Validation', () => {
-  describe('Dependency Injection Container', () => {
+describe('Simple Architecture Validation', _() => {
+  describe('Dependency Injection Container', _() => {
     let container: DIContainer;
 
-    beforeEach(() => {
+    beforeEach_(() => {
       container = new DIContainer();
     });
 
-    test('should register and resolve services without circular dependencies', async () => {
+    test('should register and resolve services without circular dependencies', async() => {
       container.registerSingleton(
         'testService',
         () => ({ value: 'test' }),
@@ -32,7 +32,7 @@ describe('Simple Architecture Validation', () => {
       expect(service).toEqual({ value: 'test' });
     });
 
-    test('should handle service dependencies in correct order', async () => {
+    test('should handle service dependencies in correct order', async() => {
       // Register dependency first
       container.registerSingleton(
         'dependency',
@@ -52,7 +52,7 @@ describe('Simple Architecture Validation', () => {
       expect(service.value).toBe('service');
     });
 
-    test('should detect circular dependencies', async () => {
+    test('should detect circular dependencies', async() => {
       container.registerSingleton(
         'serviceA',
         (b: any) => ({ b }),
@@ -69,8 +69,8 @@ describe('Simple Architecture Validation', () => {
     });
   });
 
-  describe('Service Registry Integration', () => {
-    test('should create registry without circular dependencies', () => {
+  describe('Service Registry Integration', _() => {
+    test('should create registry without circular dependencies', _() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const validation = serviceRegistry.validateServices();
 
@@ -78,7 +78,7 @@ describe('Simple Architecture Validation', () => {
       expect(validation.errors).toHaveLength(0);
     });
 
-    test('should resolve all core services successfully', async () => {
+    test('should resolve all core services successfully', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -101,7 +101,7 @@ describe('Simple Architecture Validation', () => {
       }
     });
 
-    test('should maintain proper dependency hierarchy', async () => {
+    test('should maintain proper dependency hierarchy', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -112,7 +112,7 @@ describe('Simple Architecture Validation', () => {
       expect(userAppService.commands).not.toBe(userAppService.queries);
     });
 
-    test('should support CQRS pattern', async () => {
+    test('should support CQRS pattern', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -127,7 +127,7 @@ describe('Simple Architecture Validation', () => {
       expect(typeof userAppService.getUserByEmail).toBe('function');
     });
 
-    test('should handle scoped services correctly', async () => {
+    test('should handle scoped services correctly', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -143,8 +143,8 @@ describe('Simple Architecture Validation', () => {
     });
   });
 
-  describe('Architecture Principles Validation', () => {
-    test('should enforce proper layer separation', async () => {
+  describe('Architecture Principles Validation', _() => {
+    test('should enforce proper layer separation', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const serviceInfo = serviceRegistry.getServiceInfo();
 
@@ -160,7 +160,7 @@ describe('Simple Architecture Validation', () => {
       expect(appServiceDeps).toContain('userQueryService');
     });
 
-    test('should follow dependency inversion principle', async () => {
+    test('should follow dependency inversion principle', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -179,7 +179,7 @@ describe('Simple Architecture Validation', () => {
       }
     });
 
-    test('should support single responsibility principle', async () => {
+    test('should support single responsibility principle', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -196,8 +196,8 @@ describe('Simple Architecture Validation', () => {
     });
   });
 
-  describe('Performance and Resilience', () => {
-    test('should handle multiple service resolutions efficiently', async () => {
+  describe('Performance and Resilience', _() => {
+    test('should handle multiple service resolutions efficiently', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -211,14 +211,16 @@ describe('Simple Architecture Validation', () => {
       const services = await Promise.all(promises);
       const endTime = Date.now();
       
-      // All services should be defined (singleton behavior verified elsewhere)
+      // All services should be defined (singleton behavior verified else {
+    where)
+  }
       expect(services.every(s => s !== undefined)).toBe(true);
       
       // Should complete quickly
       expect(endTime - startTime).toBeLessThan(500);
     });
 
-    test('should validate service registrations', () => {
+    test('should validate service registrations', _() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const validation = serviceRegistry.validateServices();
 
@@ -226,7 +228,7 @@ describe('Simple Architecture Validation', () => {
       expect(validation.errors).toEqual([]);
     });
 
-    test('should provide service information for monitoring', () => {
+    test('should provide service information for monitoring', _() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const serviceInfo = serviceRegistry.getServiceInfo();
 
@@ -242,8 +244,8 @@ describe('Simple Architecture Validation', () => {
     });
   });
 
-  describe('Integration Testing', () => {
-    test('should execute complete user registration flow', async () => {
+  describe('Integration Testing', _() => {
+    test('should execute complete user registration flow', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -264,7 +266,7 @@ describe('Simple Architecture Validation', () => {
       expect(result.requiresEmailVerification).toBe(true);
     });
 
-    test('should execute user authentication flow', async () => {
+    test('should execute user authentication flow', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -283,7 +285,7 @@ describe('Simple Architecture Validation', () => {
       expect(result.error).toBeDefined();
     });
 
-    test('should handle controller requests', async () => {
+    test('should handle controller requests', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -296,8 +298,8 @@ describe('Simple Architecture Validation', () => {
   });
 });
 
-describe('Clean Architecture Validation', () => {
-  test('should maintain clear architectural boundaries', () => {
+describe('Clean Architecture Validation', _() => {
+  test('should maintain clear architectural boundaries', _() => {
     const serviceRegistry = createSimpleServiceRegistry(mockEnv);
     const serviceInfo = serviceRegistry.getServiceInfo();
 
@@ -318,7 +320,7 @@ describe('Clean Architecture Validation', () => {
     ]);
   });
 
-  test('should support microservices deployment patterns', async () => {
+  test('should support microservices deployment patterns', async() => {
     // Each service should be independently testable and deployable
     const serviceRegistry = createSimpleServiceRegistry(mockEnv);
     const container = serviceRegistry.getContainer();

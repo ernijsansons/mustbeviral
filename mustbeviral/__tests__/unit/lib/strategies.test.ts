@@ -694,7 +694,7 @@ describe('StrategyGenerator', () => {
         const originalCalculate = (strategyGenerator as any).calculateSuccessProbability;
         (strategyGenerator as any).calculateSuccessProbability = (req: StrategyRequest, template: StrategyTemplate) => {
           let probability = 20; // Start below minimum
-          if (req.budget_range === 'low') probability -= 10;
+          if (req.budget_range === 'low') {probability -= 10;}
           return Math.min(95, Math.max(30, probability));
         };
         

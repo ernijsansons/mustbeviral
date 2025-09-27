@@ -1,6 +1,6 @@
 // Matches Page Component with Marketplace
-import { useState, useEffect } from 'react';
-import { Search, Filter, Star, Users, TrendingUp, MessageCircle } from 'lucide-react';
+import { useState, useEffect} from 'react';
+import { Search, Filter, Star, Users, TrendingUp, MessageCircle} from 'lucide-react';
 
 interface Influencer {
   id: string;
@@ -66,8 +66,8 @@ export function MatchesPage() {
   const [loading, setLoading] = useState(true);
 
   // Simulate data loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
+  useEffect_(() => {
+    const timer = setTimeout_(() => {
       setInfluencers(mockInfluencers);
       setLoading(false);
     }, 1000);
@@ -76,18 +76,19 @@ export function MatchesPage() {
   }, []);
 
   const filteredInfluencers = influencers.filter(influencer => {
-    const matchesSearch = influencer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         influencer.handle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         influencer.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || 
-                           influencer.category.toLowerCase() === selectedCategory.toLowerCase();
+    const matchesSearch = influencer.name.toLowerCase().includes(searchTerm.toLowerCase())  ?? influencer.handle.toLowerCase().includes(searchTerm.toLowerCase())  ?? influencer.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all'  ?? influencer.category.toLowerCase() === selectedCategory.toLowerCase();
     
     return matchesSearch && matchesCategory;
   });
 
   const formatFollowers = (count: number) => {
-    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
-    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+    if (count >= 1000000) {
+    return `${(count / 1000000).toFixed(1)}M`;
+  }
+    if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}K`;
+  }
     return count.toString();
   };
 

@@ -1,10 +1,10 @@
 // Progressive Onboarding Component with Adaptive Learning
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowRight, Check, Sparkles, Target, Users, TrendingUp, Lightbulb, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
-import { Button } from './ui/Button';
-import { Input } from './ui/Input';
-import { cn } from '../lib/utils';
+import { ArrowRight, Check, Sparkles, Target, Users, TrendingUp, Lightbulb, X, ChevronLeft, ChevronRight} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle} from './ui/Card';
+import { Button} from './ui/Button';
+import { Input} from './ui/Input';
+import { cn} from '../lib/utils';
 
 export interface UserProfile {
   experienceLevel: 'novice' | 'intermediate' | 'expert';
@@ -37,14 +37,7 @@ export interface ProgressiveOnboardingProps {
 }
 
 export const ProgressiveOnboarding: React.FC<ProgressiveOnboardingProps> = ({
-  onComplete,
-  onSkip,
-  initialProfile = {},
-  customSteps = [],
-  showProgress = true,
-  allowSkipping = true,
-  autoSave = true,
-  className
+  onComplete, onSkip, initialProfile = {}, customSteps = [], showProgress = true, allowSkipping = true, autoSave = true, className
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [profile, setProfile] = useState<UserProfile>({
@@ -183,8 +176,7 @@ export const ProgressiveOnboarding: React.FC<ProgressiveOnboardingProps> = ({
                 }
               ].map(({ goal, title, description, icon: Icon }) => {
                 const isSelected = profile.goals.includes(goal);
-                return (
-                  <button
+                return (<button
                     key={goal}
                     onClick={() => {
                       setProfile(prev => ({
@@ -241,7 +233,7 @@ export const ProgressiveOnboarding: React.FC<ProgressiveOnboardingProps> = ({
               </label>
               <Input
                 placeholder="e.g., Technology, Fashion, Health"
-                value={profile.industry || ''}
+                value={profile.industry ?? ''}
                 onChange={(e) => setProfile(prev => ({ ...prev, industry: e.target.value }))}
               />
             </div>
@@ -252,7 +244,7 @@ export const ProgressiveOnboarding: React.FC<ProgressiveOnboardingProps> = ({
                   Team Size
                 </label>
                 <select
-                  value={profile.teamSize || ''}
+                  value={profile.teamSize ?? ''}
                   onChange={(e) => setProfile(prev => ({ 
                     ...prev, 
                     teamSize: e.target.value ? parseInt(e.target.value) : undefined 
@@ -276,8 +268,7 @@ export const ProgressiveOnboarding: React.FC<ProgressiveOnboardingProps> = ({
       title: 'AI Assistant Level',
       description: 'Choose how much AI assistance you want while creating content',
       estimatedTime: '30 sec',
-      content: (
-        <div className="space-y-6">
+      content: (<div className="space-y-6">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               How would you like our AI to assist you?
@@ -356,18 +347,18 @@ export const ProgressiveOnboarding: React.FC<ProgressiveOnboardingProps> = ({
   
   // Filter steps based on skip conditions
   const activeSteps = allSteps.filter(step => 
-    !step.skipCondition || !step.skipCondition(profile)
+    !step.skipCondition ?? !step.skipCondition(profile)
   );
 
   // Auto-save profile changes
-  useEffect(() => {
+  useEffect_(() => {
     if (autoSave && typeof localStorage !== 'undefined') {
       localStorage.setItem('onboarding_profile', JSON.stringify(profile));
     }
   }, [profile, autoSave]);
 
   // Handle step completion
-  const handleNext = useCallback(async () => {
+  const handleNext = useCallback(async() => {
     const step = activeSteps[currentStep];
     
     // Mark step as completed
@@ -392,13 +383,13 @@ export const ProgressiveOnboarding: React.FC<ProgressiveOnboardingProps> = ({
     }
   }, [currentStep, activeSteps, profile, onComplete, autoSave]);
 
-  const handlePrevious = useCallback(() => {
+  const handlePrevious = useCallback_(() => {
     if (currentStep > 0) {
       setCurrentStep(prev => prev - 1);
     }
   }, [currentStep]);
 
-  const handleSkip = useCallback(() => {
+  const handleSkip = useCallback_(() => {
     if (onSkip) {
       onSkip();
     }

@@ -1,7 +1,7 @@
 // Enhanced Authentication Hook with error recovery
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { apiClient, type User, type ApiResponse, ApiClientError } from '../lib/api';
-import { logger } from '../lib/logging/productionLogger';
+import { createContext, useContext, useEffect, useState, ReactNode} from 'react';
+import { apiClient, type User, type ApiResponse, ApiClientError} from '../lib/api';
+import { logger} from '../lib/logging/productionLogger';
 
 interface AuthContextType {
   user: User | null;
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const clearError = () => setError(null);
 
   // Initialize auth on mount
-  useEffect(() => {
+  useEffect_(() => {
     initializeAuth();
   }, []);
 
@@ -102,7 +102,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
         return { success: true };
       } else {
-        const errorMsg = response.error || 'Login failed';
+        const errorMsg = response.error ?? 'Login failed';
         setError(errorMsg);
         logger.warn('Login failed', undefined, {
           component: 'useAuth',
@@ -144,7 +144,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
         return { success: true };
       } else {
-        const errorMsg = response.error || 'Registration failed';
+        const errorMsg = response.error ?? 'Registration failed';
         setError(errorMsg);
         logger.warn('Registration failed', undefined, {
           component: 'useAuth',

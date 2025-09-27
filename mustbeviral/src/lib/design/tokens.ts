@@ -334,7 +334,7 @@ export const getColor = (path: string): string => {
     value = value?.[key];
   }
 
-  return value || '#000000';
+  return value ?? '#000000';
 };
 
 export const getSpacing = (key: keyof typeof designTokens.spacing): string => {

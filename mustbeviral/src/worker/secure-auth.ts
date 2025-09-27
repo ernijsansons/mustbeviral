@@ -1,7 +1,7 @@
 // Secure Authentication Service for Cloudflare Workers
 // Uses proper JWT signing and cryptographic best practices
 
-import { CloudflareEnv } from '../lib/cloudflare';
+import { CloudflareEnv} from '../lib/cloudflare';
 
 // JWT Configuration
 interface JWTPayload {
@@ -25,8 +25,8 @@ export class SecureAuth {
   private static readonly ALGORITHM = 'HS256';
   private static readonly ISSUER = 'must-be-viral';
   private static readonly AUDIENCE = 'must-be-viral-users';
-  private static readonly ACCESS_TOKEN_LIFETIME = 15 * 60; // 15 minutes
-  private static readonly REFRESH_TOKEN_LIFETIME = 7 * 24 * 60 * 60; // 7 days
+  private static readonly ACCESSTOKENLIFETIME = 15 * 60; // 15 minutes
+  private static readonly REFRESHTOKENLIFETIME = 7 * 24 * 60 * 60; // 7 days
 
   /**
    * Generate a cryptographically secure JWT token
@@ -46,12 +46,12 @@ export class SecureAuth {
       username,
       role,
       iat: now,
-      exp: now + this.ACCESS_TOKEN_LIFETIME,
+      exp: now + this.ACCESSTOKENLIFETIME,
       iss: this.ISSUER,
       aud: this.AUDIENCE
     };
 
-    return await this.signJWT(payload, env.JWT_SECRET);
+    return await this.signJWT(payload, env.JWTSECRET);
   }
 
   /**
@@ -67,12 +67,12 @@ export class SecureAuth {
       sub: userId,
       type: 'refresh',
       iat: now,
-      exp: now + this.REFRESH_TOKEN_LIFETIME,
+      exp: now + this.REFRESHTOKENLIFETIME,
       iss: this.ISSUER,
       aud: this.AUDIENCE
     };
 
-    return await this.signJWT(payload, env.JWT_REFRESH_SECRET);
+    return await this.signJWT(payload, env.JWTREFRESHSECRET);
   }
 
   /**
@@ -80,7 +80,7 @@ export class SecureAuth {
    */
   static async verifyToken(token: string, env: CloudflareEnv): Promise<JWTVerificationResult> {
     try {
-      const payload = await this.verifyJWT(token, env.JWT_SECRET);
+      const payload = await this.verifyJWT(token, env.JWTSECRET);
 
       // Validate payload structure
       if (!this.isValidPayload(payload)) {
@@ -94,7 +94,7 @@ export class SecureAuth {
       }
 
       // Check issuer and audience
-      if (payload.iss !== this.ISSUER || payload.aud !== this.AUDIENCE) {
+      if (payload.iss !== this.ISSUER ?? payload.aud !== this.AUDIENCE) {
         return { valid: false, error: 'Invalid token issuer or audience' };
       }
 
@@ -109,7 +109,7 @@ export class SecureAuth {
    */
   static async verifyRefreshToken(token: string, env: CloudflareEnv): Promise<JWTVerificationResult> {
     try {
-      const payload = await this.verifyJWT(token, env.JWT_REFRESH_SECRET);
+      const payload = await this.verifyJWT(token, env.JWTREFRESHSECRET);
 
       if (payload.type !== 'refresh') {
         return { valid: false, error: 'Invalid refresh token' };
@@ -187,7 +187,7 @@ export class SecureAuth {
    */
   private static base64UrlEncode(str: string): string {
     const base64 = btoa(str);
-    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    return base64.replace(/\+/g, '-').replace(/\//g, '').replace(/=/g, '');
   }
 
   /**
@@ -210,7 +210,7 @@ export class SecureAuth {
       binary += String.fromCharCode(bytes[i]);
     }
     const base64 = btoa(binary);
-    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    return base64.replace(/\+/g, '-').replace(/\//g, '').replace(/=/g, '');
   }
 
   /**

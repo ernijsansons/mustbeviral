@@ -51,9 +51,9 @@ export class DIContainer {
     this.services.set(config.name, {
       name: config.name,
       factory: config.factory,
-      dependencies: config.dependencies || [],
-      lifetime: config.lifetime || ServiceLifetime.SINGLETON,
-      isAsync: config.isAsync || false
+      dependencies: config.dependencies ?? [],
+      lifetime: config.lifetime ?? ServiceLifetime.SINGLETON,
+      isAsync: config.isAsync ?? false
     });
     return this;
   }

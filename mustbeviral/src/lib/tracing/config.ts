@@ -1,8 +1,8 @@
 // Telemetry Configuration
 // Manages OpenTelemetry initialization and configuration
 
-import { _initializeTelemetry, TraceConfig } from './telemetry';
-import { log } from '../monitoring/logger';
+import { initializeTelemetry, TraceConfig} from './telemetry';
+import { log} from '../monitoring/logger';
 
 export interface TelemetryConfig {
   enabled: boolean;
@@ -63,7 +63,7 @@ export class TelemetryConfigManager {
           environment: this.config.environment,
           endpoint: this.config.exporterEndpoint,
           enabled: true,
-          debug: this.config.debug || false,
+          debug: this.config.debug ?? false,
         };
 
         initializeTelemetry(traceConfig);
@@ -74,7 +74,7 @@ export class TelemetryConfigManager {
             serviceName: this.config.serviceName,
             environment: this.config.environment,
             exporterEndpoint: this.config.exporterEndpoint ? 'configured' : 'none',
-            debug: this.config.debug || false
+            debug: this.config.debug ?? false
           }
         });
       } else {
@@ -121,16 +121,16 @@ export class TelemetryConfigManager {
   // Load configuration from environment variables
   private loadConfigFromEnv(env: unknown): TelemetryConfig {
     return {
-      enabled: this.parseBooleanEnv(env.TELEMETRY_ENABLED, true),
-      serviceName: env.TELEMETRY_SERVICE_NAME || 'must-be-viral',
-      serviceVersion: env.TELEMETRY_SERVICE_VERSION || '1.0.0',
-      environment: env.ENVIRONMENT || env.NODE_ENV || 'development',
-      exporterEndpoint: env.TELEMETRY_EXPORTER_ENDPOINT || env.OTEL_EXPORTER_OTLP_ENDPOINT,
-      debug: this.parseBooleanEnv(env.TELEMETRY_DEBUG, false),
+      enabled: this.parseBooleanEnv(env.TELEMETRYENABLED, true),
+      serviceName: env.TELEMETRY_SERVICE_NAME ?? 'must-be-viral',
+      serviceVersion: env.TELEMETRY_SERVICE_VERSION ?? '1.0.0',
+      environment: env.ENVIRONMENT ?? env.NODE_ENV ?? 'development',
+      exporterEndpoint: env.TELEMETRY_EXPORTER_ENDPOINT ?? env.OTELEXPORTEROTLP_ENDPOINT,
+      debug: this.parseBooleanEnv(env.TELEMETRYDEBUG, false),
       sampling: {
-        rate: parseFloat(env.TELEMETRY_SAMPLING_RATE || '1.0'),
-        strategy: env.TELEMETRY_SAMPLING_STRATEGY || 'ratio',
-        maxPerSecond: parseInt(env.TELEMETRY_SAMPLING_MAX_PER_SECOND || '100'),
+        rate: parseFloat(env.TELEMETRY_SAMPLING_RATE ?? '1.0'),
+        strategy: env.TELEMETRY_SAMPLING_STRATEGY ?? 'ratio',
+        maxPerSecond: parseInt(env.TELEMETRY_SAMPLING_MAX_PER_SECOND ?? '100'),
       },
       resources: this.parseResourcesFromEnv(env),
     };
@@ -138,8 +138,10 @@ export class TelemetryConfigManager {
 
   // Parse boolean environment variable
   private parseBooleanEnv(value: string | undefined, defaultValue: boolean): boolean {
-    if (value === undefined) return defaultValue;
-    return value.toLowerCase() === 'true' || value === '1';
+    if(value = == undefined) {
+    return defaultValue;
+  }
+    return value.toLowerCase() === 'true'  ?? value === '1';
   }
 
   // Parse additional resources from environment
@@ -147,29 +149,29 @@ export class TelemetryConfigManager {
     const resources: Record<string, string> = {};
 
     // Add Cloudflare-specific resources
-    if (env.CF_RAY) {
-      resources['cf.ray'] = env.CF_RAY;
+    if (env.CFRAY) {
+      resources['cf.ray'] = env.CFRAY;
     }
 
-    if (env.CF_REGION) {
-      resources['cf.region'] = env.CF_REGION;
+    if (env.CFREGION) {
+      resources['cf.region'] = env.CFREGION;
     }
 
-    if (env.CF_DATACENTER) {
-      resources['cf.datacenter'] = env.CF_DATACENTER;
+    if (env.CFDATACENTER) {
+      resources['cf.datacenter'] = env.CFDATACENTER;
     }
 
     // Add deployment-specific resources
-    if (env.DEPLOYMENT_ID) {
-      resources['deployment.id'] = env.DEPLOYMENT_ID;
+    if (env.DEPLOYMENTID) {
+      resources['deployment.id'] = env.DEPLOYMENTID;
     }
 
-    if (env.GIT_COMMIT) {
-      resources['git.commit'] = env.GIT_COMMIT;
+    if (env.GITCOMMIT) {
+      resources['git.commit'] = env.GITCOMMIT;
     }
 
-    if (env.BUILD_ID) {
-      resources['build.id'] = env.BUILD_ID;
+    if (env.BUILDID) {
+      resources['build.id'] = env.BUILDID;
     }
 
     return resources;
@@ -178,13 +180,13 @@ export class TelemetryConfigManager {
   // Validate configuration
   private validateConfig(config: TelemetryConfig): boolean {
     // Check required fields
-    if (!config.serviceName || !config.serviceVersion || !config.environment) {
+    if (!config.serviceName  ?? !config.serviceVersion  ?? !config.environment) {
       return false;
     }
 
     // Validate sampling configuration
-    if (config.sampling) {
-      if (config.sampling.rate < 0 || config.sampling.rate > 1) {
+    if(config.sampling) {
+      if (config.sampling.rate < 0  ?? config.sampling.rate > 1) {
         return false;
       }
 
@@ -229,24 +231,24 @@ export class TelemetryConfigManager {
   // Get telemetry endpoints for different exporters
   getExporterEndpoints(): { [exporter: string]: string | undefined } {
     return {
-      jaeger: process.env.JAEGER_ENDPOINT || 'http://localhost:14268/api/traces',
-      zipkin: process.env.ZIPKIN_ENDPOINT || 'http://localhost:9411/api/v2/spans',
-      otlp: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318/v1/traces',
-      prometheus: process.env.PROMETHEUS_ENDPOINT || 'http://localhost:9090',
-      grafana: process.env.GRAFANA_ENDPOINT,
-      datadog: process.env.DATADOG_ENDPOINT,
-      newrelic: process.env.NEWRELIC_ENDPOINT,
-      honeycomb: process.env.HONEYCOMB_ENDPOINT,
+      jaeger: process.env.JAEGER_ENDPOINT ?? 'http://localhost:14268/api/traces',
+      zipkin: process.env.ZIPKIN_ENDPOINT ?? 'http://localhost:9411/api/v2/spans',
+      otlp: process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318/v1/traces',
+      prometheus: process.env.PROMETHEUS_ENDPOINT ?? 'http://localhost:9090',
+      grafana: process.env.GRAFANAENDPOINT,
+      datadog: process.env.DATADOGENDPOINT,
+      newrelic: process.env.NEWRELICENDPOINT,
+      honeycomb: process.env.HONEYCOMBENDPOINT,
     };
   }
 
   // Get sampling configuration for specific operations
-  getSamplingConfig(operationType?: string): { shouldSample: boolean; reason: string } {
+  getSamplingConfig(_operationType?: string): { shouldSample: boolean; reason: string } {
     if (!this.config.sampling) {
       return { shouldSample: true, reason: 'no_sampling_config' };
     }
 
-    const { _rate, strategy, maxPerSecond } = this.config.sampling;
+    const { rate, strategy } = this.config.sampling;
 
     switch (strategy) {
       case 'always':
@@ -255,20 +257,21 @@ export class TelemetryConfigManager {
       case 'never':
         return { shouldSample: false, reason: 'never_sample' };
 
-      case 'ratio':
+      case 'ratio': {
         const shouldSample = Math.random() < rate;
-        return { _shouldSample,
+        return { shouldSample,
           reason: shouldSample ? 'ratio_sampled' : 'ratio_not_sampled'
         };
+      }
 
-      case 'rate-limited':
+      case 'rate-limited': {
         // Simplified rate limiting (in production, use a proper rate limiter)
-        const now = Date.now();
         const shouldSampleRateLimit = Math.random() < rate;
         return {
           shouldSample: shouldSampleRateLimit,
           reason: shouldSampleRateLimit ? 'rate_limit_sampled' : 'rate_limit_not_sampled'
         };
+      }
 
       default:
         return { shouldSample: true, reason: 'default_sample' };

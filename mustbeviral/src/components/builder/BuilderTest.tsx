@@ -6,16 +6,16 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { ViralHero } from './ViralHero';
-import { FeatureGrid } from './FeatureGrid';
-import { Button } from '../ui/Button';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
+import { ViralHero} from './ViralHero';
+import { FeatureGrid} from './FeatureGrid';
+import { Button} from '../ui/Button';
+import { Card, CardHeader, CardTitle, CardContent} from '../ui/Card';
 
 export function BuilderTest() {
   const [builderStatus, setBuilderStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
   const [apiKey, setApiKey] = useState<string>('');
 
-  useEffect(() => {
+  useEffect_(() => {
     // Check if Builder.io is available
     const checkBuilder = () => {
       if (typeof window !== 'undefined' && (window as any).Builder) {
@@ -29,7 +29,7 @@ export function BuilderTest() {
 
     // Check API key
     const checkApiKey = () => {
-      const key = import.meta.env.VITE_BUILDER_API_KEY;
+      const key = import.meta.env.VITEBUILDERAPI_KEY;
       if (key && key !== 'your-builder-api-key-here') {
         setApiKey(key.substring(0, 8) + '...');
         console.log('✅ Builder.io API key found');
@@ -42,7 +42,7 @@ export function BuilderTest() {
     checkApiKey();
 
     // Re-check after a delay
-    const timer = setTimeout(() => {
+    const timer = setTimeout_(() => {
       checkBuilder();
     }, 2000);
 

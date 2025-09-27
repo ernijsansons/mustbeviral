@@ -4,8 +4,8 @@
  * and intelligent query routing for Must Be Viral V2
  */
 
-import { Pool, PoolClient, PoolConfig } from 'pg';
-import { EventEmitter } from 'events';
+import { Pool, PoolClient, PoolConfig} from 'pg';
+import { EventEmitter} from 'events';
 
 export interface ConnectionPoolConfig extends PoolConfig {
   // Basic pool settings
@@ -128,7 +128,9 @@ class DatabaseLoadBalancer {
    */
   getReadPool(): { pool: Pool; name: string } | null {
     const readPools = Array.from(this.readPools.entries());
-    if (readPools.length === 0) return null;
+    if (readPools.length === 0) {
+    return null;
+  }
 
     // Round-robin with health awareness
     let attempts = 0;
@@ -137,7 +139,7 @@ class DatabaseLoadBalancer {
       this.currentReadIndex++;
 
       const metrics = this.poolMetrics.get(name);
-      if (metrics && metrics.isHealthy) {
+      if (metrics?.isHealthy) {
         return { pool, name };
       }
       attempts++;
@@ -153,12 +155,14 @@ class DatabaseLoadBalancer {
    */
   getWritePool(): { pool: Pool; name: string } | null {
     const writePools = Array.from(this.writePools.entries());
-    if (writePools.length === 0) return null;
+    if (writePools.length === 0) {
+    return null;
+  }
 
     // Use the first healthy write pool
     for (const [name, pool] of writePools) {
       const metrics = this.poolMetrics.get(name);
-      if (metrics && metrics.isHealthy) {
+      if (metrics?.isHealthy) {
         return { pool, name };
       }
     }
@@ -183,8 +187,8 @@ class DatabaseLoadBalancer {
 
     for (const [name, pool] of analyticsPools) {
       const metrics = this.poolMetrics.get(name);
-      if (metrics && metrics.isHealthy) {
-        const load = (metrics.activeConnections / metrics.totalConnections) || 0;
+      if (metrics?.isHealthy) {
+        const load = (metrics.activeConnections / metrics.totalConnections)  ?? 0;
         if (load < lowestLoad) {
           lowestLoad = load;
           bestPool = { pool, name };
@@ -192,7 +196,7 @@ class DatabaseLoadBalancer {
       }
     }
 
-    return bestPool || this.getReadPool();
+    return bestPool ?? this.getReadPool();
   }
 
   updateMetrics(poolName: string, metrics: Partial<ConnectionMetrics>) {
@@ -216,9 +220,9 @@ class QueryRouter {
   private analyticsPatterns: RegExp[];
 
   constructor(config: ConnectionPoolConfig) {
-    const routing = config.queryRouting || {};
+    const routing = config.queryRouting ?? {};
     
-    this.readPatterns = (routing.readQueries || [
+    this.readPatterns = (routing.readQueries ?? [
       'SELECT.*FROM(?!.*INSERT|UPDATE|DELETE)',
       'WITH.*SELECT',
       'EXPLAIN\\s+SELECT',
@@ -226,7 +230,7 @@ class QueryRouter {
       'DESCRIBE\\s+'
     ]).map(pattern => new RegExp(pattern, 'i'));
 
-    this.writePatterns = (routing.writeQueries || [
+    this.writePatterns = (routing.writeQueries ?? [
       'INSERT\\s+',
       'UPDATE\\s+',
       'DELETE\\s+',
@@ -239,7 +243,7 @@ class QueryRouter {
       'ROLLBACK\\s*;'
     ]).map(pattern => new RegExp(pattern, 'i'));
 
-    this.analyticsPatterns = (routing.analyticsQueries || [
+    this.analyticsPatterns = (routing.analyticsQueries ?? [
       'SELECT.*COUNT\\(.*\\)',
       'SELECT.*SUM\\(.*\\)',
       'SELECT.*AVG\\(.*\\)',
@@ -308,10 +312,10 @@ export class EnterpriseConnectionPool extends EventEmitter {
 
   private async initialize() {
     // Create primary write pool
-    if (this.config.writeOnlyPrimary || this.config.host) {
+    if (this.config.writeOnlyPrimary ?? this.config.host) {
       const writeConfig = {
         ...this.config,
-        host: this.config.writeOnlyPrimary || this.config.host,
+        host: this.config.writeOnlyPrimary ?? this.config.host,
         max: Math.max(this.config.max! * 0.6, 10) // 60% of connections for writes
       };
       const writePool = new Pool(writeConfig);
@@ -338,7 +342,7 @@ export class EnterpriseConnectionPool extends EventEmitter {
     // Create analytics pool (can be same as read replicas but with different settings)
     const analyticsConfig = {
       ...this.config,
-      host: this.config.readOnlyReplicas?.[0] || this.config.host,
+      host: this.config.readOnlyReplicas?.[0]  ?? this.config.host,
       max: Math.max(this.config.max! * 0.1, 2), // 10% for analytics
       statement_timeout: 300000, // 5 minutes for analytics queries
       application_name: 'mustbeviral_analytics'
@@ -350,7 +354,7 @@ export class EnterpriseConnectionPool extends EventEmitter {
     this.startMetricsCollection();
     
     console.log('🗄️ Enterprise connection pool initialized');
-    console.log(`📊 Write pools: 1, Read pools: ${this.config.readOnlyReplicas?.length || 0}, Analytics pools: 1`);
+    console.log(`📊 Write pools: 1, Read pools: ${this.config.readOnlyReplicas?.length ?? 0}, Analytics pools: 1`);
   }
 
   /**
@@ -404,7 +408,7 @@ export class EnterpriseConnectionPool extends EventEmitter {
         metrics.totalQueries++;
         metrics.avgQueryTime = (metrics.avgQueryTime * (metrics.totalQueries - 1) + duration) / metrics.totalQueries;
         
-        if (duration > (this.config.monitoring?.slowQueryThreshold || 1000)) {
+        if (duration > (this.config.monitoring?.slowQueryThreshold ?? 1000)) {
           metrics.slowQueries++;
           console.warn(`🐌 Slow query detected (${duration}ms): ${text.substring(0, 100)}...`);
         }
@@ -429,7 +433,7 @@ export class EnterpriseConnectionPool extends EventEmitter {
         query: text.substring(0, 200),
         executionTime: duration,
         timestamp: new Date(),
-        pool: poolInfo?.name || 'unknown',
+        pool: poolInfo?.name ?? 'unknown',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
 
@@ -458,7 +462,7 @@ export class EnterpriseConnectionPool extends EventEmitter {
     callback: (client: PoolClient) => Promise<T>,
     options: { retries?: number; timeout?: number } = {}
   ): Promise<T> {
-    const { retries = 3, timeout = 30000 } = options;
+    const { retries = 3, timeout = 30000} = options;
     let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= retries; attempt++) {
@@ -512,7 +516,7 @@ export class EnterpriseConnectionPool extends EventEmitter {
       }
     }
 
-    throw lastError || new Error('Transaction failed');
+    throw lastError ?? new Error('Transaction failed');
   }
 
   /**
@@ -550,25 +554,24 @@ export class EnterpriseConnectionPool extends EventEmitter {
     this.queryMetrics.push(metrics);
     
     // Keep only recent metrics to prevent memory leaks
-    const maxHistory = this.config.monitoring?.maxMetricsHistory || 10000;
+    const maxHistory = this.config.monitoring?.maxMetricsHistory ?? 10000;
     if (this.queryMetrics.length > maxHistory) {
       this.queryMetrics = this.queryMetrics.slice(-maxHistory);
     }
   }
 
   private startHealthChecks() {
-    if (!this.config.healthCheck?.enabled) return;
+    if (!this.config.healthCheck?.enabled) {return;}
 
-    const interval = this.config.healthCheck.interval || 30000;
-    const query = this.config.healthCheck.query || 'SELECT 1';
-    const timeout = this.config.healthCheck.timeout || 5000;
+    const interval = this.config.healthCheck.interval ?? 30000;
+    const query = this.config.healthCheck.query ?? 'SELECT 1';
+    const timeout = this.config.healthCheck.timeout ?? 5000;
 
-    this.healthCheckInterval = setInterval(async () => {
+    this.healthCheckInterval = setInterval(async() => {
       const pools = this.loadBalancer.getMetrics();
       
       for (const [poolName, metrics] of pools) {
         try {
-          const startTime = Date.now();
           await Promise.race([
             this.query(query),
             new Promise((_, reject) => 
@@ -593,11 +596,11 @@ export class EnterpriseConnectionPool extends EventEmitter {
   }
 
   private startMetricsCollection() {
-    if (!this.config.monitoring?.enabled) return;
+    if (!this.config.monitoring?.enabled) {return;}
 
-    const interval = this.config.monitoring.metricsInterval || 60000;
+    const interval = this.config.monitoring.metricsInterval ?? 60000;
 
-    this.metricsInterval = setInterval(() => {
+    this.metricsInterval = setInterval_(() => {
       this.collectPoolMetrics();
       this.evaluateAutoScaling();
     }, interval);
@@ -613,7 +616,7 @@ export class EnterpriseConnectionPool extends EventEmitter {
       avgQueryTime: Array.from(pools.values()).reduce((sum, m) => sum + m.avgQueryTime, 0) / pools.size,
       recentSlowQueries: this.queryMetrics.filter(m => 
         Date.now() - m.timestamp.getTime() < 300000 && // Last 5 minutes
-        m.executionTime > (this.config.monitoring?.slowQueryThreshold || 1000)
+        m.executionTime > (this.config.monitoring?.slowQueryThreshold ?? 1000)
       ).length
     };
 
@@ -621,15 +624,15 @@ export class EnterpriseConnectionPool extends EventEmitter {
   }
 
   private evaluateAutoScaling() {
-    if (!this.config.autoScaling?.enabled) return;
+    if (!this.config.autoScaling?.enabled) {return;}
 
     const now = Date.now();
     const cooldown = Math.max(
-      this.config.autoScaling.scaleUpCooldown || 300000,
-      this.config.autoScaling.scaleDownCooldown || 600000
+      this.config.autoScaling.scaleUpCooldown ?? 300000,
+      this.config.autoScaling.scaleDownCooldown ?? 600000
     );
 
-    if (now - this.lastScaleOperation < cooldown) return;
+    if (now - this.lastScaleOperation < cooldown) {return;}
 
     const pools = this.loadBalancer.getMetrics();
     const totalConnections = Array.from(pools.values()).reduce((sum, m) => sum + m.totalConnections, 0);
@@ -639,14 +642,16 @@ export class EnterpriseConnectionPool extends EventEmitter {
     console.log(`📊 Connection utilization: ${(utilizationRate * 100).toFixed(1)}% (${activeConnections}/${totalConnections})`);
 
     // Scale up if utilization is high
-    if (utilizationRate > (this.config.autoScaling.scaleUpThreshold || 0.8) && 
+    if (utilizationRate > (this.config.autoScaling.scaleUpThreshold ?? 0.8) &&
         totalConnections < this.config.autoScaling.maxConnections) {
       console.log('📈 Scaling up connection pools...');
       this.scaleUp();
       this.lastScaleOperation = now;
     }
     // Scale down if utilization is low
-    else if (utilizationRate < (this.config.autoScaling.scaleDownThreshold || 0.3) && 
+    else if (utilizationRate < (this.config.autoScaling.scaleDownThreshold ?? 0.3)  {
+    &&
+  }
              totalConnections > this.config.autoScaling.minConnections) {
       console.log('📉 Scaling down connection pools...');
       this.scaleDown();
@@ -678,8 +683,8 @@ export class EnterpriseConnectionPool extends EventEmitter {
       queries: {
         total: recentMetrics.length,
         errors: recentMetrics.filter(m => m.error).length,
-        slow: recentMetrics.filter(m => m.executionTime > (this.config.monitoring?.slowQueryThreshold || 1000)).length,
-        avgExecutionTime: recentMetrics.reduce((sum, m) => sum + m.executionTime, 0) / recentMetrics.length || 0
+        slow: recentMetrics.filter(m => m.executionTime > (this.config.monitoring?.slowQueryThreshold ?? 1000)).length,
+        avgExecutionTime: recentMetrics.reduce((sum, m) => sum + m.executionTime, 0) / recentMetrics.length ?? 0
       },
       routing: {
         read: recentMetrics.filter(m => m.pool.includes('read')).length,

@@ -6,27 +6,12 @@
  * when dragged and snaps into place with delightful physics.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect} from 'react';
 import {
-  Lightbulb,
-  Plus,
-  Sparkles,
-  Hash,
-  Calendar,
-  TrendingUp,
-  Star,
-  Trash2,
-  Edit3,
-  Move,
-  MoreVertical,
-  Zap,
-  Palette,
-  Clock,
-  Target
-} from 'lucide-react';
-import { cn } from '../../lib/utils';
-import { Button } from '../ui/Button';
-import { GradientText } from '../ui/GradientText';
+  Lightbulb, Plus, Sparkles, Hash, Calendar, TrendingUp, Star, Trash2, Edit3, Move, MoreVertical, Zap, Palette, Clock, Target} from 'lucide-react';
+import { cn} from '../../lib/utils';
+import { Button} from '../ui/Button';
+import { GradientText} from '../ui/GradientText';
 
 interface IdeaCard {
   id: string;
@@ -60,7 +45,7 @@ function PriorityBadge({ priority }: { priority: string }) {
     urgent: { label: 'URGENT', color: 'bg-red-500 animate-pulse' }
   };
 
-  const { label, color } = config[priority as keyof typeof config];
+  const { label, color} = config[priority as keyof typeof config];
 
   return (
     <span className={cn(
@@ -77,9 +62,15 @@ function PriorityBadge({ priority }: { priority: string }) {
  */
 function ViralMeter({ score }: { score: number }) {
   const getColor = () => {
-    if (score >= 80) return 'from-pink-500 to-purple-500';
-    if (score >= 60) return 'from-blue-500 to-cyan-500';
-    if (score >= 40) return 'from-green-500 to-emerald-500';
+    if (score >= 80) {
+    return 'from-pink-500 to-purple-500';
+  }
+    if (score >= 60) {
+    return 'from-blue-500 to-cyan-500';
+  }
+    if (score >= 40) {
+    return 'from-green-500 to-emerald-500';
+  }
     return 'from-slate-400 to-slate-500';
   };
 
@@ -102,12 +93,8 @@ function ViralMeter({ score }: { score: number }) {
 /**
  * Draggable idea card with physics
  */
-function DraggableIdeaCard({
-  idea,
-  onDragStart,
-  onDragEnd,
-  onDelete,
-  onEdit
+function DraggableIdeaCard(_{
+  idea, onDragStart, onDragEnd, onDelete, onEdit
 }: {
   idea: IdeaCard;
   onDragStart: (id: string) => void;
@@ -129,7 +116,7 @@ function DraggableIdeaCard({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.no-drag')) return;
+    if ((e.target as HTMLElement).closest('.no-drag')) {return;}
 
     setIsDragging(true);
     setDragStart({
@@ -140,7 +127,7 @@ function DraggableIdeaCard({
   };
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
+    if (!isDragging) {return;}
 
     const newPosition = {
       x: e.clientX - dragStart.x,
@@ -157,7 +144,7 @@ function DraggableIdeaCard({
     }
   };
 
-  useEffect(() => {
+  useEffect_(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
@@ -350,7 +337,7 @@ export function IdeaBoard() {
   const [isDraggingAny, setIsDraggingAny] = useState(false);
 
   // Generate mock ideas
-  useEffect(() => {
+  useEffect_(() => {
     const mockIdeas: IdeaCard[] = [
       {
         id: '1',

@@ -3,7 +3,7 @@
  * Handles all content-related API operations
  */
 
-import { BaseApiClient, type ApiResponse } from '../base/BaseApiClient';
+import { BaseApiClient, type ApiResponse} from '../base/BaseApiClient';
 import type { RetryConfig } from '../../retryClient';
 
 // Content type definitions
@@ -333,7 +333,7 @@ export class ContentService extends BaseApiClient {
     readonly aiGenerated: number;
   }>> {
     const endpoint = userId 
-      ? `/api/content/stats?user_id=${userId}`
+      ? `/api/content/stats?userid=${userId}`
       : '/api/content/stats';
     
     return this.request(endpoint);
@@ -346,7 +346,7 @@ export class ContentService extends BaseApiClient {
     this.contentCache.set(content.id, content);
     
     // Auto-expire cache entry
-    setTimeout(() => {
+    setTimeout_(() => {
       this.contentCache.delete(content.id);
     }, this.cacheExpiry);
   }

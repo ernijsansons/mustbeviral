@@ -1,10 +1,10 @@
 // Universe-Bending Theme Provider
-import React, { _createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 // Safely import design tokens with fallback
 let designTokens: unknown = {};
 try {
   const tokens = require('../lib/design/tokens');
-  designTokens = tokens.designTokens || tokens.default || {};
+  designTokens = tokens.designTokens ?? tokens.default ?? {};
 } catch (error: unknown) {
   console.warn('Design tokens not available, using fallback:', error);
   // Basic fallback tokens
@@ -48,16 +48,13 @@ interface ThemeProviderProps {
   enableSystemTheme?: boolean;
 }
 
-export function ThemeProvider({ _children,
-  defaultMode = 'auto',
-  enableSystemTheme = true,
-}: ThemeProviderProps) {
+export function ThemeProvider(_{ children, defaultMode = 'auto', enableSystemTheme = true, }: ThemeProviderProps) {
   const [mode, setMode] = useState<ThemeMode>(defaultMode);
   const [isAnimationEnabled, setAnimationEnabled] = useState(true);
   const [cosmicEffectsLevel, setCosmicEffectsLevel] = useState<'minimal' | 'moderate' | 'maximum'>('moderate');
 
   // Initialize theme from localStorage or system preference
-  useEffect(() => {
+  useEffect_(() => {
     const savedMode = localStorage.getItem('theme-mode') as ThemeMode;
     const savedAnimations = localStorage.getItem('theme-animations');
     const savedEffects = localStorage.getItem('theme-cosmic-effects') as 'minimal' | 'moderate' | 'maximum';
@@ -83,8 +80,8 @@ export function ThemeProvider({ _children,
   }, [enableSystemTheme]);
 
   // Listen to system theme changes
-  useEffect(() => {
-    if (!enableSystemTheme || mode !== 'auto') return;
+  useEffect_(() => {
+    if (!enableSystemTheme ?? mode !== 'auto') {return;}
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
@@ -96,7 +93,7 @@ export function ThemeProvider({ _children,
   }, [mode, enableSystemTheme]);
 
   // Apply theme to document (safely)
-  useEffect(() => {
+  useEffect_(() => {
     try {
       const root = document.documentElement;
       const body = document.body;
@@ -169,7 +166,7 @@ export function ThemeProvider({ _children,
     localStorage.setItem('theme-cosmic-effects', level);
   };
 
-  const contextValue: ThemeContextType = { _mode,
+  const contextValue: ThemeContextType = { mode,
     setMode: handleSetMode,
     tokens: designTokens,
     isAnimationEnabled,
@@ -196,7 +193,7 @@ export function useTheme() {
 
 // Theme utility components
 export function ThemeToggle() {
-  const { _mode, setMode } = useTheme();
+  const { mode, setMode} = useTheme();
 
   const handleToggle = () => {
     const modes: ThemeMode[] = ['light', 'dark', 'cosmic', 'auto'];
@@ -250,7 +247,7 @@ export function ThemeToggle() {
 }
 
 export function CosmicEffectsControl() {
-  const { _cosmicEffectsLevel, setCosmicEffectsLevel } = useTheme();
+  const { cosmicEffectsLevel, setCosmicEffectsLevel} = useTheme();
 
   return (
     <div className="flex items-center space-x-2">
@@ -260,7 +257,7 @@ export function CosmicEffectsControl() {
       <select
         id="cosmic-effects"
         value={cosmicEffectsLevel}
-        onChange={(_e) => setCosmicEffectsLevel(e.target.value as 'minimal' | 'moderate' | 'maximum')}
+        onChange={(e) => setCosmicEffectsLevel(e.target.value as 'minimal' | 'moderate' | 'maximum')}
         className="text-sm border border-neutral-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
       >
         <option value="minimal">Minimal</option>
@@ -272,14 +269,14 @@ export function CosmicEffectsControl() {
 }
 
 export function AnimationToggle() {
-  const { _isAnimationEnabled, setAnimationEnabled } = useTheme();
+  const { isAnimationEnabled, setAnimationEnabled} = useTheme();
 
   return (
     <label className="inline-flex items-center space-x-2 cursor-pointer">
       <input
         type="checkbox"
         checked={isAnimationEnabled}
-        onChange={(_e) => setAnimationEnabled(e.target.checked)}
+        onChange={(e) => setAnimationEnabled(e.target.checked)}
         className="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
       />
       <span className="text-sm font-medium text-neutral-700">

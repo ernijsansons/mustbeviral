@@ -1,10 +1,10 @@
 // Login Page Component
-import { _useState, useEffect } from 'react';
-import { _Link, useLocation } from 'wouter';
-import { _Eye, EyeOff, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { LoginCredentials } from '../lib/api';
-import { logger } from '../lib/logging/productionLogger';
+import { useState, useEffect} from 'react';
+import { Link, useLocation} from 'wouter';
+import { Eye, EyeOff, Mail, Lock, AlertCircle} from 'lucide-react';
+import { useAuth} from '../hooks/useAuth';
+import { LoginCredentials} from '../lib/api';
+import { logger} from '../lib/logging/productionLogger';
 
 export function LoginPage() {
   const [, setLocation] = useLocation();
@@ -15,10 +15,10 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
-  const { _login, isLoading, error, isAuthenticated, user } = useAuth();
+  const { login, isLoading, error, isAuthenticated, user} = useAuth();
 
   // Redirect if already authenticated
-  useEffect(() => {
+  useEffect_(() => {
     if (isAuthenticated && user) {
       logger.info('User already authenticated, redirecting to dashboard', {
         component: 'LoginPage',
@@ -29,7 +29,7 @@ export function LoginPage() {
   }, [isAuthenticated, user, setLocation]);
 
   // Check for OAuth success/error in URL params
-  useEffect(() => {
+  useEffect_(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const error = urlParams.get('error');
     const success = urlParams.get('success');
@@ -90,11 +90,11 @@ export function LoginPage() {
       });
       setLocation('/dashboard');
     } else {
-      logger.error('Login failed', new Error(result.error || 'Login failed'), {
+       logger.error('Login failed', new Error(result.error ?? 'Login failed'), {
         component: 'LoginPage',
         action: 'loginFailed'
       });
-      setFormErrors({ submit: result.error || 'Login failed' });
+       setFormErrors({ submit: result.error ?? 'Login failed' });
     }
   };
 
@@ -206,7 +206,7 @@ export function LoginPage() {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(_e) => updateField('email', e.target.value)}
+                   onChange={(e) => updateField('email', e.target.value)}
                   className={`w-full pl-10 pr-3 py-3 border rounded-md text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                     formErrors.email ? 'border-red-500' : 'border-gray-300'
                   }`}
@@ -234,7 +234,7 @@ export function LoginPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
-                  onChange={(_e) => updateField('password', e.target.value)}
+                   onChange={(e) => updateField('password', e.target.value)}
                   className={`w-full pl-10 pr-12 py-3 border rounded-md text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                     formErrors.password ? 'border-red-500' : 'border-gray-300'
                   }`}
@@ -282,12 +282,12 @@ export function LoginPage() {
             </div>
 
             {/* Submit Error */}
-            {(formErrors.submit || error) && (
+            {(formErrors.submit ?? error) && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <div className="flex items-center">
                   <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
                   <p className="text-red-800 text-sm">
-                    {formErrors.submit || error}
+                    {formErrors.submit ?? error}
                   </p>
                 </div>
               </div>

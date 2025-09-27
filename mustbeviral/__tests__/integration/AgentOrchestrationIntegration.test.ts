@@ -321,7 +321,7 @@ describe('Agent Integration and Orchestration Suite', () => {
         // Cross-platform optimization should be applied
         const platformGroups = results.reduce((groups, _result) => {
           const platform = result.platform;
-          if (!groups[platform]) groups[platform] = [];
+          if (!groups[platform]) {groups[platform] = [];}
           groups[platform].push(result);
           return groups;
         }, {} as Record<string, unknown[]>);

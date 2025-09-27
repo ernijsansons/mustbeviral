@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react';
-import { Sparkles, TrendingUp, Clock, Hash, AlertCircle } from 'lucide-react';
-import { GradientText } from './ui/GradientText';
-import { Button } from './ui/Button';
-import { cn } from '../lib/utils';
+import { useState, useCallback} from 'react';
+import { Sparkles, TrendingUp, Clock, Hash, AlertCircle} from 'lucide-react';
+import { GradientText} from './ui/GradientText';
+import { Button} from './ui/Button';
+import { cn} from '../lib/utils';
 
 interface PredictionResult {
   score: number;
@@ -31,12 +31,12 @@ export function ViralPredictor() {
 
   const analyzeContent = () => {
     const sanitizedContent = sanitizeInput(content);
-    if (!sanitizedContent) return;
+    if (!sanitizedContent) {return;}
 
     setIsAnalyzing(true);
 
     // Simulate AI analysis
-    setTimeout(() => {
+    setTimeout_(() => {
       const score = Math.min(95, Math.max(40, sanitizedContent.length * 2 + Math.random() * 30));
 
       setPrediction({
@@ -56,16 +56,28 @@ export function ViralPredictor() {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-viral-500';
-    if (score >= 60) return 'text-gold-500';
-    if (score >= 40) return 'text-yellow-500';
+    if (score >= 80) {
+    return 'text-viral-500';
+  }
+    if (score >= 60) {
+    return 'text-gold-500';
+  }
+    if (score >= 40) {
+    return 'text-yellow-500';
+  }
     return 'text-red-500';
   };
 
   const getScoreGradient = (score: number) => {
-    if (score >= 80) return 'from-viral-500 to-viral-600';
-    if (score >= 60) return 'from-gold-500 to-gold-600';
-    if (score >= 40) return 'from-yellow-500 to-yellow-600';
+    if (score >= 80) {
+    return 'from-viral-500 to-viral-600';
+  }
+    if (score >= 60) {
+    return 'from-gold-500 to-gold-600';
+  }
+    if (score >= 40) {
+    return 'from-yellow-500 to-yellow-600';
+  }
     return 'from-red-500 to-red-600';
   };
 
@@ -110,7 +122,7 @@ export function ViralPredictor() {
                 variant="viral"
                 size="default"
                 onClick={analyzeContent}
-                disabled={!content.trim() || isAnalyzing}
+                disabled={!content.trim()  ?? isAnalyzing}
                 loading={isAnalyzing}
                 leftIcon={<Sparkles className="w-4 h-4" />}
                 aria-label={isAnalyzing ? 'Analyzing content' : 'Analyze your content for viral potential'}

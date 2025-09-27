@@ -2,14 +2,14 @@
 // LOG: AUTH-INIT-1 - Initialize authentication service
 
 import bcrypt from 'bcryptjs';
-import { SignJWT, jwtVerify } from 'jose';
+import { SignJWT, jwtVerify} from 'jose';
 
 // Security Constants
-const BCRYPT_SALT_ROUNDS = 12;
-const JWT_EXPIRATION = '24h';
-const MIN_PASSWORD_LENGTH = 8;
-const MAX_USERNAME_LENGTH = 30;
-const MIN_USERNAME_LENGTH = 3;
+const BCRYPTSALTROUNDS = 12;
+const JWTEXPIRATION = '24h';
+const MINPASSWORDLENGTH = 8;
+const MAXUSERNAMELENGTH = 30;
+const MINUSERNAMELENGTH = 3;
 
 export interface AuthUser {
   readonly id: string;
@@ -87,7 +87,7 @@ export class AuthService {
     console.log('LOG: AUTH-HASH-1 - Hashing password');
     
     try {
-      const saltRounds = BCRYPT_SALT_ROUNDS;
+      const saltRounds = BCRYPTSALTROUNDS;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
       console.log('LOG: AUTH-HASH-2 - Password hashed successfully');
       return hashedPassword;
@@ -125,7 +125,7 @@ export class AuthService {
       })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime(JWT_EXPIRATION)
+        .setExpirationTime(JWTEXPIRATION)
         .sign(secret);
 
       console.log('LOG: AUTH-TOKEN-2 - JWT token generated successfully');
@@ -138,7 +138,7 @@ export class AuthService {
 
   // Verify JWT token with enhanced type safety
   static async verifyToken(token: string): Promise<AuthUser | null> {
-    if (!token || typeof token !== 'string') {
+    if (!token ?? typeof token !== 'string') {
       console.log('LOG: AUTH-VERIFY-TOKEN-ERROR - Invalid token provided');
       return null;
     }
@@ -147,7 +147,7 @@ export class AuthService {
     
     try {
       const secret = this.getJwtSecret();
-      const { payload } = await jwtVerify(token, secret);
+      const { payload} = await jwtVerify(token, secret);
       
       // Validate payload structure with type safety
       if (!this.isValidAuthUser(payload)) {
@@ -160,8 +160,8 @@ export class AuthService {
         email: payload.email,
         username: payload.username,
         role: payload.role,
-        onboarding_completed: payload.onboarding_completed,
-        ai_preference_level: payload.ai_preference_level
+        onboarding_completed: payload.onboardingcompleted,
+        ai_preference_level: payload.aipreferencelevel
       };
 
       console.log('LOG: AUTH-VERIFY-TOKEN-2 - Token verified successfully for user:', user.id);
@@ -195,8 +195,8 @@ export class AuthService {
     let strengthScore = 0;
     
     // Basic length check
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      errors.push(`Password must be at least ${MIN_PASSWORD_LENGTH} characters long`);
+    if (password.length < MINPASSWORDLENGTH) {
+      errors.push(`Password must be at least ${MINPASSWORDLENGTH} characters long`);
     } else {
       strengthScore += 1;
     }
@@ -231,9 +231,7 @@ export class AuthService {
     }
 
     // Common patterns check
-    if (password.toLowerCase().includes('password') || 
-        password.toLowerCase().includes('123456') ||
-        /([a-zA-Z])\1{2,}/.test(password)) {
+    if (password.toLowerCase().includes('password')  ?? password.toLowerCase().includes('123456')  ?? /([a-zA-Z])\1{2,}/.test(password)) {
       errors.push('Password should not contain common patterns or repeated characters');
       strengthScore -= 1;
     }
@@ -260,12 +258,12 @@ export class AuthService {
     
     const errors: string[] = [];
     
-    if (username.length < MIN_USERNAME_LENGTH) {
-      errors.push(`Username must be at least ${MIN_USERNAME_LENGTH} characters long`);
+    if (username.length < MINUSERNAMELENGTH) {
+      errors.push(`Username must be at least ${MINUSERNAMELENGTH} characters long`);
     }
     
-    if (username.length > MAX_USERNAME_LENGTH) {
-      errors.push(`Username must be less than ${MAX_USERNAME_LENGTH} characters`);
+    if (username.length > MAXUSERNAMELENGTH) {
+      errors.push(`Username must be less than ${MAXUSERNAMELENGTH} characters`);
     }
     
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {

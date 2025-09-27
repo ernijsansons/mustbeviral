@@ -53,7 +53,7 @@ export class CollaborationRoom {
 
   constructor(private state: DurableObjectState, private env: unknown) {
     this.contentId = state.id.toString();
-    this.logger = new Logger('CollaborationRoom', env.LOG_LEVEL || 'INFO');
+    this.logger = new Logger('CollaborationRoom', env.LOG_LEVEL  ?? 'INFO');
 
     // Initialize document state
     this.document = {
@@ -107,9 +107,9 @@ export class CollaborationRoom {
     const url = new URL(request.url);
     const userId = url.searchParams.get('userId');
     const username = url.searchParams.get('username');
-    const clientId = url.searchParams.get('clientId') || crypto.randomUUID();
+    const clientId = url.searchParams.get('clientId')  ?? crypto.randomUUID();
 
-    if (!userId || !username) {
+    if (!userId  ?? !username) {
       return new Response('Missing collaborator credentials', { status: 400 });
     }
 
@@ -194,7 +194,7 @@ export class CollaborationRoom {
 
   async handleWebSocketMessage(clientId: string, event: MessageEvent): Promise<void> {
     const collaborator = this.collaborators.get(clientId);
-    if (!collaborator) return;
+    if (!collaborator) {return;}
 
     try {
       const message = JSON.parse(event.data as string);
@@ -245,7 +245,7 @@ export class CollaborationRoom {
 
   async handleCollaborativeOperation(clientId: string, operationData: unknown): Promise<void> {
     const collaborator = this.collaborators.get(clientId);
-    if (!collaborator) return;
+    if (!collaborator) {return;}
 
     const operation: Operation = {
       ...operationData,
@@ -298,7 +298,7 @@ export class CollaborationRoom {
     const currentContent = this.document.content;
 
     // Validate operation bounds
-    if (operation.position < 0 || operation.position > currentContent.length) {
+    if (operation.position < 0  ?? operation.position > currentContent.length) {
       this.logger.warn('Operation position out of bounds', {
         contentId: this.contentId,
         operation,
@@ -348,7 +348,7 @@ export class CollaborationRoom {
 
   async handleCursorUpdate(clientId: string, cursorData: unknown): Promise<void> {
     const collaborator = this.collaborators.get(clientId);
-    if (!collaborator) return;
+    if (!collaborator) {return;}
 
     collaborator.cursor = cursorData;
 
@@ -367,7 +367,7 @@ export class CollaborationRoom {
 
   async handleSelectionUpdate(clientId: string, selectionData: unknown): Promise<void> {
     const collaborator = this.collaborators.get(clientId);
-    if (!collaborator) return;
+    if (!collaborator) {return;}
 
     collaborator.cursor.selection = selectionData;
 
@@ -386,7 +386,7 @@ export class CollaborationRoom {
 
   async handleTypingIndicator(clientId: string, typingData: unknown): Promise<void> {
     const collaborator = this.collaborators.get(clientId);
-    if (!collaborator) return;
+    if (!collaborator) {return;}
 
     collaborator.isTyping = typingData.isTyping;
 
@@ -404,7 +404,7 @@ export class CollaborationRoom {
 
   async handlePing(clientId: string): Promise<void> {
     const collaborator = this.collaborators.get(clientId);
-    if (!collaborator) return;
+    if (!collaborator) {return;}
 
     collaborator.websocket.send(JSON.stringify({
       type: 'pong',
@@ -417,7 +417,7 @@ export class CollaborationRoom {
 
   async handleSyncRequest(clientId: string): Promise<void> {
     const collaborator = this.collaborators.get(clientId);
-    if (!collaborator) return;
+    if (!collaborator) {return;}
 
     collaborator.websocket.send(JSON.stringify({
       type: 'sync',
@@ -433,7 +433,7 @@ export class CollaborationRoom {
 
   handleWebSocketClose(clientId: string): void {
     const collaborator = this.collaborators.get(clientId);
-    if (!collaborator) return;
+    if (!collaborator) {return;}
 
     // Notify other collaborators
     this.broadcastMessage({

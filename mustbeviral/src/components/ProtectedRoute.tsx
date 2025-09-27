@@ -1,9 +1,9 @@
 // Protected Route Component with enhanced error recovery
-import { _ReactNode, useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { useAuth } from '../hooks/useAuth';
-import { _AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
-import { logger } from '../lib/logging/productionLogger';
+import { ReactNode, useEffect} from 'react';
+import { useLocation} from 'wouter';
+import { useAuth} from '../hooks/useAuth';
+import { AlertCircle, RefreshCw, Loader2} from 'lucide-react';
+import { logger} from '../lib/logging/productionLogger';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -12,15 +12,12 @@ interface ProtectedRouteProps {
   requiredRole?: 'creator' | 'influencer' | 'admin';
 }
 
-export function ProtectedRoute({ _children,
-  fallback = null,
-  requireOnboarding = false,
-  requiredRole
+export function ProtectedRoute(_{ children, fallback = null, requireOnboarding = false, requiredRole
 }: ProtectedRouteProps) {
   const [, setLocation] = useLocation();
-  const { _isAuthenticated, user, isLoading, error, refreshAuth, clearError } = useAuth();
+  const { isAuthenticated, user, isLoading, error, refreshAuth, clearError} = useAuth();
 
-  useEffect(() => {
+  useEffect_(() => {
     if (!isLoading && !error) {
       if (!isAuthenticated) {
         logger.info('User not authenticated, redirecting to login', undefined, {
@@ -31,21 +28,21 @@ export function ProtectedRoute({ _children,
         return;
       }
 
-      if (requireOnboarding && user && !user.onboarding_completed) {
+      if (requireOnboarding && user && !user.onboardingcompleted) {
         logger.info('User not onboarded, redirecting to onboarding', undefined, {
           component: 'ProtectedRoute',
           action: 'redirectToOnboarding',
-          metadata: { _requireOnboarding, onboardingCompleted: user.onboarding_completed }
+          metadata: { requireOnboarding, onboardingCompleted: user.onboardingcompleted }
         });
         setLocation('/onboard');
         return;
       }
 
-      if (!requireOnboarding && user && !user.onboarding_completed) {
+      if (!requireOnboarding && user && !user.onboardingcompleted) {
         logger.info('User needs onboarding, redirecting', undefined, {
           component: 'ProtectedRoute',
           action: 'redirectForOnboarding',
-          metadata: { _requireOnboarding, onboardingCompleted: user.onboarding_completed }
+          metadata: { requireOnboarding, onboardingCompleted: user.onboardingcompleted }
         });
         setLocation('/onboard');
         return;
@@ -56,7 +53,7 @@ export function ProtectedRoute({ _children,
         logger.warn('Insufficient permissions for protected route', undefined, {
           component: 'ProtectedRoute',
           action: 'permissionDenied',
-          metadata: { _requiredRole, userRole: user.role, userId: user.id }
+          metadata: { requiredRole, userRole: user.role, userId: user.id }
         });
         setLocation('/unauthorized');
         return;
@@ -66,7 +63,7 @@ export function ProtectedRoute({ _children,
 
   // Show loading state while checking authentication
   if (isLoading) {
-    return fallback || (
+    return fallback ?? (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
@@ -78,8 +75,7 @@ export function ProtectedRoute({ _children,
 
   // Show error state with retry option
   if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    return (<div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Error</h2>
@@ -111,7 +107,7 @@ export function ProtectedRoute({ _children,
   }
 
   // Show fallback if not authenticated or loading
-  if (!isAuthenticated || (!requireOnboarding && user && !user.onboarding_completed)) {
+  if (!isAuthenticated ?? (!requireOnboarding && user && !user.onboardingcompleted)) {
     return fallback ? <>{fallback}</> : null;
   }
 

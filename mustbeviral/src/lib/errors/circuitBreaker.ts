@@ -3,7 +3,7 @@
  * Provides advanced circuit breaker pattern with monitoring and adaptive thresholds
  */
 
-import { _CircuitBreakerConfig, CircuitBreakerState, CircuitBreakerMetrics } from '../types/security';
+import { CircuitBreakerConfig, CircuitBreakerState, CircuitBreakerMetrics} from '../types/security';
 
 export interface EnhancedCircuitBreakerConfig extends CircuitBreakerConfig {
   healthCheckInterval?: number;
@@ -42,7 +42,7 @@ export class EnhancedCircuitBreaker {
   private errorHistory: Array<{ timestamp: Date; error: string; retryable: boolean }> = [];
   private stateChangeHistory: Array<{ timestamp: Date; from: CircuitBreakerState; to: CircuitBreakerState }> = [];
   private healthCheckTimer?: unknown;
-  private readonly MAX_HISTORY = 100;
+  private readonly MAXHISTORY = 100;
 
   constructor(config: EnhancedCircuitBreakerConfig) {
     this.config = {
@@ -83,7 +83,7 @@ export class EnhancedCircuitBreaker {
         this.transitionTo('HALF_OPEN');
       } else {
         throw new CircuitBreakerOpenError(
-          `Circuit breaker is OPEN for ${operationName || 'operation'}`,
+          `Circuit breaker is OPEN for ${operationName ?? 'operation'}`,
           this.getTimeUntilNextAttempt()
         );
       }
@@ -139,7 +139,7 @@ export class EnhancedCircuitBreaker {
 
     if (responseTime !== undefined) {
       this.responseTimeHistory.push(responseTime);
-      if (this.responseTimeHistory.length > this.MAX_HISTORY) {
+      if (this.responseTimeHistory.length > this.MAXHISTORY) {
         this.responseTimeHistory.shift();
       }
     }
@@ -164,7 +164,7 @@ export class EnhancedCircuitBreaker {
     this.lastFailureTime = new Date();
 
     // Classify error
-    const errorString = error?.message || String(error);
+    const errorString = error?.message ?? String(error);
     const isRetryable = this.isRetryableError(errorString);
 
     // Add to error history
@@ -174,13 +174,13 @@ export class EnhancedCircuitBreaker {
       retryable: isRetryable
     });
 
-    if (this.errorHistory.length > this.MAX_HISTORY) {
+    if (this.errorHistory.length > this.MAXHISTORY) {
       this.errorHistory.shift();
     }
 
     if (responseTime !== undefined) {
       this.responseTimeHistory.push(responseTime);
-      if (this.responseTimeHistory.length > this.MAX_HISTORY) {
+      if (this.responseTimeHistory.length > this.MAXHISTORY) {
         this.responseTimeHistory.shift();
       }
     }
@@ -219,7 +219,7 @@ export class EnhancedCircuitBreaker {
     const errorRate = totalRequests > 0 ? (this.failures / totalRequests) * 100 : 0;
 
     const averageResponseTime = this.responseTimeHistory.length > 0
-      ? this.responseTimeHistory.reduce((a, _b) => a + b, 0) / this.responseTimeHistory.length
+      ? this.responseTimeHistory.reduce((a, b) => a + b, 0) / this.responseTimeHistory.length
       : 0;
 
     const timeouts = this.errorHistory.filter(e =>
@@ -232,7 +232,7 @@ export class EnhancedCircuitBreaker {
 
     const uptime = this.calculateUptime();
 
-    return { _totalRequests,
+    return { totalRequests,
       successfulRequests: this.successes,
       failedRequests: this.failures,
       timeouts,
@@ -259,12 +259,12 @@ export class EnhancedCircuitBreaker {
     const errorCounts = new Map<string, number>();
     this.errorHistory.forEach(e => {
       const simplified = this.simplifyError(e.error);
-      errorCounts.set(simplified, (errorCounts.get(simplified) || 0) + 1);
+      errorCounts.set(simplified, (errorCounts.get(simplified)  ?? 0) + 1);
     });
 
     const commonErrors = Array.from(errorCounts.entries())
-      .map(([error, count]) => ({ _error, count }))
-      .sort((a, _b) => b.count - a.count)
+      .map(([error, count]) => ({ error, count }))
+      .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
     // Error trend (hourly buckets for last 24 hours)
@@ -282,7 +282,7 @@ export class EnhancedCircuitBreaker {
       errorTrend.push({ timestamp: hourStart, count });
     }
 
-    return { _retryableErrors,
+    return { retryableErrors,
       nonRetryableErrors,
       commonErrors,
       errorTrend
@@ -340,8 +340,8 @@ export class EnhancedCircuitBreaker {
     operation: () => Promise<T>,
     timeout: number
   ): Promise<T> {
-    return new Promise((resolve, _reject) => {
-      const timer = setTimeout(() => {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout_(() => {
         reject(new Error(`Operation timeout after ${timeout}ms`));
       }, timeout);
 
@@ -361,7 +361,7 @@ export class EnhancedCircuitBreaker {
    * Check if error is retryable
    */
   private isRetryableError(errorString: string): boolean {
-    const { _retryable, nonRetryable } = this.config.errorClassification;
+    const { retryable, nonRetryable} = this.config.errorClassification;
 
     // Check non-retryable patterns first
     for (const pattern of nonRetryable) {
@@ -402,7 +402,9 @@ export class EnhancedCircuitBreaker {
    * Check if reset attempt can be made
    */
   private canAttemptReset(): boolean {
-    if (!this.nextAttemptTime) return true;
+    if (!this.nextAttemptTime) {
+    return true;
+  }
     return Date.now() >= this.nextAttemptTime.getTime();
   }
 
@@ -410,7 +412,9 @@ export class EnhancedCircuitBreaker {
    * Get time until next attempt
    */
   private getTimeUntilNextAttempt(): number {
-    if (!this.nextAttemptTime) return 0;
+    if (!this.nextAttemptTime) {
+    return 0;
+  }
     return Math.max(0, this.nextAttemptTime.getTime() - Date.now());
   }
 
@@ -429,7 +433,7 @@ export class EnhancedCircuitBreaker {
         to: newState
       });
 
-      if (this.stateChangeHistory.length > this.MAX_HISTORY) {
+      if (this.stateChangeHistory.length > this.MAXHISTORY) {
         this.stateChangeHistory.shift();
       }
 
@@ -517,7 +521,9 @@ export class EnhancedCircuitBreaker {
    * Calculate uptime percentage
    */
   private calculateUptime(): number {
-    if (this.stateChangeHistory.length === 0) return 100;
+    if (this.stateChangeHistory.length === 0) {
+    return 100;
+  }
 
     const timeWindow = 24 * 60 * 60 * 1000; // 24 hours
     const cutoff = new Date(Date.now() - timeWindow);
@@ -526,7 +532,9 @@ export class EnhancedCircuitBreaker {
     let lastOpenTime: Date | null = null;
 
     for (const change of this.stateChangeHistory) {
-      if (change.timestamp < cutoff) continue;
+      if (change.timestamp < cutoff) {
+    continue;
+  }
 
       if (change.to === 'OPEN') {
         lastOpenTime = change.timestamp;
@@ -562,7 +570,7 @@ export class EnhancedCircuitBreaker {
    * Start health check monitoring
    */
   private startHealthCheck(): void {
-    this.healthCheckTimer = setInterval(() => {
+    this.healthCheckTimer = setInterval_(() => {
       this.performHealthCheck();
     }, this.config.healthCheckInterval);
   }

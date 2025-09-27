@@ -18,7 +18,7 @@ export interface SanitizationOptions {
 
 export class InputSanitizer {
   // Dangerous patterns to detect and block
-  private static readonly DANGEROUS_PATTERNS = {
+  private static readonly DANGEROUSPATTERNS = {
     sqlInjection: /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b)/gi,
     scriptTags: /<script[^>]*>.*?<\/script>/gis,
     eventHandlers: /\bon\w+\s*=/gi,
@@ -41,7 +41,7 @@ export class InputSanitizer {
    * Sanitize HTML content
    */
   static sanitizeHtml(input: string, options: SanitizationOptions = {}): string {
-    if (!input || typeof input !== 'string') {
+    if (!input ?? typeof input !== 'string') {
       return '';
     }
 
@@ -52,8 +52,8 @@ export class InputSanitizer {
 
     // Configure DOMPurify
     const config: any = {
-      ALLOWED_TAGS: options.allowedTags || ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li'],
-      ALLOWED_ATTR: options.allowedAttributes || { 'a': ['href', 'target'] },
+      ALLOWED_TAGS: options.allowedTags ?? ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li'],
+      ALLOWED_ATTR: options.allowedAttributes ?? { 'a': ['href', 'target'] },
       ALLOW_DATA_ATTR: false,
       FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form'],
       FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
@@ -98,7 +98,7 @@ export class InputSanitizer {
    * Sanitize plain text input
    */
   static sanitizeText(input: string, maxLength: number = 10000): string {
-    if (!input || typeof input !== 'string') {
+    if (!input ?? typeof input !== 'string') {
       return '';
     }
 
@@ -126,7 +126,7 @@ export class InputSanitizer {
    * Sanitize JSON input
    */
   static sanitizeJson(input: string): object | null {
-    if (!input || typeof input !== 'string') {
+    if (!input ?? typeof input !== 'string') {
       return null;
     }
 
@@ -176,7 +176,7 @@ export class InputSanitizer {
    * Sanitize SQL query parameters
    */
   static sanitizeSqlParam(input: string): string {
-    if (!input || typeof input !== 'string') {
+    if (!input ?? typeof input !== 'string') {
       return '';
     }
 
@@ -203,7 +203,7 @@ export class InputSanitizer {
    * Sanitize file names
    */
   static sanitizeFileName(fileName: string): string {
-    if (!fileName || typeof fileName !== 'string') {
+    if (!fileName ?? typeof fileName !== 'string') {
       return 'unnamed';
     }
 
@@ -219,14 +219,14 @@ export class InputSanitizer {
       sanitized = sanitized.substring(0, 240) + (extension ? `.${extension}` : '');
     }
 
-    return sanitized || 'unnamed';
+    return sanitized ?? 'unnamed';
   }
 
   /**
    * Sanitize URL
    */
   static sanitizeUrl(url: string): string | null {
-    if (!url || typeof url !== 'string') {
+    if(!url ?? typeof url !== 'string') {
       return null;
     }
 
@@ -241,9 +241,9 @@ export class InputSanitizer {
 
       // Check for suspicious patterns
       if (
-        this.DANGEROUS_PATTERNS.javascript.test(url) ||
-        this.DANGEROUS_PATTERNS.dataUri.test(url) ||
-        this.DANGEROUS_PATTERNS.vbscript.test(url)
+        this.DANGEROUS_PATTERNS.javascript.test(url)   {
+    ?? this.DANGEROUS_PATTERNS.dataUri.test(url)  ?? this.DANGEROUS_PATTERNS.vbscript.test(url)
+  }
       ) {
         return null;
       }
@@ -258,7 +258,7 @@ export class InputSanitizer {
    * Sanitize email address
    */
   static sanitizeEmail(email: string): string | null {
-    if (!email || typeof email !== 'string') {
+    if (!email ?? typeof email !== 'string') {
       return null;
     }
 
@@ -272,8 +272,9 @@ export class InputSanitizer {
 
     // Check for suspicious patterns
     if (
-      this.DANGEROUS_PATTERNS.scriptTags.test(sanitized) ||
-      this.DANGEROUS_PATTERNS.sqlInjection.test(sanitized)
+      this.DANGEROUS_PATTERNS.scriptTags.test(sanitized)   {
+    ?? this.DANGEROUS_PATTERNS.sqlInjection.test(sanitized)
+  }
     ) {
       return null;
     }
@@ -287,7 +288,7 @@ export class InputSanitizer {
   static sanitizeNumber(input: any, min?: number, max?: number): number | null {
     const num = Number(input);
 
-    if (isNaN(num) || !isFinite(num)) {
+    if (isNaN(num)  ?? !isFinite(num)) {
       return null;
     }
 

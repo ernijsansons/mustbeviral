@@ -105,10 +105,10 @@ class TestPerformanceMonitor {
     const totalMatch = output.match(/Tests:\s+(\d+) total/);
     const suitesMatch = output.match(/Test Suites:\s+(\d+) passed.*?(\d+) total/);
 
-    if (passedMatch) results.testsPassed = parseInt(passedMatch[1]);
-    if (failedMatch) results.testsFailed = parseInt(failedMatch[1]);
-    if (totalMatch) results.testsTotal = parseInt(totalMatch[1]);
-    if (suitesMatch) results.testSuites = parseInt(suitesMatch[2]);
+    if (passedMatch) {results.testsPassed = parseInt(passedMatch[1]);}
+    if (failedMatch) {results.testsFailed = parseInt(failedMatch[1]);}
+    if (totalMatch) {results.testsTotal = parseInt(totalMatch[1]);}
+    if (suitesMatch) {results.testSuites = parseInt(suitesMatch[2]);}
 
     return results;
   }

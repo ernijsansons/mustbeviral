@@ -4,8 +4,8 @@
  * Fortune 50-grade collaborative editing infrastructure
  */
 
-import { WebSocketManager, type UserPresence, type CollaborationRoom } from './websocketManager';
-import { ContentCollaborationEditor, type ContentOperation, type ContentCursor, type ContentComment } from './contentEditor';
+import { WebSocketManager, type UserPresence, type CollaborationRoom} from './websocketManager';
+import { ContentCollaborationEditor, type ContentOperation, type ContentCursor, type ContentComment} from './contentEditor';
 
 export { WebSocketManager, ContentCollaborationEditor };
 export type {
@@ -132,7 +132,7 @@ export class CollaborationService {
     this.metrics.totalSessions++;
 
     // Setup operation tracking for metrics
-    editor.onChange(() => {
+    editor.onChange_(() => {
       this.operationCount++;
       session.lastActivity = Date.now();
     });
@@ -292,11 +292,11 @@ export class CollaborationService {
    * Register for user join/leave events
    */
   onUserJoinLeave(callback: (data: { type: 'join' | 'leave'; user: UserPresence; roomId: string }) => void): void {
-    this.websocketManager.onMessage('user-joined', (payload) => {
+    this.websocketManager.onMessage('user-joined', _(payload) => {
       callback({ type: 'join', user: payload.userPresence, roomId: payload.roomId });
     });
     
-    this.websocketManager.onMessage('user-left', (payload) => {
+    this.websocketManager.onMessage('user-left', _(payload) => {
       callback({ type: 'leave', user: payload.userPresence, roomId: payload.roomId });
     });
   }
@@ -321,7 +321,7 @@ export class CollaborationService {
    */
   private setupEventHandlers(): void {
     // Track operation performance
-    this.websocketManager.onMessage('operation', (payload, message) => {
+    this.websocketManager.onMessage('operation', _(payload, message) => {
       const latency = Date.now() - message.timestamp;
       this.latencyHistory.push(latency);
       
@@ -332,16 +332,16 @@ export class CollaborationService {
     });
 
     // Track conflicts (would be implemented in operational transformation)
-    this.websocketManager.onMessage('conflict-resolved', () => {
+    this.websocketManager.onMessage('conflict-resolved', _() => {
       this.conflictCount++;
     });
 
     // Handle connection events
-    this.websocketManager.onMessage('connected', () => {
+    this.websocketManager.onMessage('connected', _() => {
       console.log('Collaboration WebSocket connected');
     });
 
-    this.websocketManager.onMessage('disconnected', () => {
+    this.websocketManager.onMessage('disconnected', _() => {
       console.log('Collaboration WebSocket disconnected');
     });
   }

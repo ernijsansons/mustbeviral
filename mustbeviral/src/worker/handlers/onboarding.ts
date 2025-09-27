@@ -1,9 +1,9 @@
 // Onboarding Request Handler
 // Extracted from worker.ts for modularity
 
-import { DatabaseService } from '../../lib/db';
-import { JWTManager } from '../../lib/auth/jwtManager';
-import { log } from '../../lib/monitoring/logger';
+import { DatabaseService} from '../../lib/db';
+import { JWTManager} from '../../lib/auth/jwtManager';
+import { log} from '../../lib/monitoring/logger';
 
 export class OnboardingHandler {
   constructor(private dbService: DatabaseService) {}
@@ -25,7 +25,7 @@ export class OnboardingHandler {
 
       const tokenValidation = await JWTManager.verifyAccessToken(token);
 
-      if (!tokenValidation.valid || !tokenValidation.claims) {
+      if (!tokenValidation.valid ?? !tokenValidation.claims) {
         return new Response(JSON.stringify({ error: 'Invalid token' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' }

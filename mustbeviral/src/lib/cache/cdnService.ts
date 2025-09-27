@@ -8,9 +8,9 @@ import crypto from 'crypto'
 
 export enum CDNProvider {
   CLOUDFLARE = 'cloudflare',
-  AWS_CLOUDFRONT = 'aws_cloudfront',
+  AWSCLOUDFRONT = 'aws_cloudfront',
   FASTLY = 'fastly',
-  AZURE_CDN = 'azure_cdn'
+  AZURECDN = 'azure_cdn'
 }
 
 export interface CDNConfig {
@@ -118,8 +118,7 @@ export class CDNService {
    * Preload content into CDN edge caches
    */
   async preload(urls: string[]): Promise<{ success: boolean; results: Array<{ url: string; success: boolean; message?: string }> }> {
-    const results = await Promise.allSettled(
-      urls.map(async (url) => {
+    const results = await Promise.allSettled(urls.map(async (url) => {
         try {
           const response = await fetch(url, {
             method: 'HEAD',
@@ -202,11 +201,11 @@ export class CDNService {
     const body: any = {}
     
     if (request.everything) {
-      body.purge_everything = true
+      body.purgeeverything = true
     } else {
-      if (request.urls) body.files = request.urls
-      if (request.tags) body.tags = request.tags
-      if (request.files) body.files = request.files
+      if (request.urls) {body.files = request.urls}
+      if (request.tags) {body.tags = request.tags}
+      if (request.files) {body.files = request.files}
     }
 
     const response = await fetch(endpoint, {
@@ -221,7 +220,7 @@ export class CDNService {
     const data = await response.json()
     
     return {
-      success: data.success || false,
+      success: data.success ?? false,
       id: data.result?.id,
       message: data.success ? 'Purge initiated successfully' : data.errors?.[0]?.message
     }
@@ -239,15 +238,15 @@ export class CDNService {
     })
 
     const data = await response.json()
-    const result = data.result || {}
+    const result = data.result ?? {}
     
     return {
-      requests: result.totals?.requests?.all || 0,
-      bandwidth: result.totals?.bandwidth?.all || 0,
-      cacheHitRatio: (result.totals?.requests?.cached || 0) / (result.totals?.requests?.all || 1),
-      edgeResponseTime: result.totals?.responseTimeAvg || 0,
-      errors: result.totals?.requests?.status?.['5xx'] || 0,
-      regions: this.parseCloudflareRegions(result.timeseries || [])
+      requests: result.totals?.requests?.all ?? 0,
+      bandwidth: result.totals?.bandwidth?.all ?? 0,
+      cacheHitRatio: (result.totals?.requests?.cached ?? 0) / (result.totals?.requests?.all ?? 1),
+      edgeResponseTime: result.totals?.responseTimeAvg ?? 0,
+      errors: result.totals?.requests?.status?.['5xx']  ?? 0,
+      regions: this.parseCloudflareRegions(result.timeseries ?? [])
     }
   }
 
@@ -355,7 +354,7 @@ export class CDNService {
       throw new Error(`Rate limit exceeded. Try again in ${Math.ceil(waitTime / 1000)} seconds`)
     }
 
-    if (!limit || now >= limit.resetTime) {
+    if (!limit ?? now >= limit.resetTime) {
       this.rateLimiter.set(key, {
         count: 1,
         resetTime: now + this.getRateLimitWindow(operation)
@@ -371,7 +370,7 @@ export class CDNService {
       stats: 100,  // 100 stats requests per window
       preload: 50  // 50 preload requests per window
     }
-    return limits[operation] || 100
+    return limits[operation]  ?? 100
   }
 
   private getRateLimitWindow(operation: string): number {
@@ -386,7 +385,7 @@ export class CDNService {
       '7d': now - (7 * 24 * 60 * 60 * 1000),
       '30d': now - (30 * 24 * 60 * 60 * 1000)
     }
-    return ranges[range] || ranges['24h']
+    return ranges[range]  ?? ranges['24h']
   }
 
   private parseCloudflareRegions(timeseries: any[]): CDNStats['regions'] {
@@ -421,13 +420,13 @@ export class CDNManager {
   constructor(configs: Array<{ name: string; config: CDNConfig; primary?: boolean; fallback?: boolean }>) {
     configs.forEach(({ name, config, primary, fallback }) => {
       this.providers.set(name, new CDNService(config))
-      if (primary) this.primaryProvider = name
-      if (fallback) this.fallbackProvider = name
+      if (primary) {this.primaryProvider = name}
+      if (fallback) {this.fallbackProvider = name}
     })
   }
 
   async purge(request: PurgeRequest, provider?: string): Promise<PurgeResponse> {
-    const targetProvider = provider || this.primaryProvider
+    const targetProvider = provider ?? this.primaryProvider
     const service = this.providers.get(targetProvider)
     
     if (!service) {
@@ -448,7 +447,7 @@ export class CDNManager {
   }
 
   async getStats(provider?: string, timeRange?: '1h' | '24h' | '7d' | '30d'): Promise<CDNStats> {
-    const targetProvider = provider || this.primaryProvider
+    const targetProvider = provider ?? this.primaryProvider
     const service = this.providers.get(targetProvider)
     
     if (!service) {
@@ -459,7 +458,7 @@ export class CDNManager {
   }
 
   async preload(urls: string[], provider?: string) {
-    const targetProvider = provider || this.primaryProvider
+    const targetProvider = provider ?? this.primaryProvider
     const service = this.providers.get(targetProvider)
     
     if (!service) {
@@ -481,8 +480,8 @@ export const cdnService = new CDNManager([
     primary: true,
     config: {
       provider: CDNProvider.CLOUDFLARE,
-      zoneId: process.env.CLOUDFLARE_ZONE_ID || '',
-      apiKey: process.env.CLOUDFLARE_API_TOKEN || '',
+      zoneId: process.env.CLOUDFLARE_ZONE_ID ?? '',
+      apiKey: process.env.CLOUDFLARE_API_TOKEN ?? '',
       baseUrl: 'https://mustbeviral.com',
       defaultTTL: 3600,
       maxTTL: 31536000,
@@ -493,10 +492,10 @@ export const cdnService = new CDNManager([
     name: 'aws',
     fallback: true,
     config: {
-      provider: CDNProvider.AWS_CLOUDFRONT,
-      distributionId: process.env.AWS_CLOUDFRONT_DISTRIBUTION_ID || '',
-      apiKey: process.env.AWS_ACCESS_KEY_ID || '',
-      apiSecret: process.env.AWS_SECRET_ACCESS_KEY || '',
+      provider: CDNProvider.AWSCLOUDFRONT,
+      distributionId: process.env.AWS_CLOUDFRONT_DISTRIBUTION_ID ?? '',
+      apiKey: process.env.AWS_ACCESS_KEY_ID ?? '',
+      apiSecret: process.env.AWS_SECRET_ACCESS_KEY ?? '',
       baseUrl: 'https://cdn.mustbeviral.com',
       defaultTTL: 3600,
       maxTTL: 31536000

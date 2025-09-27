@@ -1,7 +1,7 @@
 // Security Middleware for Cloudflare Workers
 // Implements security headers, CORS, CSRF protection, and more
 
-import { CloudflareEnv } from '../lib/cloudflare';
+import { CloudflareEnv} from '../lib/cloudflare';
 
 export interface SecurityConfig {
   allowedOrigins: string[];
@@ -10,13 +10,13 @@ export interface SecurityConfig {
 }
 
 export class SecurityMiddleware {
-  private static readonly PRODUCTION_ORIGINS = [
+  private static readonly PRODUCTIONORIGINS = [
     'https://mustbeviral.com',
     'https://www.mustbeviral.com',
     'https://app.mustbeviral.com'
   ];
 
-  private static readonly DEVELOPMENT_ORIGINS = [
+  private static readonly DEVELOPMENTORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
     'http://localhost:3000',
@@ -125,7 +125,7 @@ export class SecurityMiddleware {
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
       'raw',
-      encoder.encode(env.JWT_SECRET),
+      encoder.encode(env.JWTSECRET),
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['sign']
@@ -147,7 +147,7 @@ export class SecurityMiddleware {
   ): Promise<boolean> {
     try {
       const [dataB64, signatureB64] = token.split('.');
-      if (!dataB64 || !signatureB64) {
+      if (!dataB64 ?? !signatureB64) {
         return false;
       }
 
@@ -170,7 +170,7 @@ export class SecurityMiddleware {
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey(
         'raw',
-        encoder.encode(env.JWT_SECRET),
+        encoder.encode(env.JWTSECRET),
         { name: 'HMAC', hash: 'SHA-256' },
         false,
         ['verify']
@@ -189,12 +189,12 @@ export class SecurityMiddleware {
    * Sanitize response data to prevent information leakage
    */
   static sanitizeResponse(data: unknown): unknown {
-    if (typeof data !== 'object' || data === null) {
+    if (typeof data !== 'object'  ?? data === null) {
       return data;
     }
 
     if (Array.isArray(data)) {
-      return data.map(item => this.sanitizeResponse(item));
+      return data.map(item = > this.sanitizeResponse(item));
     }
 
     const sanitized: unknown = {};
@@ -218,8 +218,8 @@ export class SecurityMiddleware {
    * Check if request is suspicious
    */
   static isSuspiciousRequest(request: Request): { suspicious: boolean; reason?: string } {
-    const userAgent = request.headers.get('user-agent') || '';
-    const contentType = request.headers.get('content-type') || '';
+    const userAgent = request.headers.get('user-agent')  ?? '';
+    const contentType = request.headers.get('content-type')  ?? '';
 
     // Check for suspicious user agents
     const suspiciousUserAgents = [
@@ -253,16 +253,18 @@ export class SecurityMiddleware {
     const environment = env.ENVIRONMENT === 'production' ? 'production' : 'development';
     const allowedOrigins = environment === 'production'
       ? this.PRODUCTION_ORIGINS
-      : [...this.PRODUCTION_ORIGINS, ...this.DEVELOPMENT_ORIGINS];
+      : [...this.PRODUCTIONORIGINS, ...this.DEVELOPMENTORIGINS];
 
-    return { _allowedOrigins,
+    return { allowedOrigins,
       environment,
       enableCSRF: environment === 'production'
     };
   }
 
   private static isValidOrigin(origin: string | null, config: SecurityConfig): boolean {
-    if (!origin) return false;
+    if (!origin) {
+    return false;
+  }
     return config.allowedOrigins.includes(origin);
   }
 

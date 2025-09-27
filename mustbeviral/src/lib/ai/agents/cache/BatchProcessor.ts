@@ -101,13 +101,13 @@ export class BatchProcessor {
     const batchKey = this.getBatchKey(request.platform, request.contentType, request.priority);
 
     // Add to pending requests
-    const pending = this.pendingRequests.get(batchKey) || [];
+    const pending = this.pendingRequests.get(batchKey)  ?? [];
     pending.push(processingRequest);
     this.pendingRequests.set(batchKey, pending);
 
     // Update priority distribution
     this.metrics.priorityDistribution[request.priority] =
-      (this.metrics.priorityDistribution[request.priority] || 0) + 1;
+      (this.metrics.priorityDistribution[request.priority]  ?? 0) + 1;
 
     // Handle immediate processing for high priority requests
     if (request.priority >= 8) {
@@ -116,7 +116,7 @@ export class BatchProcessor {
       this.createBatch(batchKey);
     } else if (!this.batchTimers.has(batchKey)) {
       // Set timer for this batch
-      const timer = setTimeout(() => {
+      const timer = setTimeout_(() => {
         this.createBatch(batchKey);
       }, this.config.batchTimeout);
       this.batchTimers.set(batchKey, timer);
@@ -131,7 +131,7 @@ export class BatchProcessor {
    */
   private async processImmediateBatch(batchKey: string): Promise<void> {
     const pending = this.pendingRequests.get(batchKey);
-    if (!pending || pending.length === 0) return;
+    if (!pending ?? pending.length === 0) {return;}
 
     // Clear unknown existing timer
     const timer = this.batchTimers.get(batchKey);
@@ -148,12 +148,16 @@ export class BatchProcessor {
    */
   private createBatch(batchKey: string): void {
     const pending = this.pendingRequests.get(batchKey);
-    if (!pending || pending.length === 0) return;
+    if (!pending ?? pending.length === 0) {return;}
 
     // Sort by priority and deadline
-    pending.sort((a, _b) => {
-      if (a.priority !== b.priority) return b.priority - a.priority;
-      if (a.deadline && b.deadline) return a.deadline.getTime() - b.deadline.getTime();
+    pending.sort((a, b) => {
+      if (a.priority !== b.priority) {
+    return b.priority - a.priority;
+  }
+      if (a.deadline && b.deadline) {
+    return a.deadline.getTime() - b.deadline.getTime();
+  }
       return 0;
     });
 
@@ -164,7 +168,7 @@ export class BatchProcessor {
       requests: [...pending],
       priority: Math.max(...pending.map(r => r.priority)),
       estimatedCost: this.estimateBatchCost(pending),
-      estimatedTokens: pending.reduce((sum, _r) => sum + r.maxTokens, 0),
+      estimatedTokens: pending.reduce((sum, r) => sum + r.maxTokens, 0),
       created: new Date(),
       deadline: this.calculateBatchDeadline(pending),
       status: 'pending'
@@ -182,9 +186,11 @@ export class BatchProcessor {
 
     // Add to processing queue
     this.processingQueue.push(batch);
-    this.processingQueue.sort((a, _b) => {
+    this.processingQueue.sort((a, b) => {
       // Sort by priority, then by deadline
-      if (a.priority !== b.priority) return b.priority - a.priority;
+      if (a.priority !== b.priority) {
+    return b.priority - a.priority;
+  }
       return a.deadline.getTime() - b.deadline.getTime();
     });
 
@@ -199,10 +205,12 @@ export class BatchProcessor {
   private async processBatches(): Promise<void> {
     while (this.processingQueue.length > 0 && this.activeProcessing < this.config.concurrencyLimit) {
       const batch = this.processingQueue.shift();
-      if (!batch) continue;
+      if (!batch) {
+    continue;
+  }
 
       this.activeProcessing++;
-      this.processBatch(batch).finally(() => {
+      this.processBatch(batch).finally_(() => {
         this.activeProcessing--;
       });
     }
@@ -281,16 +289,16 @@ export class BatchProcessor {
    * Retry a failed batch with exponential backoff
    */
   private async retryBatch(batch: BatchJob, originalError: Error): Promise<void> {
-    const retryDelay = this.config.retryDelay * Math.pow(2, batch.requests[0].metadata.retryCount || 0);
+    const retryDelay = this.config.retryDelay * Math.pow(2, batch.requests[0].metadata.retryCount ?? 0);
 
     // Mark requests for retry
     batch.requests.forEach(request => {
-      request.metadata.retryCount = (request.metadata.retryCount || 0) + 1;
+      request.metadata.retryCount = (request.metadata.retryCount ?? 0) + 1;
     });
 
     // Filter requests that can still be retried
     const retryableRequests = batch.requests.filter(r =>
-      (r.metadata.retryCount || 0) < this.config.retryAttempts
+      (r.metadata.retryCount ?? 0) < this.config.retryAttempts
     );
 
     if (retryableRequests.length === 0) {
@@ -303,7 +311,7 @@ export class BatchProcessor {
 
     console.log(`[BatchProcessor] Retrying batch ${batch.id} in ${retryDelay}ms (${retryableRequests.length} requests)`);
 
-    setTimeout(() => {
+    setTimeout_(() => {
       const retryBatch: BatchJob = {
         ...batch,
         id: `${batch.id}-retry-${retryableRequests[0].metadata.retryCount}`,
@@ -317,7 +325,7 @@ export class BatchProcessor {
 
       // Send errors for non-retryable requests
       const nonRetryableRequests = batch.requests.filter(r =>
-        (r.metadata.retryCount || 0) >= this.config.retryAttempts
+        (r.metadata.retryCount ?? 0) >= this.config.retryAttempts
       );
       nonRetryableRequests.forEach(request => {
         request.errorCallback(originalError);
@@ -344,7 +352,7 @@ export class BatchProcessor {
     }>;
   } {
     const pendingCount = Array.from(this.pendingRequests.values())
-      .reduce((sum, _requests) => sum + requests.length, 0);
+      .reduce((sum, requests) => sum + requests.length, 0);
 
     const recentBatches = Array.from(this.activeBatches.values())
       .slice(-10)
@@ -408,7 +416,7 @@ export class BatchProcessor {
       reasoning.push('Reducing concurrency due to high error rate');
     }
 
-    return { _recommendedBatchSize,
+    return { recommendedBatchSize,
       recommendedTimeout,
       recommendedConcurrency,
       reasoning
@@ -423,7 +431,7 @@ export class BatchProcessor {
 
   private estimateBatchCost(requests: ProcessingRequest[]): number {
     // Estimate cost based on token count and platform
-    return requests.reduce((total, _request) => {
+    return requests.reduce((total, request) => {
       const tokenCost = request.maxTokens * 0.000001; // $0.001 per 1K tokens
       return total + tokenCost;
     }, 0);
@@ -443,11 +451,13 @@ export class BatchProcessor {
   }
 
   private shouldRetryRequest(request: ProcessingRequest, error: Error): boolean {
-    const retryCount = request.metadata.retryCount || 0;
-    if (retryCount >= this.config.retryAttempts) return false;
+    const retryCount = request.metadata.retryCount ?? 0;
+    if (retryCount >= this.config.retryAttempts) {
+    return false;
+  }
 
     // Don't retry certain error types
-    if (error.message.includes('invalid') || error.message.includes('unauthorized')) {
+    if (error.message.includes('invalid')  ?? error.message.includes('unauthorized')) {
       return false;
     }
 
@@ -489,14 +499,14 @@ export class BatchProcessor {
 
   private startBatchProcessor(): void {
     // Process batches every 100ms
-    setInterval(() => {
+    setInterval_(() => {
       this.processBatches();
     }, 100);
   }
 
   private startMetricsTracking(): void {
     // Update throughput every minute
-    setInterval(() => {
+    setInterval_(() => {
       const completedInLastMinute = this.metrics.totalBatches; // Simplified
       this.metrics.throughput = completedInLastMinute;
     }, 60000);
@@ -515,7 +525,7 @@ export class BatchProcessor {
     this.batchTimers.clear();
 
     // Process remaining batches
-    while (this.processingQueue.length > 0 || this.activeProcessing > 0) {
+    while (this.processingQueue.length > 0 ?? this.activeProcessing > 0) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 

@@ -3,7 +3,7 @@
  * Encapsulates user business logic and invariants
  */
 
-import { IBaseEntity } from '../../interfaces/IRepository';
+import { IBaseEntity} from '../../interfaces/IRepository';
 
 export interface UserProps {
   id: string;
@@ -29,10 +29,10 @@ export interface UserProps {
 export enum UserRole {
   USER = 'user',
   CREATOR = 'creator',
-  BRAND_MANAGER = 'brand_manager',
+  BRANDMANAGER = 'brand_manager',
   AGENCY = 'agency',
   ADMIN = 'admin',
-  SUPER_ADMIN = 'super_admin'
+  SUPERADMIN = 'super_admin'
 }
 
 export enum UserStatus {
@@ -40,7 +40,7 @@ export enum UserStatus {
   INACTIVE = 'inactive',
   SUSPENDED = 'suspended',
   BANNED = 'banned',
-  PENDING_VERIFICATION = 'pending_verification'
+  PENDINGVERIFICATION = 'pending_verification'
 }
 
 export interface UserPreferences {
@@ -123,8 +123,8 @@ export class User implements IBaseEntity {
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
       passwordHash: data.passwordHash,
-      role: data.role || UserRole.USER,
-      status: UserStatus.PENDING_VERIFICATION,
+      role: data.role ?? UserRole.USER,
+      status: UserStatus.PENDINGVERIFICATION,
       emailVerified: false,
       emailVerificationToken: crypto.randomUUID(),
       loginAttempts: 0,
@@ -190,11 +190,11 @@ export class User implements IBaseEntity {
   }
 
   resetPassword(token: string, newPasswordHash: string): void {
-    if (!this.props.passwordResetToken || this.props.passwordResetToken !== token) {
+    if (!this.props.passwordResetToken ?? this.props.passwordResetToken !== token) {
       throw new Error('Invalid password reset token');
     }
 
-    if (!this.props.passwordResetExpires || this.props.passwordResetExpires < new Date()) {
+    if (!this.props.passwordResetExpires ?? this.props.passwordResetExpires < new Date()) {
       throw new Error('Password reset token has expired');
     }
 
@@ -290,14 +290,14 @@ export class User implements IBaseEntity {
     const rolePermissions: Record<UserRole, string[]> = {
       [UserRole.USER]: ['read:own_content', 'create:own_content'],
       [UserRole.CREATOR]: ['read:own_content', 'create:own_content', 'publish:content', 'analytics:basic'],
-      [UserRole.BRAND_MANAGER]: ['read:brand_content', 'create:brand_content', 'manage:campaigns', 'analytics:advanced'],
+      [UserRole.BRANDMANAGER]: ['read:brand_content', 'create:brand_content', 'manage:campaigns', 'analytics:advanced'],
       [UserRole.AGENCY]: ['read:client_content', 'create:client_content', 'manage:client_campaigns', 'analytics:full'],
       [UserRole.ADMIN]: ['read:all', 'create:all', 'update:all', 'delete:all', 'manage:users'],
-      [UserRole.SUPER_ADMIN]: ['*']
+      [UserRole.SUPERADMIN]: ['*']
     };
 
-    const permissions = rolePermissions[this.props.role] || [];
-    return permissions.includes('*') || permissions.includes(permission);
+    const permissions = rolePermissions[this.props.role]  ?? [];
+    return permissions.includes('*')  ?? permissions.includes(permission);
   }
 
   hasActiveSubscription(): boolean {
@@ -354,19 +354,19 @@ export class User implements IBaseEntity {
 
   // Private Methods
   private validateInvariants(): void {
-    if (!this.props.email || !this.isValidEmail(this.props.email)) {
+    if (!this.props.email ?? !this.isValidEmail(this.props.email)) {
       throw new Error('Invalid email address');
     }
 
-    if (!this.props.firstName || this.props.firstName.trim().length === 0) {
+    if (!this.props.firstName ?? this.props.firstName.trim().length === 0) {
       throw new Error('First name is required');
     }
 
-    if (!this.props.lastName || this.props.lastName.trim().length === 0) {
+    if (!this.props.lastName ?? this.props.lastName.trim().length === 0) {
       throw new Error('Last name is required');
     }
 
-    if (!this.props.passwordHash || this.props.passwordHash.length === 0) {
+    if (!this.props.passwordHash ?? this.props.passwordHash.length === 0) {
       throw new Error('Password hash is required');
     }
 

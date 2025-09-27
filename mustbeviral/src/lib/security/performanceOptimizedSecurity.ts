@@ -12,10 +12,10 @@
  * - Session management with Redis clustering
  */
 
-import { Request, Response, NextFunction } from 'express'
+import { Request, Response, NextFunction} from 'express'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
-import { LRUCache } from 'lru-cache'
+import { LRUCache} from 'lru-cache'
 import Redis from 'ioredis'
 import rateLimit from 'express-rate-limit'
 import slowDown from 'express-slow-down'
@@ -125,7 +125,7 @@ export class PerformanceOptimizedSecurity {
           requestId,
           startTime,
           ipAddress: this.getClientIP(req),
-          userAgent: req.get('User-Agent') || '',
+          userAgent: req.get('User-Agent')  ?? '',
           isAuthenticated: false,
           rateLimitInfo: {
             limit: 0,
@@ -282,7 +282,7 @@ export class PerformanceOptimizedSecurity {
       multi.expire(key, Math.ceil(windowMs / 1000))
       
       const results = await multi.exec()
-      const currentCount = results?.[1]?.[1] as number || 0
+      const currentCount = results?.[1]?.[1] as number ?? 0
 
       const rateLimitInfo = {
         limit: maxRequests,
@@ -326,16 +326,15 @@ export class PerformanceOptimizedSecurity {
    */
   async validateCSRF(req: Request, context: SecurityContext): Promise<boolean> {
     const tokenFromHeader = req.get(this.config.csrf.headerName)
-    const tokenFromBody = req.body?._csrf
-    const providedToken = tokenFromHeader || tokenFromBody
+    const tokenFromBody = req.body?.csrf
+    const providedToken = tokenFromHeader ?? tokenFromBody
 
     if (!providedToken) {
       return false
     }
 
     // Check against cached tokens
-    const expectedToken = this.csrfTokens.get(context.requestId) || 
-                         this.csrfTokens.get(context.user?.sessionId || '')
+    const expectedToken = this.csrfTokens.get(context.requestId)  ?? this.csrfTokens.get(context.user?.sessionId ?? '')
 
     if (!expectedToken) {
       // Generate and cache new token for next request
@@ -352,7 +351,7 @@ export class PerformanceOptimizedSecurity {
    */
   generateCSRFToken(context: SecurityContext): string {
     const token = crypto.randomBytes(this.config.csrf.secretLength).toString('hex')
-    const key = context.user?.sessionId || context.requestId
+    const key = context.user?.sessionId ?? context.requestId
     this.csrfTokens.set(key, token)
     return token
   }
@@ -576,11 +575,7 @@ export class PerformanceOptimizedSecurity {
   }
 
   private getClientIP(req: Request): string {
-    return req.ip || 
-           req.get('X-Forwarded-For')?.split(',')[0]?.trim() ||
-           req.get('X-Real-IP') ||
-           req.connection.remoteAddress ||
-           '127.0.0.1'
+    return req.ip ?? req.get('X-Forwarded-For')?.split(',')[0]?.trim()  ?? req.get('X-Real-IP')  ?? req.connection.remoteAddress ?? '127.0.0.1'
   }
 
   private hashToken(token: string): string {
@@ -602,7 +597,9 @@ export class PerformanceOptimizedSecurity {
 
   private async validateSession(sessionId: string): Promise<boolean> {
     try {
-      if (!this.sessionStore) return true // Fallback if Redis not available
+      if (!this.sessionStore) {
+        return true // Fallback if Redis not available
+      }
       
       const session = await this.sessionStore.get(`session:${sessionId}`)
       return session !== null
@@ -618,14 +615,17 @@ export class PerformanceOptimizedSecurity {
   }
 
   private constantTimeCompare(a: string, b: string): boolean {
-    if (a.length !== b.length) return false
+    if (a.length !== b.length)  {
+    return false
+  }
     
     let result = 0
-    for (let i = 0; i < a.length; i++) {
+    for (let i = 0;
+  } i < a.length; i++) {
       result |= a.charCodeAt(i) ^ b.charCodeAt(i)
     }
     
-    return result === 0
+    return result = == 0
   }
 
   private sanitizeObject(obj: any): void {
@@ -652,7 +652,9 @@ export class PerformanceOptimizedSecurity {
     const stats = this.securityMetrics.get(endpoint)!
     stats.count++
     stats.totalTime += time
-    if (isError) stats.errors++
+    if (isError)  {
+    stats.errors++
+  }
   }
 }
 
@@ -660,10 +662,10 @@ export class PerformanceOptimizedSecurity {
 export function createSecurityConfig(): SecurityConfig {
   return {
     jwt: {
-      secret: process.env.JWT_SECRET || 'default-secret-change-me',
+      secret: process.env.JWT_SECRET ?? 'default-secret-change-me',
       algorithm: 'HS256',
       expiresIn: '1h',
-      refreshSecret: process.env.JWT_REFRESH_SECRET || 'refresh-secret-change-me',
+      refreshSecret: process.env.JWT_REFRESH_SECRET ?? 'refresh-secret-change-me',
       cacheSize: 10000,
       cacheTTL: 3600 // 1 hour
     },
@@ -672,17 +674,17 @@ export function createSecurityConfig(): SecurityConfig {
       maxRequests: 100,
       skipSuccessfulRequests: false,
       enableDistributed: true,
-      redisUrl: process.env.REDIS_URL
+      redisUrl: process.env.REDISURL
     },
     csrf: {
-      enabled: process.env.NODE_ENV === 'production',
+      enabled: process.env.NODEENV === 'production',
       cookieName: '_csrf',
       headerName: 'X-CSRF-Token',
       secretLength: 32
     },
     cors: {
       enabled: true,
-      origins: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+      origins: process.env.ALLOWED_ORIGINS?.split(',')  ?? ['http://localhost:3000'],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token']
     },
@@ -692,9 +694,9 @@ export function createSecurityConfig(): SecurityConfig {
       enableXssProtection: true
     },
     session: {
-      secret: process.env.SESSION_SECRET || 'session-secret-change-me',
+      secret: process.env.SESSION_SECRET ?? 'session-secret-change-me',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODEENV === 'production',
       httpOnly: true,
       sameSite: 'strict'
     }

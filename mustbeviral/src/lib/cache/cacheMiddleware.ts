@@ -3,8 +3,8 @@
  * Intelligent HTTP caching with enterprise-grade optimizations
  */
 
-import { Request, Response, NextFunction } from 'express'
-import { enterpriseCache, CacheTier, CacheStrategy } from './enterpriseCache'
+import { Request, Response, NextFunction} from 'express'
+import { enterpriseCache, CacheTier, CacheStrategy} from './enterpriseCache'
 import crypto from 'crypto'
 
 // Cache configuration per route/pattern
@@ -28,8 +28,8 @@ const CACHE_CONFIGS: RouteCacheConfig[] = [
   {
     pattern: /\.(css|js|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico)$/,
     ttl: 31536000, // 1 year
-    strategy: CacheStrategy.CACHE_FIRST,
-    tiers: [CacheTier.L1_MEMORY, CacheTier.L2_REDIS, CacheTier.L3_CDN],
+    strategy: CacheStrategy.CACHEFIRST,
+    tiers: [CacheTier.L1MEMORY, CacheTier.L2REDIS, CacheTier.L3CDN],
     compression: true,
     private: false,
     revalidate: 86400 // 1 day
@@ -39,8 +39,8 @@ const CACHE_CONFIGS: RouteCacheConfig[] = [
   {
     pattern: /^\/api\/public\//,
     ttl: 300, // 5 minutes
-    strategy: CacheStrategy.CACHE_FIRST,
-    tiers: [CacheTier.L1_MEMORY, CacheTier.L2_REDIS],
+    strategy: CacheStrategy.CACHEFIRST,
+    tiers: [CacheTier.L1MEMORY, CacheTier.L2REDIS],
     tags: ['api', 'public'],
     varyBy: ['Accept-Language', 'User-Agent'],
     compression: true,
@@ -52,8 +52,8 @@ const CACHE_CONFIGS: RouteCacheConfig[] = [
   {
     pattern: /^\/api\/user\//,
     ttl: 60, // 1 minute
-    strategy: CacheStrategy.CACHE_ASIDE,
-    tiers: [CacheTier.L1_MEMORY],
+    strategy: CacheStrategy.CACHEASIDE,
+    tiers: [CacheTier.L1MEMORY],
     tags: ['api', 'user'],
     private: true,
     shouldCache: (req, res) => res.statusCode === 200 && req.method === 'GET'
@@ -63,8 +63,8 @@ const CACHE_CONFIGS: RouteCacheConfig[] = [
   {
     pattern: /^\/api\/campaigns/,
     ttl: 1800, // 30 minutes
-    strategy: CacheStrategy.REFRESH_AHEAD,
-    tiers: [CacheTier.L1_MEMORY, CacheTier.L2_REDIS],
+    strategy: CacheStrategy.REFRESHAHEAD,
+    tiers: [CacheTier.L1MEMORY, CacheTier.L2REDIS],
     tags: ['api', 'campaigns'],
     compression: true,
     private: false,
@@ -75,8 +75,8 @@ const CACHE_CONFIGS: RouteCacheConfig[] = [
   {
     pattern: /^\/api\/analytics/,
     ttl: 3600, // 1 hour
-    strategy: CacheStrategy.CACHE_FIRST,
-    tiers: [CacheTier.L1_MEMORY, CacheTier.L2_REDIS],
+    strategy: CacheStrategy.CACHEFIRST,
+    tiers: [CacheTier.L1MEMORY, CacheTier.L2REDIS],
     tags: ['api', 'analytics'],
     compression: true,
     private: false,
@@ -87,8 +87,8 @@ const CACHE_CONFIGS: RouteCacheConfig[] = [
   {
     pattern: /^\/(home|landing|about)?$/,
     ttl: 600, // 10 minutes
-    strategy: CacheStrategy.CACHE_FIRST,
-    tiers: [CacheTier.L1_MEMORY, CacheTier.L2_REDIS, CacheTier.L3_CDN],
+    strategy: CacheStrategy.CACHEFIRST,
+    tiers: [CacheTier.L1MEMORY, CacheTier.L2REDIS, CacheTier.L3CDN],
     tags: ['pages', 'public'],
     varyBy: ['Accept-Language', 'User-Agent'],
     compression: true,
@@ -225,12 +225,12 @@ export class CacheMiddleware {
   // Private methods
 
   private findCacheConfig(path: string): RouteCacheConfig | null {
-    return CACHE_CONFIGS.find(config => {
+    return CACHE_CONFIGS.find(config = > {
       if (typeof config.pattern === 'string') {
         return path === config.pattern
       }
       return config.pattern.test(path)
-    }) || null
+    })  ?? null
   }
 
   private generateCacheKey(req: Request, config: RouteCacheConfig): string {
@@ -238,7 +238,7 @@ export class CacheMiddleware {
       return config.keyGenerator(req)
     }
 
-    let keyComponents = [req.path]
+    const keyComponents = [req.path]
 
     // Add query parameters to key
     if (Object.keys(req.query).length > 0) {
@@ -252,7 +252,7 @@ export class CacheMiddleware {
     // Add vary headers to key
     if (config.varyBy) {
       const varyComponents = config.varyBy
-        .map(header => `${header}:${req.get(header) || 'none'}`)
+        .map(header => `${header}:${req.get(header)  ?? 'none'}`)
         .join('|')
       keyComponents.push(varyComponents)
     }
@@ -274,7 +274,7 @@ export class CacheMiddleware {
     config: RouteCacheConfig,
     cacheKey: string
   ) {
-    const stats = this.hitStats.get(cacheKey) || { hits: 0, misses: 0, bytes: 0 }
+    const stats = this.hitStats.get(cacheKey)  ?? { hits: 0, misses: 0, bytes: 0 }
     stats.hits++
     stats.bytes += Buffer.byteLength(JSON.stringify(cachedResponse))
     this.hitStats.set(cacheKey, stats)
@@ -302,7 +302,7 @@ export class CacheMiddleware {
       res.set(cachedResponse.headers)
     }
 
-    res.status(cachedResponse.statusCode || 200)
+    res.status(cachedResponse.statusCode ?? 200)
     
     if (config.compression && req.get('Accept-Encoding')?.includes('gzip')) {
       res.set('Content-Encoding', 'gzip')
@@ -325,7 +325,7 @@ export class CacheMiddleware {
     config: RouteCacheConfig,
     cacheKey: string
   ) {
-    const stats = this.hitStats.get(cacheKey) || { hits: 0, misses: 0, bytes: 0 }
+    const stats = this.hitStats.get(cacheKey)  ?? { hits: 0, misses: 0, bytes: 0 }
     stats.misses++
 
     // Store original methods
@@ -515,7 +515,7 @@ export class CacheMiddleware {
     return {
       totalHits,
       totalMisses,
-      hitRate: totalHits / (totalHits + totalMisses) || 0,
+      hitRate: totalHits / (totalHits + totalMisses)  ?? 0,
       totalBytes,
       activeKeys: this.hitStats.size,
       refreshTasks: this.refreshTasks.size

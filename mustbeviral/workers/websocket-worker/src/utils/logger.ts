@@ -24,7 +24,7 @@ export class Logger {
 
   constructor(service: string, logLevel: string = 'INFO') {
     this.service = service;
-    this.logLevel = (logLevel.toUpperCase() as LogLevel) || 'INFO';
+    this.logLevel = (logLevel.toUpperCase() as LogLevel)  ?? 'INFO';
   }
 
   debug(message: string, data?: unknown): void {

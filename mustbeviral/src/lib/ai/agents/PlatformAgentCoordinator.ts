@@ -4,14 +4,14 @@
  * Advanced multi-platform intelligence and content distribution strategies
  */
 
-import { PlatformAgentConfig, ContentGenerationRequest, IPlatformAgent } from './IPlatformAgent';
-import { TwitterAgent } from './TwitterAgent';
-import { TikTokAgent } from './TikTokAgent';
-import { InstagramAgent } from './InstagramAgent';
-// import { YouTubeAgent } from './YouTubeAgent';
-// import { LinkedInAgent } from './LinkedInAgent';
-// import { FacebookAgent } from './FacebookAgent';
-// import { PinterestAgent } from './PinterestAgent';
+import { PlatformAgentConfig, ContentGenerationRequest, IPlatformAgent} from './IPlatformAgent';
+import { TwitterAgent} from './TwitterAgent';
+import { TikTokAgent} from './TikTokAgent';
+import { InstagramAgent} from './InstagramAgent';
+// import { YouTubeAgent} from './YouTubeAgent';
+// import { LinkedInAgent} from './LinkedInAgent';
+// import { FacebookAgent} from './FacebookAgent';
+// import { PinterestAgent} from './PinterestAgent';
 
 export interface CrossPlatformStrategy {
   primaryPlatform: string;
@@ -140,7 +140,7 @@ export class PlatformAgentCoordinator {
     const startTime = Date.now();
 
     // Use provided platforms or default to all available platforms
-    const targetPlatforms = platforms || Array.from(this.agents.keys());
+    const targetPlatforms = platforms ?? Array.from(this.agents.keys());
 
     // Step 1: Determine primary platform based on content type and goals
     const primaryPlatform = this.determinePrimaryPlatform(request, targetPlatforms);
@@ -162,7 +162,9 @@ export class PlatformAgentCoordinator {
       .filter(platform => platform !== primaryPlatform)
       .map(async platform => {
         const agent = this.agents.get(platform);
-        if (!agent) return { platform, result: null };
+        if (!agent) {
+    return { platform, result: null };
+  }
 
         try {
           const adapted = await agent.adaptForPlatform(primaryGeneration.content, primaryPlatform);
@@ -179,7 +181,7 @@ export class PlatformAgentCoordinator {
               },
               analysis: {
                 platformScore: analysis.platformScore,
-                viralPrediction: analysis.viralPrediction || Math.floor(Math.random() * 40) + 60
+                viralPrediction: analysis.viralPrediction ?? Math.floor(Math.random() * 40) + 60
               },
               metadata: {
                 processingTime: Date.now() - startTime,
@@ -206,7 +208,7 @@ export class PlatformAgentCoordinator {
       },
       analysis: {
         platformScore: primaryGeneration.analysis.platformScore,
-        viralPrediction: primaryGeneration.analysis.viralPrediction || Math.floor(Math.random() * 40) + 60
+        viralPrediction: primaryGeneration.analysis.viralPrediction ?? Math.floor(Math.random() * 40) + 60
       },
       metadata: {
         processingTime: Date.now() - startTime,
@@ -239,7 +241,7 @@ export class PlatformAgentCoordinator {
     // Create distribution timeline
     const distributionTimeline = targetPlatforms.map((platform, index) => ({ platform,
       time: `+${index * 2}h`, // Hours after initial post
-      content: adaptations[platform]?.content || coreMessage,
+      content: adaptations[platform]?.content ?? coreMessage,
       reasoning: `Optimized for ${platform} audience at peak engagement time`
     }));
 
@@ -264,7 +266,9 @@ export class PlatformAgentCoordinator {
   async analyzeMultiPlatform(content: string, platforms: string[]): Promise<MultiPlatformAnalysis> {
     const analysisPromises = platforms.map(async platform => {
       const agent = this.agents.get(platform);
-      if (!agent) return { platform, score: 0, analysis: null };
+      if (!agent) {
+    return { platform, score: 0, analysis: null };
+  }
 
       try {
         const analysis = await agent.analyzeContent(content);
@@ -361,9 +365,11 @@ export class PlatformAgentCoordinator {
     changes: unknown[];
     reasoning: string;
   }>> {
-    const optimizationPromises = Object.entries(content).map(async ([platform, platformContent]) => {
+    const optimizationPromises = Object.entries(content).map(async([platform, platformContent]) => {
       const agent = this.agents.get(platform);
-      if (!agent) return { platform, result: null };
+      if (!agent) {
+    return { platform, result: null };
+  }
 
       try {
         const metrics = currentMetrics[platform];
@@ -421,12 +427,12 @@ export class PlatformAgentCoordinator {
     return { availablePlatforms,
       totalAgents: this.agents.size,
       combinedCapabilities: {
-        maxReasoningDepth: Math.max(...agentCapabilities.map(cap => cap?.maxReasoningDepth || 0)),
+        maxReasoningDepth: Math.max(...agentCapabilities.map(cap => cap?.maxReasoningDepth ?? 0)),
         supportedAnalysisTypes: [
-          ...new Set(agentCapabilities.flatMap(cap => cap?.supportedAnalysisTypes || []))
+          ...new Set(agentCapabilities.flatMap(cap => cap?.supportedAnalysisTypes ?? []))
         ],
         viralMechanicsExpertise: [
-          ...new Set(agentCapabilities.flatMap(cap => cap?.viralMechanicsExpertise || []))
+          ...new Set(agentCapabilities.flatMap(cap => cap?.viralMechanicsExpertise ?? []))
         ],
         crossPlatformIntelligence: true,
         realTimeOptimization: true
@@ -443,10 +449,10 @@ export class PlatformAgentCoordinator {
 
   private determinePrimaryPlatform(request: ContentGenerationRequest, platforms?: string[]): string {
     // Use provided platforms or default to all available platforms
-    const availablePlatforms = platforms || Array.from(this.agents.keys());
+    const availablePlatforms = platforms ?? Array.from(this.agents.keys());
 
     // Fallback to a default platform if no platforms available
-    if (!availablePlatforms || availablePlatforms.length === 0) {
+    if (!availablePlatforms ?? availablePlatforms.length === 0) {
       return 'twitter'; // Default fallback platform
     }
 
@@ -485,14 +491,14 @@ export class PlatformAgentCoordinator {
     let bestScore = 0;
 
     for (const platform of availablePlatforms) {
-      if (!this.agents.has(platform)) continue;
+      if (!this.agents.has(platform)) {continue;}
 
       let score = 60; // Base score
 
       // Add goal-specific scoring
       if (request.goals) {
         for (const goal of request.goals) {
-          score += platformPriority[goal]?.[platform] || 0;
+          score += platformPriority[goal]?.[platform]  ?? 0;
         }
       }
 
@@ -541,7 +547,7 @@ export class PlatformAgentCoordinator {
 
     for (const platform of platforms) {
       timeline.push({ platform,
-        time: optimalTimes[platform] || '12:00',
+        time: optimalTimes[platform]  ?? '12:00',
         content: platformVariations[platform].content,
         reasoning: `Optimal timing for ${platform} based on audience activity patterns`
       });
@@ -549,8 +555,8 @@ export class PlatformAgentCoordinator {
 
     // Sort by expected performance
     timeline.sort((a, b) =>
-      (platformVariations[b.platform]?.expectedPerformance || 0) -
-      (platformVariations[a.platform]?.expectedPerformance || 0)
+      (platformVariations[b.platform]?.expectedPerformance ?? 0) -
+      (platformVariations[a.platform]?.expectedPerformance ?? 0)
     );
 
     return timeline;
@@ -569,8 +575,8 @@ export class PlatformAgentCoordinator {
 
     // High-performing platforms promote to others
     const sortedPlatforms = platforms.sort((a, b) =>
-      (platformVariations[b]?.expectedPerformance || 0) -
-      (platformVariations[a]?.expectedPerformance || 0)
+      (platformVariations[b]?.expectedPerformance ?? 0) -
+      (platformVariations[a]?.expectedPerformance ?? 0)
     );
 
     for (let i = 0; i < sortedPlatforms.length - 1; i++) {
@@ -607,7 +613,7 @@ export class PlatformAgentCoordinator {
       }
     };
 
-    return methods[source]?.[target] || 'Direct mention and link';
+    return methods[source]?.[target]  ?? 'Direct mention and link';
   }
 
   private calculatePlatformSynergy(platforms: string[], scores: Record<string, number>): number {
@@ -625,7 +631,7 @@ export class PlatformAgentCoordinator {
       for (let j = i + 1; j < platforms.length; j++) {
         const pair = `${platforms[i]}-${platforms[j]}`;
         const reversePair = `${platforms[j]}-${platforms[i]}`;
-        const bonus = synergyBonus[pair] || synergyBonus[reversePair] || 0;
+        const bonus = synergyBonus[pair]  ?? synergyBonus[reversePair]  ?? 0;
         totalSynergy += bonus;
       }
     }
@@ -836,7 +842,7 @@ export class PlatformAgentCoordinator {
       linkedin: 'post',
       facebook: 'post'
     };
-    return contentTypes[platform] || 'post';
+    return contentTypes[platform]  ?? 'post';
   }
 
   /**
@@ -854,6 +860,6 @@ export class PlatformAgentCoordinator {
       facebook: ['#viral', '#trending']
     };
 
-    return [...baseHashtags, ...(platformSpecificHashtags[platform] || ['#viral'])];
+    return [...baseHashtags, ...(platformSpecificHashtags[platform]  ?? ['#viral'])];
   }
 }

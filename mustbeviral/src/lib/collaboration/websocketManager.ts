@@ -166,7 +166,7 @@ export class WebSocketManager {
   async joinRoom(roomId: string, userInfo?: Partial<UserPresence>): Promise<void> {
     const presence: UserPresence = {
       userId: this.currentUserId!,
-      username: userInfo?.username || 'Anonymous',
+      username: userInfo?.username ?? 'Anonymous',
       avatar: userInfo?.avatar,
       status: 'online',
       lastSeen: Date.now(),
@@ -201,7 +201,7 @@ export class WebSocketManager {
    * Send typing indicator
    */
   sendTyping(roomId: string, isTyping: boolean, context?: { contentId?: string; position?: number }): void {
-    if (!this.config.enableTyping) return;
+    if (!this.config.enableTyping) {return;}
 
     this.sendMessage('typing', {
       roomId,
@@ -214,7 +214,7 @@ export class WebSocketManager {
    * Send cursor position for real-time cursor tracking
    */
   sendCursorPosition(roomId: string, position: { x: number; y: number; elementId?: string }): void {
-    if (!this.config.enableCursor) return;
+    if (!this.config.enableCursor) {return;}
 
     this.sendMessage('cursor-position', {
       roomId,
@@ -242,7 +242,7 @@ export class WebSocketManager {
    * Update user presence status
    */
   updatePresence(status: UserPresence['status']): void {
-    if (!this.config.enablePresence) return;
+    if (!this.config.enablePresence) {return;}
 
     const presence = this.userPresence.get(this.currentUserId!);
     if (presence) {
@@ -388,7 +388,7 @@ export class WebSocketManager {
    * Handle room joined event
    */
   private handleRoomJoined(payload: any): void {
-    const { room, participants } = payload;
+    const { room, participants} = payload;
     
     const collaborationRoom: CollaborationRoom = {
       id: room.id,
@@ -413,7 +413,7 @@ export class WebSocketManager {
    * Handle room left event
    */
   private handleRoomLeft(payload: any): void {
-    const { roomId } = payload;
+    const { roomId} = payload;
     this.rooms.delete(roomId);
   }
 
@@ -421,7 +421,7 @@ export class WebSocketManager {
    * Handle user joined room event
    */
   private handleUserJoined(payload: any): void {
-    const { roomId, userPresence } = payload;
+    const { roomId, userPresence} = payload;
     
     const room = this.rooms.get(roomId);
     if (room) {
@@ -436,7 +436,7 @@ export class WebSocketManager {
    * Handle user left room event
    */
   private handleUserLeft(payload: any): void {
-    const { roomId, userId } = payload;
+    const { roomId, userId} = payload;
     
     const room = this.rooms.get(roomId);
     if (room) {
@@ -449,7 +449,7 @@ export class WebSocketManager {
    * Handle presence update event
    */
   private handlePresenceUpdate(payload: any): void {
-    const { userId, status, lastSeen } = payload;
+    const { userId, status, lastSeen} = payload;
     
     const presence = this.userPresence.get(userId);
     if (presence) {
@@ -463,7 +463,7 @@ export class WebSocketManager {
    * Start heartbeat to keep connection alive
    */
   private startHeartbeat(): void {
-    this.heartbeatTimer = setInterval(() => {
+    this.heartbeatTimer = setInterval_(() => {
       if (this.isConnected && this.ws?.readyState === WebSocket.OPEN) {
         this.ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
       }

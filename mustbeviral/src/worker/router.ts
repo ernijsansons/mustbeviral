@@ -1,18 +1,18 @@
 // API Router for Cloudflare Worker
 // Manages routing and request handling
 
-import { CloudflareEnv } from '../lib/cloudflare';
-import { DatabaseService } from '../lib/db';
-import { CloudflareService } from '../lib/cloudflare';
-import { AuthHandlers } from './handlers/auth';
-import { OnboardingHandler } from './handlers/onboarding';
-import { HealthHandler } from './handlers/health';
-import { AIController } from '../controllers/AIController';
-import { MLController } from '../controllers/MLController';
-import { OrganizationController } from '../controllers/OrganizationController';
-import { _withDataIsolation, IsolatedRequest } from '../middleware/dataIsolation';
-import { _withTracing, finishTracing, TracedRequest } from '../middleware/tracingMiddleware';
-import { log } from '../lib/monitoring/logger';
+import { CloudflareEnv} from '../lib/cloudflare';
+import { DatabaseService} from '../lib/db';
+import { CloudflareService} from '../lib/cloudflare';
+import { AuthHandlers} from './handlers/auth';
+import { OnboardingHandler} from './handlers/onboarding';
+import { HealthHandler} from './handlers/health';
+import { AIController} from '../controllers/AIController';
+import { MLController} from '../controllers/MLController';
+import { OrganizationController} from '../controllers/OrganizationController';
+import { withDataIsolation, IsolatedRequest} from '../middleware/dataIsolation';
+import { withTracing, finishTracing, TracedRequest} from '../middleware/tracingMiddleware';
+import { log} from '../lib/monitoring/logger';
 
 export interface Route {
   pattern: RegExp;
@@ -418,7 +418,7 @@ export class Router {
     const params: Record<string, string> = {};
     const match = pattern.exec(path);
 
-    if (match && match.groups) {
+    if (match?.groups) {
       Object.keys(match.groups).forEach(key => {
         params[key] = match.groups![key];
       });
@@ -435,7 +435,7 @@ export class Router {
     let error: Error | undefined = undefined;
 
     // Apply tracing first
-    let tracedRequest: TracedRequest = await _withTracing(request as IsolatedRequest);
+    let tracedRequest: TracedRequest = await withTracing(request as IsolatedRequest);
 
     try {
       log.debug('Routing request', {
@@ -457,16 +457,16 @@ export class Router {
             metadata: { path,
               method,
               pattern: route.pattern.toString(),
-              requiresAuth: route.requiresAuth || false,
-              requiresIsolation: route.requiresIsolation || false,
-              requiresTracing: route.requiresTracing || false,
+              requiresAuth: route.requiresAuth ?? false,
+              requiresIsolation: route.requiresIsolation ?? false,
+              requiresTracing: route.requiresTracing ?? false,
               traceId: tracedRequest.traceId
             }
           });
 
           // Apply data isolation for protected routes
-          if (route.requiresAuth || route.requiresIsolation) {
-            tracedRequest = await _withDataIsolation(tracedRequest, this.dbService) as TracedRequest;
+          if (route.requiresAuth ?? route.requiresIsolation) {
+            tracedRequest = await withDataIsolation(tracedRequest, this.dbService) as TracedRequest;
           }
 
           // Execute route handler
@@ -532,7 +532,7 @@ export class Router {
       metadata: {
         pattern: route.pattern.toString(),
         method: route.method,
-        requiresAuth: route.requiresAuth || false
+        requiresAuth: route.requiresAuth ?? false
       }
     });
 
@@ -544,7 +544,7 @@ export class Router {
     return this.routes.map(route => ({
       pattern: route.pattern.toString(),
       method: route.method,
-      requiresAuth: route.requiresAuth || false
+      requiresAuth: route.requiresAuth ?? false
     }));
   }
 }

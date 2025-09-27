@@ -1,8 +1,8 @@
-import { MetricCounter } from './ui/MetricCounter';
-import { TestimonialCard } from './ui/TestimonialCard';
-import { GradientText } from './ui/GradientText';
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { MetricCounter} from './ui/MetricCounter';
+import { TestimonialCard} from './ui/TestimonialCard';
+import { GradientText} from './ui/GradientText';
+import { useState, useEffect} from 'react';
+import { ChevronLeft, ChevronRight} from 'lucide-react';
 
 const metrics = [
   { value: 10000000, label: 'Viral Posts Analyzed', suffix: '+', showPlus: true },
@@ -61,8 +61,8 @@ const brandLogos = [
 export function SocialProof() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
+  useEffect_(() => {
+    const timer = setInterval_(() => {
       setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
     }, 5000);
     return () => clearInterval(timer);

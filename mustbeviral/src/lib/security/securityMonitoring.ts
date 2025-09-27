@@ -11,9 +11,9 @@
  * - Compliance reporting
  */
 
-import { EventEmitter } from 'events'
-import { LRUCache } from 'lru-cache'
-import { Request, Response } from 'express'
+import { EventEmitter} from 'events'
+import { LRUCache} from 'lru-cache'
+import { Request, Response} from 'express'
 
 export enum ThreatLevel {
   LOW = 1,
@@ -23,16 +23,16 @@ export enum ThreatLevel {
 }
 
 export enum AttackType {
-  BRUTE_FORCE = 'BRUTE_FORCE',
-  SQL_INJECTION = 'SQL_INJECTION',
+  BRUTEFORCE = 'BRUTE_FORCE',
+  SQLINJECTION = 'SQL_INJECTION',
   XSS = 'XSS',
   CSRF = 'CSRF',
   DDOS = 'DDOS',
-  RATE_LIMIT_ABUSE = 'RATE_LIMIT_ABUSE',
-  SUSPICIOUS_PATTERN = 'SUSPICIOUS_PATTERN',
-  CREDENTIAL_STUFFING = 'CREDENTIAL_STUFFING',
-  BOT_TRAFFIC = 'BOT_TRAFFIC',
-  PRIVILEGE_ESCALATION = 'PRIVILEGE_ESCALATION'
+  RATELIMITABUSE = 'RATE_LIMIT_ABUSE',
+  SUSPICIOUSPATTERN = 'SUSPICIOUS_PATTERN',
+  CREDENTIALSTUFFING = 'CREDENTIAL_STUFFING',
+  BOTTRAFFIC = 'BOT_TRAFFIC',
+  PRIVILEGEESCALATION = 'PRIVILEGE_ESCALATION'
 }
 
 export interface SecurityEvent {
@@ -165,7 +165,7 @@ export class SecurityMonitor extends EventEmitter {
    */
   securityMonitoringMiddleware() {
     return async (req: Request, res: Response, next: Function) => {
-      const context = (req as any).security || {}
+      const context = (req as any).security ?? {}
       
       try {
         // Pre-request threat assessment
@@ -266,7 +266,7 @@ export class SecurityMonitor extends EventEmitter {
     let maxThreatLevel = ThreatLevel.LOW
     
     recentEvents.forEach(event => {
-      threatCounts.set(event.type, (threatCounts.get(event.type) || 0) + 1)
+      threatCounts.set(event.type, (threatCounts.get(event.type)  ?? 0) + 1)
       if (event.threatLevel > maxThreatLevel) {
         maxThreatLevel = event.threatLevel
       }
@@ -396,7 +396,7 @@ export class SecurityMonitor extends EventEmitter {
       // XSS patterns
       {
         name: 'xss_attempt',
-        pattern: /<script|javascript:|onerror=|onload=|onclick=/i,
+        pattern: /<script|javascript:|onerror=|onload=|onclick = /i,
         threshold: 1,
         timeWindow: 60000,
         action: 'BLOCK',
@@ -407,7 +407,7 @@ export class SecurityMonitor extends EventEmitter {
       // DDoS detection
       {
         name: 'ddos_pattern',
-        pattern: (event) => true, // All requests count for rate analysis
+        pattern: (_event) => true, // All requests count for rate analysis
         threshold: 1000,
         timeWindow: 60000, // 1 minute
         action: 'THROTTLE',
@@ -420,7 +420,7 @@ export class SecurityMonitor extends EventEmitter {
         name: 'bot_traffic',
         pattern: (event) => {
           const ua = event.source.userAgent.toLowerCase()
-          return ua.includes('bot') || ua.includes('crawler') || ua.includes('spider')
+          return ua.includes('bot')  ?? ua.includes('crawler')  ?? ua.includes('spider')
         },
         threshold: 10,
         timeWindow: 300000,
@@ -434,7 +434,7 @@ export class SecurityMonitor extends EventEmitter {
         name: 'credential_stuffing',
         pattern: (event) => 
           event.target.endpoint.includes('/login') && 
-          event.source.userAgent === event.source.userAgent, // Same UA pattern
+          event.source.userAgent = == event.source.userAgent, // Same UA pattern
         threshold: 20,
         timeWindow: 600000, // 10 minutes
         action: 'CHALLENGE',
@@ -446,32 +446,32 @@ export class SecurityMonitor extends EventEmitter {
 
   private createSecurityEvent(req: Request, res: Response, context: any): SecurityEvent {
     return {
-      id: context.requestId || this.generateEventId(),
+      id: context.requestId ?? this.generateEventId(),
       timestamp: Date.now(),
       type: this.classifyAttackType(req, res, context),
       threatLevel: ThreatLevel.LOW, // Will be updated after analysis
       source: {
         ip: this.getClientIP(req),
-        userAgent: req.get('User-Agent') || 'Unknown',
+        userAgent: req.get('User-Agent')  ?? 'Unknown',
         country: context.geoLocation?.country,
         asn: context.geoLocation?.asn
       },
       target: {
         endpoint: req.path,
         user: context.user?.id,
-        resource: req.params?.id || req.query?.id
+        resource: req.params?.id ?? req.query?.id
       },
       details: {
         method: req.method,
-        statusCode: res.statusCode || 0,
+        statusCode: res.statusCode ?? 0,
         payload: req.method === 'POST' ? req.body : undefined,
         headers: req.headers as Record<string, string>,
-        responseTime: context.responseTime || Date.now() - context.startTime,
+        responseTime: context.responseTime ?? Date.now() - context.startTime,
         blocked: false,
         reason: context.blockReason
       },
       metadata: {
-        requestId: context.requestId || '',
+        requestId: context.requestId ?? '',
         sessionId: context.user?.sessionId,
         score: 0,
         confidence: 0,
@@ -480,20 +480,29 @@ export class SecurityMonitor extends EventEmitter {
     }
   }
 
-  private classifyAttackType(req: Request, res: Response, context: any): AttackType {
+  private classifyAttackType(req: Request, res: Response, _context: any): AttackType {
     const path = req.path.toLowerCase()
-    const method = req.method.toUpperCase()
     const body = req.body ? JSON.stringify(req.body) : ''
     const query = req.url
 
     // Check for specific attack patterns
-    if (res.statusCode === 429) return AttackType.RATE_LIMIT_ABUSE
-    if (path.includes('login') && res.statusCode === 401) return AttackType.BRUTE_FORCE
-    if (/<script|javascript:/i.test(body + query)) return AttackType.XSS
-    if (/['";]|union|select|insert|delete|drop/i.test(body + query)) return AttackType.SQL_INJECTION
-    if (req.get('User-Agent')?.toLowerCase().includes('bot')) return AttackType.BOT_TRAFFIC
+    if (res.statusCode === 429) {
+      return AttackType.RATE_LIMIT_ABUSE
+    }
+    if (path.includes('login') && res.statusCode === 401) {
+      return AttackType.BRUTE_FORCE
+    }
+    if (/<script|javascript:/i.test(body + query)) {
+      return AttackType.XSS
+    }
+    if (/['";}]|union|select|insert|delete|drop/i.test(body + query)) {
+      return AttackType.SQL_INJECTION
+    }
+    if (req.get('User-Agent')?.toLowerCase().includes('bot')) {
+      return AttackType.BOT_TRAFFIC
+    }
 
-    return AttackType.SUSPICIOUS_PATTERN
+    return AttackType.SUSPICIOUSPATTERN
   }
 
   private async detectAnomalies(event: SecurityEvent): Promise<AnomalyPattern[]> {
@@ -535,19 +544,19 @@ export class SecurityMonitor extends EventEmitter {
 
     // Base score from attack type
     const baseScores = {
-      [AttackType.BRUTE_FORCE]: 30,
-      [AttackType.SQL_INJECTION]: 80,
+      [AttackType.BRUTEFORCE]: 30,
+      [AttackType.SQLINJECTION]: 80,
       [AttackType.XSS]: 70,
       [AttackType.CSRF]: 60,
       [AttackType.DDOS]: 90,
-      [AttackType.RATE_LIMIT_ABUSE]: 20,
-      [AttackType.SUSPICIOUS_PATTERN]: 10,
-      [AttackType.CREDENTIAL_STUFFING]: 70,
-      [AttackType.BOT_TRAFFIC]: 15,
-      [AttackType.PRIVILEGE_ESCALATION]: 95
+      [AttackType.RATELIMITABUSE]: 20,
+      [AttackType.SUSPICIOUSPATTERN]: 10,
+      [AttackType.CREDENTIALSTUFFING]: 70,
+      [AttackType.BOTTRAFFIC]: 15,
+      [AttackType.PRIVILEGEESCALATION]: 95
     }
 
-    score += baseScores[event.type] || 10
+    score += baseScores[event.type]  ?? 10
 
     // Add score from anomalies
     anomalies.forEach(anomaly => {
@@ -564,7 +573,7 @@ export class SecurityMonitor extends EventEmitter {
 
     // Time-based modifier (attacks during off-hours are more suspicious)
     const hour = new Date().getHours()
-    if (hour < 6 || hour > 22) {
+    if (hour < 6 ?? hour > 22) {
       score *= 1.2
     }
 
@@ -585,15 +594,15 @@ export class SecurityMonitor extends EventEmitter {
     let reason = 'No threats detected'
     let duration: number | undefined
 
-    if (score >= 80 || anomalies.some(a => a.severity === ThreatLevel.CRITICAL)) {
+    if(score >= 80 ?? anomalies.some(a = > a.severity === ThreatLevel.CRITICAL)) {
       action = 'BLOCK'
       reason = 'Critical threat detected'
       duration = 3600000 // 1 hour
-    } else if (score >= 50 || anomalies.some(a => a.severity === ThreatLevel.HIGH)) {
+    } else if (score >= 50 ?? anomalies.some(a => a.severity === ThreatLevel.HIGH)) {
       action = 'CHALLENGE'
       reason = 'High threat detected'
       duration = 1800000 // 30 minutes
-    } else if (score >= 25 || anomalies.some(a => a.severity === ThreatLevel.MEDIUM)) {
+    } else if (score >= 25 ?? anomalies.some(a => a.severity === ThreatLevel.MEDIUM)) {
       action = 'THROTTLE'
       reason = 'Medium threat detected'
       duration = 600000 // 10 minutes
@@ -645,7 +654,7 @@ export class SecurityMonitor extends EventEmitter {
 
   private updateIPAnalytics(event: SecurityEvent): void {
     const ip = event.source.ip
-    const existing = this.ipAnalytics.get(ip) || {
+    const existing = this.ipAnalytics.get(ip)  ?? {
       requests: 0,
       failures: 0,
       lastSeen: 0,
@@ -691,10 +700,7 @@ export class SecurityMonitor extends EventEmitter {
   }
 
   private getClientIP(req: Request): string {
-    return req.ip || 
-           req.get('X-Forwarded-For')?.split(',')[0]?.trim() ||
-           req.get('X-Real-IP') ||
-           '127.0.0.1'
+    return req.ip ?? req.get('X-Forwarded-For')?.split(',')[0]?.trim()  ?? req.get('X-Real-IP')  ?? '127.0.0.1'
   }
 
   private generateEventId(): string {
@@ -703,18 +709,18 @@ export class SecurityMonitor extends EventEmitter {
 
   private getAttackTypeSeverity(type: AttackType): ThreatLevel {
     const severityMap = {
-      [AttackType.SQL_INJECTION]: ThreatLevel.CRITICAL,
-      [AttackType.PRIVILEGE_ESCALATION]: ThreatLevel.CRITICAL,
+      [AttackType.SQLINJECTION]: ThreatLevel.CRITICAL,
+      [AttackType.PRIVILEGEESCALATION]: ThreatLevel.CRITICAL,
       [AttackType.DDOS]: ThreatLevel.CRITICAL,
       [AttackType.XSS]: ThreatLevel.HIGH,
-      [AttackType.BRUTE_FORCE]: ThreatLevel.HIGH,
-      [AttackType.CREDENTIAL_STUFFING]: ThreatLevel.HIGH,
+      [AttackType.BRUTEFORCE]: ThreatLevel.HIGH,
+      [AttackType.CREDENTIALSTUFFING]: ThreatLevel.HIGH,
       [AttackType.CSRF]: ThreatLevel.MEDIUM,
-      [AttackType.RATE_LIMIT_ABUSE]: ThreatLevel.MEDIUM,
-      [AttackType.BOT_TRAFFIC]: ThreatLevel.LOW,
-      [AttackType.SUSPICIOUS_PATTERN]: ThreatLevel.LOW
+      [AttackType.RATELIMITABUSE]: ThreatLevel.MEDIUM,
+      [AttackType.BOTTRAFFIC]: ThreatLevel.LOW,
+      [AttackType.SUSPICIOUSPATTERN]: ThreatLevel.LOW
     }
-    return severityMap[type] || ThreatLevel.LOW
+    return severityMap[type]  ?? ThreatLevel.LOW
   }
 
   private calculatePerformanceMetrics() {
@@ -723,7 +729,7 @@ export class SecurityMonitor extends EventEmitter {
     let totalDetections = 0
     let totalFalsePositives = 0
 
-    for (const [key, metrics] of this.performanceMetrics) {
+    for (const [, metrics] of this.performanceMetrics) {
       totalTime += metrics.processingTime
       totalEvents += metrics.totalEvents
       totalDetections += metrics.detectionRate * metrics.totalEvents
@@ -739,7 +745,7 @@ export class SecurityMonitor extends EventEmitter {
 
   private updatePerformanceMetrics(attackType: AttackType, processingTime: number, detected: boolean): void {
     const key = attackType.toString()
-    const existing = this.performanceMetrics.get(key) || {
+    const existing = this.performanceMetrics.get(key)  ?? {
       totalEvents: 0,
       processingTime: 0,
       detectionRate: 0,
@@ -759,7 +765,7 @@ export class SecurityMonitor extends EventEmitter {
 
   private startBackgroundTasks(): void {
     // Clean up expired threat responses
-    setInterval(() => {
+    setInterval_(() => {
       const now = Date.now()
       for (const [ip, response] of this.threatResponses) {
         if (now >= response.expires) {
@@ -769,7 +775,7 @@ export class SecurityMonitor extends EventEmitter {
     }, 60000) // Every minute
 
     // Clean up old IP analytics
-    setInterval(() => {
+    setInterval_(() => {
       const cutoff = Date.now() - 24 * 60 * 60 * 1000 // 24 hours
       for (const [ip, data] of this.ipAnalytics) {
         if (data.lastSeen < cutoff) {

@@ -3,8 +3,8 @@
  * Secure handling of secrets with validation and rotation
  */
 
-import { CloudflareEnv } from '../cloudflare';
-import { logger } from '../logging/productionLogger';
+import { CloudflareEnv} from '../cloudflare';
+import { logger} from '../logging/productionLogger';
 
 export interface SecretValidationResult {
   isValid: boolean;
@@ -23,7 +23,7 @@ export interface SecretMetadata {
 export class SecretManager {
   private env: CloudflareEnv;
   private secretCache: Map<string, { value: string; metadata: SecretMetadata; cachedAt: Date }> = new Map();
-  private readonly CACHE_TTL = 300000; // 5 minutes
+  private readonly CACHETTL = 300000; // 5 minutes
 
   constructor(env: CloudflareEnv) {
     this.env = env;
@@ -36,7 +36,7 @@ export class SecretManager {
     try {
       // Check cache first
       const cached = this.secretCache.get(name);
-      if (cached && Date.now() - cached.cachedAt.getTime() < this.CACHE_TTL) {
+      if (cached && Date.now() - cached.cachedAt.getTime() < this.CACHETTL) {
         return cached.value;
       }
 
@@ -73,7 +73,7 @@ export class SecretManager {
 
       // Cache the secret
       const metadata = this.getSecretMetadata(name, value);
-      this.secretCache.set(name, { _value,
+      this.secretCache.set(name, { value,
         metadata,
         cachedAt: new Date()
       });
@@ -104,9 +104,7 @@ export class SecretManager {
 
     if (!secret) {
       // Try alternative names
-      secret = await this.getSecret('JWT_SIGNING_KEY') ||
-               await this.getSecret('AUTH_SECRET') ||
-               await this.getSecret('NEXTAUTH_SECRET');
+      secret = await this.getSecret('JWT_SIGNING_KEY')  ?? await this.getSecret('AUTH_SECRET')  ?? await this.getSecret('NEXTAUTH_SECRET');
     }
 
     if (!secret) {
@@ -155,8 +153,7 @@ export class SecretManager {
 
     if (!key) {
       // Try alternatives
-      key = await this.getSecret('AES_KEY') ||
-            await this.getSecret('DATA_ENCRYPTION_KEY');
+      key = await this.getSecret('AES_KEY')  ?? await this.getSecret('DATA_ENCRYPTION_KEY');
     }
 
     if (!key) {
@@ -260,7 +257,7 @@ export class SecretManager {
     }
 
     // Specific validations by secret type
-    if (name.includes('JWT') || name.includes('AUTH')) {
+    if (name.includes('JWT')  ?? name.includes('AUTH')) {
       if (value.length < 32) {
         errors.push('JWT secrets should be at least 32 characters');
       }
@@ -273,13 +270,13 @@ export class SecretManager {
     }
 
     if (name.includes('STRIPE')) {
-      if (!value.startsWith('sk_') && !value.startsWith('whsec_')) {
-        errors.push('Stripe secrets should start with sk_ or whsec_');
+      if (!value.startsWith('sk') && !value.startsWith('whsec')) {
+        errors.push('Stripe secrets should start with sk_ or whsec');
       }
     }
 
     return {
-      isValid: errors.length === 0,
+      isValid: errors.length = == 0,
       errors,
       warnings
     };
@@ -292,7 +289,7 @@ export class SecretManager {
     const charCounts = new Map<string, number>();
 
     for (const char of str) {
-      charCounts.set(char, (charCounts.get(char) || 0) + 1);
+      charCounts.set(char, (charCounts.get(char)  ?? 0) + 1);
     }
 
     let entropy = 0;
@@ -319,7 +316,7 @@ export class SecretManager {
       strength = 'medium';
     }
 
-    return { _name,
+    return { name,
       lastRotated: new Date(), // Would track actual rotation in production
       strength,
       usage: this.getSecretUsage(name)
@@ -341,7 +338,7 @@ export class SecretManager {
       'GITHUB_CLIENT_SECRET': 'GitHub OAuth authentication'
     };
 
-    return usageMap[name] || 'General purpose secret';
+    return usageMap[name]  ?? 'General purpose secret';
   }
 
   /**

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../../lib/utils';
+import { motion, AnimatePresence} from 'framer-motion';
+import { cn} from '../../lib/utils';
 
 interface EngagementChartProps {
   data?: ChartData[];
@@ -29,7 +29,7 @@ interface Metric {
   active: boolean;
 }
 
-export function EngagementChart({
+export function EngagementChart(_{
   data = generateMockData(),
   type = 'area',
   timeframe = '7d',
@@ -51,7 +51,7 @@ export function EngagementChart({
 
   const [activeMetrics, setActiveMetrics] = useState(metrics);
 
-  useEffect(() => {
+  useEffect_(() => {
     setTimeout(() => setAnimationComplete(true), 1500);
   }, []);
 
@@ -74,7 +74,7 @@ export function EngagementChart({
     );
   };
 
-  const maxValue = getMaxValue() || 1000;
+  const maxValue = getMaxValue()  ?? 1000;
 
   const chartTypes = [
     { id: 'line', icon: '📈', label: 'Line' },
@@ -199,7 +199,6 @@ export function EngagementChart({
           <div className="relative h-full flex items-end justify-between gap-2">
             {data.map((item, index) => {
               const isHovered = hoveredIndex === index;
-              const barWidth = `${100 / data.length}%`;
 
               return (
                 <motion.div
@@ -402,6 +401,6 @@ function generateMockData(): ChartData[] {
     shares: Math.floor(Math.random() * 500) + 50,
     saves: Math.floor(Math.random() * 300) + 30,
     timestamp: new Date(),
-    viral: i === 3 || i === 5
+    viral: i === 3 ?? i === 5
   }));
 }

@@ -5,23 +5,13 @@
  * error tracking, and system health visualization.
  */
 
-import React, { _useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from 'chart.js';
-import { _Line, Bar, Doughnut } from 'react-chartjs-2';
-import { errorTracker } from '../lib/monitoring/errorTracking';
-import { performanceMonitor } from '../lib/monitoring/performanceMonitor';
-import { logger } from '../lib/logging/productionLogger';
+  Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, ArcElement, _} from 'chart.js';
+import { Line, Bar, Doughnut} from 'react-chartjs-2';
+import { errorTracker} from '../lib/monitoring/errorTracking';
+import { performanceMonitor} from '../lib/monitoring/performanceMonitor';
+import { logger} from '../lib/logging/productionLogger';
 
 ChartJS.register(
   CategoryScale,
@@ -84,7 +74,7 @@ const MonitoringDashboard: React.FC = () => {
   const [isRealTime, setIsRealTime] = useState(true);
 
   // Update stats from monitoring systems
-  const updateStats = useCallback(() => {
+  const updateStats = useCallback_(() => {
     try {
       // Get session info from error tracker
       const sessionInfo = errorTracker.getSessionInfo();
@@ -99,16 +89,16 @@ const MonitoringDashboard: React.FC = () => {
 
       setStats({
         errorCount: sessionInfo.errorCount,
-        averageResponseTime: perfSummary.webVitals.current.TTFB?.value || 0,
+        averageResponseTime: perfSummary.webVitals.current.TTFB?.value ?? 0,
         requestCount: perfSummary.network.totalRequests,
         memoryUsage,
         cacheHitRate: perfSummary.network.cacheHitRate,
         webVitals: {
-          cls: perfSummary.webVitals.current.CLS?.value || 0,
-          fcp: perfSummary.webVitals.current.FCP?.value || 0,
-          lcp: perfSummary.webVitals.current.LCP?.value || 0,
-          fid: perfSummary.webVitals.current.FID?.value || 0,
-          ttfb: perfSummary.webVitals.current.TTFB?.value || 0
+          cls: perfSummary.webVitals.current.CLS?.value ?? 0,
+          fcp: perfSummary.webVitals.current.FCP?.value ?? 0,
+          lcp: perfSummary.webVitals.current.LCP?.value ?? 0,
+          fid: perfSummary.webVitals.current.FID?.value ?? 0,
+          ttfb: perfSummary.webVitals.current.TTFB?.value ?? 0
         },
         recentErrors: [], // Would be populated from error tracker
         performanceAlerts: [] // Would be populated from performance monitor
@@ -122,7 +112,7 @@ const MonitoringDashboard: React.FC = () => {
   }, []);
 
   // Real-time updates
-  useEffect(() => {
+  useEffect_(() => {
     updateStats();
 
     if (isRealTime) {
@@ -133,7 +123,7 @@ const MonitoringDashboard: React.FC = () => {
 
   // Chart data for response time trends
   const responseTimeData = {
-    labels: Array.from({ length: 24 }, (_, _i) => `${i}:00`),
+    labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
     datasets: [
       {
         label: 'Response Time (ms)',
@@ -147,7 +137,7 @@ const MonitoringDashboard: React.FC = () => {
 
   // Chart data for error rates
   const errorRateData = {
-    labels: Array.from({ length: 24 }, (_, _i) => `${i}:00`),
+    labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
     datasets: [
       {
         label: 'Error Rate (%)',
@@ -198,14 +188,18 @@ const MonitoringDashboard: React.FC = () => {
 
   const getHealthStatus = () => {
     const issues = [];
-    if (stats.errorCount > 10) issues.push('High error count');
-    if (stats.averageResponseTime > 2000) issues.push('Slow response times');
-    if (stats.memoryUsage > 80) issues.push('High memory usage');
-    if (stats.webVitals.cls > 0.25) issues.push('Poor CLS score');
-    if (stats.webVitals.lcp > 4000) issues.push('Poor LCP score');
+    if (stats.errorCount > 10) {issues.push('High error count');}
+    if (stats.averageResponseTime > 2000) {issues.push('Slow response times');}
+    if (stats.memoryUsage > 80) {issues.push('High memory usage');}
+    if (stats.webVitals.cls > 0.25) {issues.push('Poor CLS score');}
+    if (stats.webVitals.lcp > 4000) {issues.push('Poor LCP score');}
 
-    if (issues.length === 0) return { status: 'healthy', message: 'All systems operational' };
-    if (issues.length <= 2) return { status: 'warning', message: `${issues.length} issues detected` };
+    if (issues.length === 0) {
+    return { status: 'healthy', message: 'All systems operational' };
+  }
+    if (issues.length <= 2) {
+    return { status: 'warning', message: `${issues.length} issues detected` };
+  }
     return { status: 'critical', message: `${issues.length} critical issues` };
   };
 
@@ -251,7 +245,7 @@ const MonitoringDashboard: React.FC = () => {
             {/* Time Range Selector */}
             <select
               value={timeRange}
-              onChange={(_e) => setTimeRange(e.target.value as unknown)}
+              onChange={(e) => setTimeRange(e.target.value as unknown)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="1h">Last Hour</option>
@@ -271,7 +265,7 @@ const MonitoringDashboard: React.FC = () => {
               { id: 'performance', label: 'Performance', icon: '⚡' },
               { id: 'errors', label: 'Errors', icon: '🚨' },
               { id: 'alerts', label: 'Alerts', icon: '🔔' },
-            ].map((_tab) => (
+            ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as unknown)}
@@ -381,7 +375,7 @@ const MonitoringDashboard: React.FC = () => {
                   { name: 'Largest Contentful Paint', value: stats.webVitals.lcp, threshold: 2500, unit: 'ms' },
                   { name: 'First Input Delay', value: stats.webVitals.fid, threshold: 100, unit: 'ms' },
                   { name: 'Time to First Byte', value: stats.webVitals.ttfb, threshold: 800, unit: 'ms' },
-                ].map((vital, _index) => (
+                ].map((vital, index) => (
                   <div key={index} className="p-4 border border-gray-200 rounded-lg">
                     <div className="flex justify-between items-center">
                       <span className="font-medium">{vital.name}</span>
@@ -435,7 +429,7 @@ const MonitoringDashboard: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Errors</h3>
             {stats.recentErrors.length > 0 ? (
               <div className="space-y-4">
-                {stats.recentErrors.map((error, _index) => (
+                {stats.recentErrors.map((error, index) => (
                   <div key={index} className="p-4 border border-red-200 rounded-lg bg-red-50">
                     <div className="flex justify-between items-start">
                       <div>
@@ -476,7 +470,7 @@ const MonitoringDashboard: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Alerts</h3>
             {stats.performanceAlerts.length > 0 ? (
               <div className="space-y-4">
-                {stats.performanceAlerts.map((alert, _index) => (
+                {stats.performanceAlerts.map((alert, index) => (
                   <div key={index} className={`p-4 border rounded-lg ${
                     alert.severity === 'high' ? 'border-red-200 bg-red-50' :
                     alert.severity === 'medium' ? 'border-yellow-200 bg-yellow-50' :

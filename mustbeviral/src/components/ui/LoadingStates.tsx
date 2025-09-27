@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Loader2, Sparkles, Zap, TrendingUp, FileText, User } from 'lucide-react';
+import { Loader2, Sparkles, Zap, TrendingUp, FileText, User} from 'lucide-react';
 
 // Basic Loading Spinner
 export interface LoadingSpinnerProps {
@@ -17,10 +17,7 @@ export interface LoadingSpinnerProps {
 }
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  size = 'md',
-  color = 'primary',
-  className = '',
-  'data-testid': testId = 'loading-spinner'
+  size = 'md', color = 'primary', className = '', 'data-testid': testId = 'loading-spinner'
 }) => {
   const sizeClasses = {
     sm: 'w-4 h-4',
@@ -54,10 +51,7 @@ export interface PageLoadingProps {
 }
 
 export const PageLoading: React.FC<PageLoadingProps> = ({
-  message = 'Loading...',
-  description,
-  animated = true,
-  className = ''
+  message = 'Loading...', description, animated = true, className = ''
 }) => {
   return (
     <div className={`min-h-screen flex items-center justify-center bg-gray-50 ${className}`}>
@@ -99,15 +93,7 @@ export interface LoadingButtonProps {
 }
 
 export const LoadingButton: React.FC<LoadingButtonProps> = ({
-  loading = false,
-  children,
-  disabled = false,
-  variant = 'primary',
-  size = 'md',
-  className = '',
-  onClick,
-  type = 'button',
-  'data-testid': testId = 'loading-button'
+  loading = false, children, disabled = false, variant = 'primary', size = 'md', className = '', onClick, type = 'button', 'data-testid': testId = 'loading-button'
 }) => {
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
@@ -128,14 +114,14 @@ export const LoadingButton: React.FC<LoadingButtonProps> = ({
     <button
       type={type}
       onClick={onClick}
-      disabled={disabled || loading}
+      disabled={disabled ?? loading}
       data-testid={testId}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
     >
       {loading && (
         <LoadingSpinner
           size="sm"
-          color={variant === 'outline' || variant === 'ghost' ? 'primary' : 'white'}
+          color={variant === 'outline'  ?? variant === 'ghost' ? 'primary' : 'white'}
           className="mr-2"
         />
       )}
@@ -154,11 +140,7 @@ export interface SkeletonProps {
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({
-  width = '100%',
-  height = '1rem',
-  className = '',
-  rounded = false,
-  animated = true
+  width = '100%', height = '1rem', className = '', rounded = false, animated = true
 }) => {
   const widthStyle = typeof width === 'number' ? `${width}px` : width;
   const heightStyle = typeof height === 'number' ? `${height}px` : height;
@@ -209,17 +191,17 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({
     {/* Header */}
     <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
       <div className="flex space-x-4">
-        {Array.from({ length: columns }).map((_, _i) => (
+        {Array.from({ length: columns }).map((_, i) => (
           <Skeleton key={i} width="120px" height="1rem" />
         ))}
       </div>
     </div>
 
     {/* Rows */}
-    {Array.from({ length: rows }).map((_, _rowIndex) => (
+    {Array.from({ length: rows }).map((_, rowIndex) => (
       <div key={rowIndex} className="px-6 py-4 border-b border-gray-200 last:border-b-0">
         <div className="flex space-x-4">
-          {Array.from({ length: columns }).map((_, _colIndex) => (
+          {Array.from({ length: columns }).map((_, colIndex) => (
             <Skeleton
               key={colIndex}
               width={colIndex === 0 ? '150px' : '100px'}
@@ -244,14 +226,7 @@ export interface ProgressBarProps {
   label?: string;
 }
 
-export const ProgressBar: React.FC<ProgressBarProps> = ({ _value,
-  max = 100,
-  className = '',
-  color = 'primary',
-  size = 'md',
-  animated = true,
-  showValue = false,
-  label
+export const ProgressBar: React.FC<ProgressBarProps> = ({ value, max = 100, className = '', color = 'primary', size = 'md', animated = true, showValue = false, label
 }) => {
   const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
 
@@ -270,7 +245,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ _value,
 
   return (
     <div className={className}>
-      {(label || showValue) && (
+      {(label ?? showValue) && (
         <div className="flex justify-between text-sm text-gray-700 mb-1">
           {label && <span>{label}</span>}
           {showValue && <span>{Math.round(percentage)}%</span>}
@@ -286,7 +261,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ _value,
           aria-valuenow={value}
           aria-valuemin={0}
           aria-valuemax={max}
-          aria-label={label || `Progress: ${Math.round(percentage)}%`}
+          aria-label={label ?? `Progress: ${Math.round(percentage)}%`}
         />
       </div>
     </div>
@@ -305,14 +280,7 @@ export interface CircularProgressProps {
   label?: string;
 }
 
-export const CircularProgress: React.FC<CircularProgressProps> = ({ _value,
-  max = 100,
-  size = 120,
-  strokeWidth = 8,
-  className = '',
-  color = 'primary',
-  showValue = true,
-  label
+export const CircularProgress: React.FC<CircularProgressProps> = ({ value, max = 100, size = 120, strokeWidth = 8, className = '', color = 'primary', showValue = true, label
 }) => {
   const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
   const radius = (size - strokeWidth) / 2;
@@ -388,7 +356,7 @@ export const DashboardLoading: React.FC = () => (
 
     {/* Stats Cards */}
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {Array.from({ length: 4 }).map((_, _i) => (
+      {Array.from({ length: 4 }).map((_, i) => (
         <div key={i} className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -417,7 +385,7 @@ export const ContentLoading: React.FC = () => (
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {Array.from({ length: 6 }).map((_, _i) => (
+      {Array.from({ length: 6 }).map((_, i) => (
         <CardSkeleton key={i} />
       ))}
     </div>
@@ -431,9 +399,7 @@ export interface ContextualLoadingProps {
   className?: string;
 }
 
-export const ContextualLoading: React.FC<ContextualLoadingProps> = ({ _context,
-  progress,
-  className = ''
+export const ContextualLoading: React.FC<ContextualLoadingProps> = ({ context, progress, className = ''
 }) => {
   const contextConfig = {
     dashboard: {

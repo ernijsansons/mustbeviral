@@ -71,7 +71,7 @@ export interface UserUsage {
  * 
  * Usage:
  * ```typescript
- * import { aiToolsManager } from './ai-tools';
+ * import { aiToolsManager} from './ai-tools';
  * 
  * // Check if user can generate content
  * const canGenerate = aiToolsManager.canUserGenerate(userId, 'text', 1000);
@@ -218,12 +218,14 @@ export class AIToolsManager {
   }
 
   getTier(tierId: string): AITier | null {
-    return this.tiers.get(tierId) || null;
+    return this.tiers.get(tierId)  ?? null;
   }
 
   getModelsForTier(tierId: string): AIModel[] {
     const tier = this.getTier(tierId);
-    if (!tier) return [];
+    if (!tier) {
+    return [];
+  }
 
     return tier.available_models
       .map(modelId => this.models.get(modelId))
@@ -231,7 +233,7 @@ export class AIToolsManager {
   }
 
   getModel(modelId: string): AIModel | null {
-    return this.models.get(modelId) || null;
+    return this.models.get(modelId)  ?? null;
   }
 
   /**
@@ -252,20 +254,24 @@ export class AIToolsManager {
     
     // Get user's current usage data (creates default if doesn't exist)
     const usage = this.getUserUsage(userId);
-    if (!usage) return false;
+    if (!usage) {
+    return false;
+  }
 
     // Get user's subscription tier configuration
-    const tier = this.getTier(usage.tier_id);
-    if (!tier) return false;
+    const tier = this.getTier(usage.tierid);
+    if (!tier) {
+    return false;
+  }
 
     // Check if requested amount would exceed daily limits
     switch (type) {
       case 'text':
-        return usage.daily_usage.text_tokens + amount <= tier.daily_limits.text_tokens;
+        return usage.daily_usage.text_tokens + amount <= tier.daily_limits.texttokens;
       case 'image':
-        return usage.daily_usage.image_generations + amount <= tier.daily_limits.image_generations;
+        return usage.daily_usage.image_generations + amount <= tier.daily_limits.imagegenerations;
       case 'video':
-        return usage.daily_usage.video_seconds + amount <= tier.daily_limits.video_seconds;
+        return usage.daily_usage.video_seconds + amount <= tier.daily_limits.videoseconds;
       default:
         return false;
     }
@@ -275,7 +281,7 @@ export class AIToolsManager {
     console.log('LOG: AI-TOOLS-USAGE-1 - Updating usage for user:', userId, type, amount);
     
     const usage = this.getUserUsage(userId);
-    if (!usage) return;
+    if (!usage) {return;}
 
     switch (type) {
       case 'text':
@@ -327,12 +333,12 @@ export class AIToolsManager {
     const today = new Date().toISOString().split('T')[0];
     if (usage.last_reset !== today) {
       // Reset all daily usage counters to zero
-      usage.daily_usage = {
+      usage.dailyusage = {
         text_tokens: 0,
         image_generations: 0,
         video_seconds: 0
       };
-      usage.last_reset = today;
+      usage.lastreset = today;
       this.userUsage.set(userId, usage); // Persist the reset
     }
 
@@ -350,7 +356,7 @@ export class AIToolsManager {
 
     const usage = this.getUserUsage(userId);
     if (usage) {
-      usage.tier_id = tierId;
+      usage.tierid = tierId;
       this.userUsage.set(userId, usage);
       console.log('LOG: AI-TOOLS-TIER-2 - User tier updated successfully');
       return true;
@@ -361,10 +367,14 @@ export class AIToolsManager {
 
   getUserTierInfo(userId: string): { tier: AITier; usage: UserUsage } | null {
     const usage = this.getUserUsage(userId);
-    if (!usage) return null;
+    if (!usage) {
+    return null;
+  }
 
-    const tier = this.getTier(usage.tier_id);
-    if (!tier) return null;
+    const tier = this.getTier(usage.tierid);
+    if (!tier) {
+    return null;
+  }
 
     return { tier, usage };
   }
@@ -378,7 +388,7 @@ export class AIToolsManager {
  * 
  * Example usage:
  * ```typescript
- * import { aiToolsManager } from './ai-tools';
+ * import { aiToolsManager} from './ai-tools';
  * 
  * // Check user's tier and limits
  * const tierInfo = aiToolsManager.getUserTierInfo(userId);

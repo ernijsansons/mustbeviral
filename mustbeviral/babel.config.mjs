@@ -27,6 +27,8 @@ export default {
     ],
   ],
   plugins: [
+    // Use the modern class properties plugin
+    '@babel/plugin-transform-class-properties',
     // Transform import.meta for Jest compatibility
     ['babel-plugin-transform-import-meta', {
       module: 'ES6'

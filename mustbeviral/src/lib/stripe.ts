@@ -36,7 +36,7 @@ export class StripeService {
     console.log('LOG: STRIPE-SERVICE-1 - Initializing Stripe service in test mode');
     
     this.testMode = process.env.NODE_ENV !== 'production';
-    this.webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_webhook_secret';
+    this.webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? 'whsec_test_webhook_secret';
     
     if (this.testMode) {
       console.log('LOG: STRIPE-SERVICE-2 - Running in test mode with mock Stripe');
@@ -244,7 +244,7 @@ export class StripeService {
       customer_id: subscription.customer,
       tier_id: tier?.id,
       status: subscription.status,
-      cancel_at_period_end: subscription.cancel_at_period_end
+      cancel_at_period_end: subscription.cancelatperiod_end
     };
   }
 
@@ -266,7 +266,7 @@ export class StripeService {
       action: 'payment_succeeded',
       subscription_id: invoice.subscription,
       customer_id: invoice.customer,
-      amount_paid: invoice.amount_paid
+      amount_paid: invoice.amountpaid
     };
   }
 
@@ -277,15 +277,17 @@ export class StripeService {
       action: 'payment_failed',
       subscription_id: invoice.subscription,
       customer_id: invoice.customer,
-      amount_due: invoice.amount_due
+      amount_due: invoice.amountdue
     };
   }
 
   private getTierByPriceId(priceId?: string): SubscriptionTier | null {
-    if (!priceId) return null;
+    if (!priceId) {
+    return null;
+  }
     
     const tiers = this.getSubscriptionTiers();
-    return tiers.find(tier => tier.price_id === priceId) || null;
+    return tiers.find(tier => tier.priceid === priceId)  ?? null;
   }
 
   calculateCommission(amount: number, rate: number = 0.15): number {

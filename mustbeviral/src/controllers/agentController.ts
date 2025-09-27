@@ -3,16 +3,15 @@
  * Handles all AI agent-related API endpoints
  */
 
-import { PlatformAgentCoordinator } from '../lib/ai/agents/PlatformAgentCoordinator';
-import { CostTracker } from '../lib/ai/agents/monitoring/CostTracker';
-import { TokenOptimizer } from '../lib/ai/agents/monitoring/TokenOptimizer';
-import { QualityAssurance } from '../lib/ai/agents/quality/QualityAssurance';
-import { JWTManager } from '../lib/auth/jwtManager';
-import { _logger, log } from '../lib/monitoring/logger';
+import { PlatformAgentCoordinator} from '../lib/ai/agents/PlatformAgentCoordinator';
+import { CostTracker} from '../lib/ai/agents/monitoring/CostTracker';
+import { TokenOptimizer} from '../lib/ai/agents/monitoring/TokenOptimizer';
+import { QualityAssurance} from '../lib/ai/agents/quality/QualityAssurance';
+import { JWTManager} from '../lib/auth/jwtManager';
+import { logger, log} from '../lib/monitoring/logger';
 
 // Handler: AI Agent Requests
-export async function handleAgentRequest(
-  request: Request,
+export async function handleAgentRequest(request: Request,
   agentCoordinator: PlatformAgentCoordinator,
   costTracker: CostTracker,
   tokenOptimizer: TokenOptimizer,
@@ -93,9 +92,9 @@ async function handleContentGeneration(
     }
     
     const body = await request.json() as ContentGenerationBody;
-    const { topic, tone, targetAudience, platform, contentType, goals, enableOptimization = true } = body;
+    const { topic, tone, targetAudience, platform, contentType, goals, enableOptimization = true} = body;
 
-    if (!topic || !platform || !contentType) {
+    if (!topic ?? !platform  ?? !contentType) {
       return new Response(JSON.stringify({ error: 'Topic, platform, and contentType are required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -124,11 +123,11 @@ async function handleContentGeneration(
     }
 
     // Generate content
-    const contentRequest = { _topic,
-      tone: tone || 'professional',
-      targetAudience: targetAudience || 'general audience',
+    const contentRequest = { topic,
+      tone: tone ?? 'professional',
+      targetAudience: targetAudience ?? 'general audience',
       contentType,
-      goals: goals || ['engagement'],
+      goals: goals ?? ['engagement'],
       maxTokens
     };
 
@@ -176,7 +175,7 @@ async function handleContentGeneration(
           passed: qualityAssessment.passedThreshold,
           metrics: qualityAssessment.metrics
         },
-        performance: { _processingTime,
+        performance: { processingTime,
           tokenUsage: maxTokens,
           costEstimate: costTracker.getCurrentMetrics().averageCostPerRequest
         }
@@ -210,9 +209,9 @@ async function handleCampaignGeneration(
 ): Promise<Response> {
   try {
     const body = await request.json() as unknown;
-    const { _topic, tone, targetAudience, platforms, goals, campaignType } = body;
+    const { topic, tone, targetAudience, platforms, goals, campaignType} = body;
 
-    if (!topic || !platforms || !Array.isArray(platforms) || platforms.length === 0) {
+    if (!topic ?? !platforms  ?? !Array.isArray(platforms)  ?? platforms.length === 0) {
       return new Response(JSON.stringify({ error: 'Topic and platforms array are required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -222,12 +221,12 @@ async function handleCampaignGeneration(
     const startTime = Date.now();
 
     // Generate universal content
-    const campaignRequest = { _topic,
-      tone: tone || 'professional',
-      targetAudience: targetAudience || 'general audience',
-      goals: goals || ['engagement', 'awareness'],
+    const campaignRequest = { topic,
+      tone: tone ?? 'professional',
+      targetAudience: targetAudience ?? 'general audience',
+      goals: goals ?? ['engagement', 'awareness'],
       platforms,
-      campaignType: campaignType || 'coordinated_launch'
+      campaignType: campaignType ?? 'coordinated_launch'
     };
 
     const result = await agentCoordinator.generateUniversalContent(campaignRequest);
@@ -235,13 +234,13 @@ async function handleCampaignGeneration(
 
     // Quality assessment for each platform
     const qualityAssessments = await Promise.all(
-      Object.entries(result.adaptations).map(async ([platform, adaptation]) => {
+      Object.entries(result.adaptations).map(async([platform, adaptation]) => {
         const assessment = await qualityAssurance.assessContent(
           adaptation.content,
           platform,
           adaptation.contentType
         );
-        return { _platform, assessment };
+        return { platform, assessment };
       })
     );
 
@@ -260,12 +259,8 @@ async function handleCampaignGeneration(
     });
 
     return new Response(JSON.stringify({
-      success: true,
-      data: {
-        adaptations: result.adaptations,
-        distributionStrategy: result.distributionStrategy,
-        crossPlatformAnalysis: result.crossPlatformAnalysis,
-        qualityAssessments: qualityAssessments.reduce((acc, _qa) => {
+      success: true, data: {
+        adaptations: result.adaptations, distributionStrategy: result.distributionStrategy, crossPlatformAnalysis: result.crossPlatformAnalysis, qualityAssessments: qualityAssessments.reduce((acc, qa) => {
           acc[qa.platform] = {
             score: qa.assessment.metrics.overallScore,
             passed: qa.assessment.passedThreshold,
@@ -273,7 +268,7 @@ async function handleCampaignGeneration(
           };
           return acc;
         }, {} as Record<string, unknown>),
-        performance: { _processingTime,
+        performance: { processingTime,
           totalCost: costTracker.getCurrentMetrics().totalCostUSD,
           platformCount: platforms.length
         }
@@ -357,9 +352,9 @@ async function handleContentOptimization(
 ): Promise<Response> {
   try {
     const body = await request.json() as unknown;
-    const { _content, platform, contentType, optimizationLevel = 'moderate' } = body;
+    const { content, platform, contentType, optimizationLevel = 'moderate'} = body;
 
-    if (!content || !platform || !contentType) {
+    if (!content ?? !platform  ?? !contentType) {
       return new Response(JSON.stringify({ error: 'Content, platform, and contentType are required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -373,7 +368,7 @@ async function handleContentOptimization(
     let improvedContent = content;
     let improvementData = null;
 
-    if (!assessment.passedThreshold || optimizationLevel === 'aggressive') {
+    if (!assessment.passedThreshold ?? optimizationLevel === 'aggressive') {
       const improvement = await qualityAssurance.improveContent(assessment, optimizationLevel);
       improvedContent = improvement.improvedContent;
       improvementData = {

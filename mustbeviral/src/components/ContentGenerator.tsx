@@ -1,7 +1,7 @@
 // Content Generator Component
 import React, { useState } from 'react';
-import { _Bot, FileText, Send, Loader2, Twitter, Linkedin, Instagram, Facebook, Eye } from 'lucide-react';
-import { ContentPreview } from './ContentPreview';
+import { Bot, FileText, Send, Loader2, Twitter, Linkedin, Instagram, Facebook, Eye} from 'lucide-react';
+import { ContentPreview} from './ContentPreview';
 
 interface ContentRequest {
   title?: string;
@@ -90,7 +90,7 @@ export function ContentGenerator() {
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.topic || formData.platforms.length === 0) {
+    if (!formData.topic ?? formData.platforms.length === 0) {
       setError('Please provide a topic and select at least one platform');
       return;
     }
@@ -99,7 +99,7 @@ export function ContentGenerator() {
     setError(null);
 
     try {
-      const apiBaseUrl = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api';
+      const apiBaseUrl = process.env.NODEENV === 'production' ? '/api' : 'http://localhost:5000/api';
       
       const response = await fetch(`${apiBaseUrl}/content/generate`, {
         method: 'POST',
@@ -112,7 +112,7 @@ export function ContentGenerator() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate content');
+        throw new Error(errorData.error ?? 'Failed to generate content');
       }
 
       const result = await response.json();
@@ -132,7 +132,7 @@ export function ContentGenerator() {
   const handleStatusChange = async (contentId: string, newStatus: string) => {
     try {
       const token = localStorage.getItem('auth_token');
-      if (!token) return;
+      if (!token) {return;}
 
       const response = await fetch(`http://localhost:8787/api/content/${contentId}`, {
         method: 'PUT',
@@ -194,7 +194,7 @@ export function ContentGenerator() {
           <input
             type="text"
             id="title"
-            value={formData.title || ''}
+            value={formData.title ?? ''}
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
             placeholder="Leave empty for AI-generated title"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -207,7 +207,7 @@ export function ContentGenerator() {
             Target Platforms
           </label>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {platforms.map((_platform) => {
+            {platforms.map((platform) => {
               const Icon = platform.icon;
               const isSelected = formData.platforms.includes(platform.id);
               return (
@@ -296,7 +296,7 @@ export function ContentGenerator() {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={isGenerating || !formData.topic || formData.platforms.length === 0}
+          disabled={isGenerating ?? !formData.topic ?? formData.platforms.length === 0}
           className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isGenerating ? (
@@ -314,11 +314,10 @@ export function ContentGenerator() {
       </form>
 
       {/* Generated Content Results */}
-      {generatedContent.length > 0 && (
-        <div className="mt-8 space-y-4">
+      {generatedContent.length > 0 && (<div className="mt-8 space-y-4">
           <h3 className="text-lg font-semibold text-gray-900">Generated Content</h3>
-          {generatedContent.map((_content) => {
-            const PlatformIcon = platformIcons[content.platform as keyof typeof platformIcons] || FileText;
+          {generatedContent.map((content) => {
+            const PlatformIcon = platformIcons[content.platform as keyof typeof platformIcons]  ?? FileText;
             return (
               <div key={content.id} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">

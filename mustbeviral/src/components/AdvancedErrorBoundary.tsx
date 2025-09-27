@@ -1,5 +1,5 @@
-import { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home, Mail, Copy, CheckCircle } from 'lucide-react';
+import { Component, ErrorInfo, ReactNode} from 'react';
+import { AlertTriangle, RefreshCw, Home, Mail, Copy, CheckCircle} from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -29,8 +29,8 @@ interface State {
  */
 export class AdvancedErrorBoundary extends Component<Props, State> {
   private retryTimeouts: Set<NodeJS.Timeout> = new Set();
-  private readonly MAX_ERROR_COUNT = 3;
-  private readonly ERROR_RESET_TIME = 10000; // 10 seconds
+  private readonly MAXERRORCOUNT = 3;
+  private readonly ERRORRESETTIME = 10000; // 10 seconds
 
   constructor(props: Props) {
     super(props);
@@ -42,8 +42,8 @@ export class AdvancedErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null,
       errorInfo: null,
-      errorCount: persistedError?.count || 0,
-      lastErrorTime: persistedError?.time || 0,
+      errorCount: persistedError?.count ?? 0,
+      lastErrorTime: persistedError?.time ?? 0,
       copied: false
     };
   }
@@ -57,8 +57,8 @@ export class AdvancedErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    const { onError, level = 'component' } = this.props;
-    const { errorCount } = this.state;
+    const { onError, level = 'component'} = this.props;
+    const { errorCount} = this.state;
 
     // Update error count
     const newErrorCount = errorCount + 1;
@@ -82,7 +82,7 @@ export class AdvancedErrorBoundary extends Component<Props, State> {
     }
 
     // Attempt automatic recovery if error count is low
-    if (newErrorCount < this.MAX_ERROR_COUNT) {
+    if (newErrorCount < this.MAXERRORCOUNT) {
       this.scheduleAutomaticRecovery();
     }
   }
@@ -115,7 +115,7 @@ export class AdvancedErrorBoundary extends Component<Props, State> {
         if (stored) {
           const data = JSON.parse(stored);
           // Reset if error is old
-          if (Date.now() - data.time > this.ERROR_RESET_TIME) {
+          if (Date.now() - data.time > this.ERRORRESETTIME) {
             sessionStorage.removeItem('error_boundary_state');
             return null;
           }
@@ -177,12 +177,12 @@ export class AdvancedErrorBoundary extends Component<Props, State> {
       };
 
       // Send to monitoring endpoint
-      if (import.meta.env.VITE_ERROR_REPORTING_ENDPOINT) {
-        fetch(import.meta.env.VITE_ERROR_REPORTING_ENDPOINT, {
+      if (import.meta.env.VITEERRORREPORTING_ENDPOINT) {
+        fetch(import.meta.env.VITEERRORREPORTING_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(errorReport)
-        }).catch(() => {
+        }).catch_(() => {
           // Silently fail error reporting
         });
       }
@@ -197,7 +197,7 @@ export class AdvancedErrorBoundary extends Component<Props, State> {
       const authData = localStorage.getItem('auth');
       if (authData) {
         const parsed = JSON.parse(authData);
-        return parsed.userId || null;
+        return parsed.userId ?? null;
       }
     } catch {
       return null;
@@ -206,7 +206,7 @@ export class AdvancedErrorBoundary extends Component<Props, State> {
   }
 
   private scheduleAutomaticRecovery() {
-    const timeout = setTimeout(() => {
+    const timeout = setTimeout_(() => {
       this.resetError();
       this.retryTimeouts.delete(timeout);
     }, 5000); // Try to recover after 5 seconds
@@ -227,13 +227,13 @@ export class AdvancedErrorBoundary extends Component<Props, State> {
   };
 
   private copyErrorDetails = async () => {
-    const { error, errorInfo } = this.state;
-    if (!error) return;
+    const { error, errorInfo} = this.state;
+    if (!error) {return;}
 
     const details = `
 Error: ${error.message}
 Stack: ${error.stack}
-Component Stack: ${errorInfo?.componentStack || 'N/A'}
+Component Stack: ${errorInfo?.componentStack ?? 'N/A'}
 Time: ${new Date().toISOString()}
 URL: ${window.location.href}
     `.trim();
@@ -248,9 +248,9 @@ URL: ${window.location.href}
   };
 
   private getErrorMessage(): string {
-    const { error, errorCount } = this.state;
+    const { error, errorCount} = this.state;
     
-    if (errorCount >= this.MAX_ERROR_COUNT) {
+    if (errorCount >= this.MAXERRORCOUNT) {
       return "We're having persistent issues. Please refresh the page or contact support.";
     }
 
@@ -269,8 +269,8 @@ URL: ${window.location.href}
   }
 
   render() {
-    const { hasError, error, errorInfo, errorCount, copied } = this.state;
-    const { children, fallback, level = 'component' } = this.props;
+    const { hasError, error, errorInfo, errorCount, copied} = this.state;
+    const { children, fallback, level = 'component'} = this.props;
 
     if (hasError && error) {
       // Use custom fallback if provided

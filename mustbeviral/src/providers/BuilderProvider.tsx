@@ -6,7 +6,7 @@
  */
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { builderConfig, BUILDER_MODELS, type BuilderContent } from '../lib/builder';
+import { builderConfig, BUILDERMODELS, type BuilderContent} from '../lib/builder';
 
 // Builder.io context interface
 interface BuilderContextType {
@@ -28,24 +28,24 @@ interface BuilderProviderProps {
 }
 
 // Builder.io Provider Component
-export function BuilderProvider({ children, apiKey }: BuilderProviderProps) {
+export function BuilderProvider(_{ children, apiKey }: BuilderProviderProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [builder, setBuilder] = useState<any>(null);
 
   // Initialize Builder.io SDK
-  useEffect(() => {
+  useEffect_(() => {
     const initializeBuilder = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
         // Dynamic import to avoid build issues
-        const { builder: builderSDK } = await import('@builder.io/react');
+        const { builder: builderSDK} = await import('@builder.io/react');
         
         // Initialize Builder.io with our config
-        builderSDK.init(apiKey || builderConfig.apiKey, {
+        builderSDK.init(apiKey ?? builderConfig.apiKey, {
           ...builderConfig,
         });
 
@@ -67,7 +67,7 @@ export function BuilderProvider({ children, apiKey }: BuilderProviderProps) {
 
   // Get Builder.io content
   const getContent = async (model: string, url?: string): Promise<BuilderContent | null> => {
-    if (!builder || !isInitialized) {
+    if (!builder ?? !isInitialized) {
       console.warn('Builder.io not initialized yet');
       return null;
     }
@@ -75,7 +75,7 @@ export function BuilderProvider({ children, apiKey }: BuilderProviderProps) {
     try {
       const content = await builder
         .get(model, {
-          url: url || window.location.pathname,
+          url: url ?? window.location.pathname,
           ...builderConfig,
         })
         .toPromise();
@@ -89,7 +89,7 @@ export function BuilderProvider({ children, apiKey }: BuilderProviderProps) {
 
   // Get multiple Builder.io entries
   const getEntries = async (model: string, limit = 10): Promise<BuilderContent[]> => {
-    if (!builder || !isInitialized) {
+    if (!builder ?? !isInitialized) {
       console.warn('Builder.io not initialized yet');
       return [];
     }
@@ -146,12 +146,12 @@ export function useBuilder(): BuilderContextType {
 
 // Hook for Builder.io content with loading states
 export function useBuilderContent(model: string, url?: string) {
-  const { getContent, isInitialized, isLoading, error } = useBuilder();
+  const { getContent, isInitialized, isLoading, error} = useBuilder();
   const [content, setContent] = useState<BuilderContent | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!isInitialized) return;
+  useEffect_(() => {
+    if (!isInitialized) {return;}
 
     const fetchContent = async () => {
       setLoading(true);
@@ -170,7 +170,7 @@ export function useBuilderContent(model: string, url?: string) {
 
   return {
     content,
-    loading: loading || isLoading,
+    loading: loading ?? isLoading,
     error,
     refetch: () => {
       setLoading(true);
@@ -181,12 +181,12 @@ export function useBuilderContent(model: string, url?: string) {
 
 // Hook for Builder.io entries with loading states
 export function useBuilderEntries(model: string, limit = 10) {
-  const { getEntries, isInitialized, isLoading, error } = useBuilder();
+  const { getEntries, isInitialized, isLoading, error} = useBuilder();
   const [entries, setEntries] = useState<BuilderContent[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!isInitialized) return;
+  useEffect_(() => {
+    if (!isInitialized) {return;}
 
     const fetchEntries = async () => {
       setLoading(true);
@@ -205,7 +205,7 @@ export function useBuilderEntries(model: string, limit = 10) {
 
   return {
     entries,
-    loading: loading || isLoading,
+    loading: loading ?? isLoading,
     error,
     refetch: () => {
       setLoading(true);

@@ -3,13 +3,13 @@
  * Real-time operational insights and system monitoring dashboard
  */
 
-import { CloudflareEnv } from '../cloudflare';
-import { getPerformanceMonitor } from '../monitoring/performanceMonitor';
-import { getConnectionPool } from '../database/connectionPool';
-import { getAutoScaler } from '../scalability/autoScaler';
-import { getComplianceManager } from '../compliance/complianceManager';
-import { getDataRetentionManager } from '../compliance/dataRetention';
-import { HealthMonitor } from '../health/healthMonitor';
+import { CloudflareEnv} from '../cloudflare';
+import { getPerformanceMonitor} from '../monitoring/performanceMonitor';
+import { getConnectionPool} from '../database/connectionPool';
+import { getAutoScaler} from '../scalability/autoScaler';
+import { getComplianceManager} from '../compliance/complianceManager';
+import { getDataRetentionManager} from '../compliance/dataRetention';
+import { HealthMonitor} from '../health/healthMonitor';
 
 export interface DashboardMetrics {
   timestamp: string;
@@ -159,8 +159,8 @@ export class OperationalDashboard {
   private healthMonitor: HealthMonitor;
   private metricsCache: Map<string, { data: unknown; timestamp: Date }> = new Map();
   private alertHistory: Alert[] = [];
-  private readonly CACHE_TTL = 30000; // 30 seconds
-  private readonly MAX_ALERTS = 1000;
+  private readonly CACHETTL = 30000; // 30 seconds
+  private readonly MAXALERTS = 1000;
 
   constructor(env: CloudflareEnv, config?: Partial<DashboardConfig>) {
     this.env = env;
@@ -212,7 +212,7 @@ export class OperationalDashboard {
       business: businessMetrics
     });
 
-    return { _timestamp,
+    return { timestamp,
       system: systemMetrics,
       performance: performanceMetrics,
       security: securityMetrics,
@@ -258,7 +258,7 @@ export class OperationalDashboard {
       {
         name: 'Database',
         status: healthStatus.checks.find(c => c.name === 'database')?.status === 'pass' ? 'operational' as const : 'degraded' as const,
-        responseTime: healthStatus.checks.find(c => c.name === 'database')?.duration || 0,
+        responseTime: healthStatus.checks.find(c => c.name === 'database')?.duration ?? 0,
         uptime: 99.8
       },
       {
@@ -296,7 +296,7 @@ export class OperationalDashboard {
 
     // Check cache first
     const cached = this.metricsCache.get(widgetId);
-    if (cached && Date.now() - cached.timestamp.getTime() < this.CACHE_TTL) {
+    if (cached && Date.now() - cached.timestamp.getTime() < this.CACHETTL) {
       return cached.data;
     }
 
@@ -324,7 +324,7 @@ export class OperationalDashboard {
     }
 
     // Cache the data
-    this.metricsCache.set(widgetId, { _data,
+    this.metricsCache.set(widgetId, { data,
       timestamp: new Date()
     });
 
@@ -347,8 +347,8 @@ export class OperationalDashboard {
     this.alertHistory.unshift(newAlert);
 
     // Keep only recent alerts
-    if (this.alertHistory.length > this.MAX_ALERTS) {
-      this.alertHistory = this.alertHistory.slice(0, this.MAX_ALERTS);
+    if (this.alertHistory.length > this.MAXALERTS) {
+      this.alertHistory = this.alertHistory.slice(0, this.MAXALERTS);
     }
 
     console.log(`LOG: DASHBOARD-ALERT-1 - Created alert: ${alertId} (${alert.severity})`);
@@ -469,7 +469,6 @@ export class OperationalDashboard {
     const connectionPool = getConnectionPool(this.env);
     const poolMetrics = connectionPool.getMetrics();
     const autoScaler = getAutoScaler(this.env);
-    const scalingHistory = autoScaler.getScalingRecommendations();
 
     return {
       databaseConnections: {
@@ -664,7 +663,7 @@ export class OperationalDashboard {
     // Generate metric data based on widget config
     return {
       value: Math.floor(Math.random() * 100),
-      unit: widget.config.unit || '',
+      unit: widget.config.unit ?? '',
       trend: 'up',
       change: '+5.2%'
     };
@@ -710,7 +709,7 @@ export class OperationalDashboard {
   private async generateAlertWidgetData(widget: DashboardWidget): Promise<unknown> {
     const activeAlerts = this.alertHistory
       .filter(a => !a.acknowledged)
-      .slice(0, widget.config.maxAlerts || 10);
+      .slice(0, widget.config.maxAlerts ?? 10);
 
     return {
       alerts: activeAlerts,
@@ -728,14 +727,14 @@ export class OperationalDashboard {
     lines.push('metric,value,timestamp');
 
     // System metrics
-    lines.push(`system_status,${metrics.system.status},${metrics.timestamp}`);
-    lines.push(`system_uptime,${metrics.system.uptime},${metrics.timestamp}`);
-    lines.push(`response_time,${metrics.system.responseTime},${metrics.timestamp}`);
+    lines.push(`systemstatus,${metrics.system.status},${metrics.timestamp}`);
+    lines.push(`systemuptime,${metrics.system.uptime},${metrics.timestamp}`);
+    lines.push(`responsetime,${metrics.system.responseTime},${metrics.timestamp}`);
 
     // Performance metrics
-    lines.push(`requests_per_second,${metrics.performance.requestsPerSecond},${metrics.timestamp}`);
-    lines.push(`error_rate,${metrics.performance.errorRate},${metrics.timestamp}`);
-    lines.push(`cache_hit_rate,${metrics.performance.cacheHitRate},${metrics.timestamp}`);
+    lines.push(`requestspersecond,${metrics.performance.requestsPerSecond},${metrics.timestamp}`);
+    lines.push(`errorrate,${metrics.performance.errorRate},${metrics.timestamp}`);
+    lines.push(`cachehitrate,${metrics.performance.cacheHitRate},${metrics.timestamp}`);
 
     return lines.join('\n');
   }

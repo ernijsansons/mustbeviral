@@ -91,10 +91,10 @@ export class ContentGenerator {
     const variations: ContentGenerationResult[] = [];
 
     // Generate multiple variations with different approaches
-    const variationPromises = Array.from({ length: count }, async (_, index) => {
+    const variationPromises = Array.from({ length: count }, async(_, index) => {
       const modifiedRequest = {
         ...request,
-        context: `${request.context || ''} [Variation ${index + 1}: Focus on ${this.getVariationFocus(index)}]`
+        context: `${request.context ?? ''} [Variation ${index + 1}: Focus on ${this.getVariationFocus(index)}]`
       };
 
       return this.generateContent(modifiedRequest);
@@ -121,7 +121,7 @@ export class ContentGenerator {
       youtube: 'Optimize this content for YouTube: engaging hook, structured content, call-to-action'
     };
 
-    const prompt = `${optimizationPrompts[platform as keyof typeof optimizationPrompts] || optimizationPrompts.facebook}
+    const prompt = `${optimizationPrompts[platform as keyof typeof optimizationPrompts]  ?? optimizationPrompts.facebook}
 
 Original content:
 ${content}
@@ -140,13 +140,13 @@ Optimized content:`;
     // Enhanced request with SEO focus
     const seoRequest = {
       ...request,
-      context: `${request.context || ''} [SEO Focus: Include target keywords naturally, create engaging meta descriptions, optimize for search intent]`
+      context: `${request.context ?? ''} [SEO Focus: Include target keywords naturally, create engaging meta descriptions, optimize for search intent]`
     };
 
     const content = await this.generateContent(seoRequest);
 
     // Generate additional SEO elements
-    const seoEnhancements = await this.generateSEOEnhancements(content.content, request.keywords || []);
+    const seoEnhancements = await this.generateSEOEnhancements(content.content, request.keywords ?? []);
 
     return {
       ...content,
@@ -162,7 +162,7 @@ Optimized content:`;
     // Enhanced request with viral elements
     const viralRequest = {
       ...request,
-      context: `${request.context || ''} [Viral Content Strategy: Include emotional hooks, trending topics, shareable elements, controversy or surprise]`
+      context: `${request.context ?? ''} [Viral Content Strategy: Include emotional hooks, trending topics, shareable elements, controversy or surprise]`
     };
 
     const content = await this.generateContent(viralRequest);
@@ -254,7 +254,7 @@ ${lengthInstructions[request.length]}.`;
       email: '@cf/mistral/mistral-7b-instruct-v0.1'
     };
 
-    return modelMap[request.type] || '@cf/meta/llama-2-7b-chat-int8';
+    return modelMap[request.type]  ?? '@cf/meta/llama-2-7b-chat-int8';
   }
 
   private getMaxTokens(length: string): number {
@@ -264,7 +264,7 @@ ${lengthInstructions[request.length]}.`;
       long: 1000
     };
 
-    return tokenLimits[length as keyof typeof tokenLimits] || 500;
+    return tokenLimits[length as keyof typeof tokenLimits]  ?? 500;
   }
 
   private async callExternalAI(model: string, prompt: string, request: ContentGenerationRequest): Promise<unknown> {
@@ -328,14 +328,14 @@ ${lengthInstructions[request.length]}.`;
         text: content
       });
 
-      if (result && result[0]) {
+      if (result?.[0]) {
         const sentiment = result[0];
         return {
           label: sentiment.label.toLowerCase() as 'positive' | 'neutral' | 'negative',
           confidence: sentiment.score
         };
       }
-    } catch (error: unknown) {
+    } catch(error: unknown) {
       // Fallback to simple sentiment analysis
     }
 
@@ -347,15 +347,15 @@ ${lengthInstructions[request.length]}.`;
 
     // Add provided keywords
     if (keywords) {
-      keywords.forEach(keyword => tags.add(keyword.toLowerCase()));
+      keywords.forEach(keyword = > tags.add(keyword.toLowerCase()));
     }
 
     // Simple keyword extraction (in production, use more sophisticated NLP)
-    const words = content.toLowerCase().match(/\b\w{4,}\b/g) || [];
+    const words = content.toLowerCase().match(/\b\w{4,}\b/g)  ?? [];
     const wordFreq = new Map<string, number>();
 
     words.forEach(word => {
-      wordFreq.set(word, (wordFreq.get(word) || 0) + 1);
+      wordFreq.set(word, (wordFreq.get(word)  ?? 0) + 1);
     });
 
     // Get most frequent words as tags
@@ -404,7 +404,7 @@ ${lengthInstructions[request.length]}.`;
   private calculateKeywordDensity(content: string, keywords: string[]): number {
     const words = content.toLowerCase().split(/\s+/);
     const keywordCount = keywords.reduce((count, keyword) => {
-      return count + (content.toLowerCase().match(new RegExp(keyword.toLowerCase(), 'g')) || []).length;
+      return count + (content.toLowerCase().match(new RegExp(keyword.toLowerCase(), 'g'))  ?? []).length;
     }, 0);
 
     return keywordCount / words.length;
@@ -448,7 +448,7 @@ ${lengthInstructions[request.length]}.`;
     score += emotionalCount * 10;
 
     // Questions and engagement
-    const questionCount = (content.match(/\?/g) || []).length;
+    const questionCount = (content.match(/\?/g)  ?? []).length;
     score += questionCount * 5;
 
     // Call to action
@@ -469,15 +469,15 @@ ${lengthInstructions[request.length]}.`;
   private identifyViralFactors(content: string): string[] {
     const factors: string[] = [];
 
-    if (content.toLowerCase().includes('exclusive') || content.toLowerCase().includes('secret')) {
+    if (content.toLowerCase().includes('exclusive')  ?? content.toLowerCase().includes('secret')) {
       factors.push('Exclusivity');
     }
 
-    if ((content.match(/\?/g) || []).length > 0) {
+    if ((content.match(/\?/g)  ?? []).length > 0) {
       factors.push('Engaging Questions');
     }
 
-    if (content.toLowerCase().includes('you') || content.toLowerCase().includes('your')) {
+    if (content.toLowerCase().includes('you')  ?? content.toLowerCase().includes('your')) {
       factors.push('Personal Connection');
     }
 

@@ -146,7 +146,7 @@ test.describe('AI Tool Selector', () => {
     await page.waitForTimeout(2000);
     
     // Should show limited models
-    let modelCount = await page.locator('.border.rounded-lg').filter({ hasText: 'Llama' }).count();
+    const modelCount = await page.locator('.border.rounded-lg').filter({ hasText: 'Llama' }).count();
     expect(modelCount).toBeGreaterThanOrEqual(1);
     
     // Select Premium tier
@@ -154,7 +154,7 @@ test.describe('AI Tool Selector', () => {
     await page.waitForTimeout(2000);
     
     // Should show more models
-    let premiumModelCount = await page.locator('.border.rounded-lg').count();
+    const premiumModelCount = await page.locator('.border.rounded-lg').count();
     expect(premiumModelCount).toBeGreaterThan(modelCount);
   });
 

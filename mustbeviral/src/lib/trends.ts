@@ -28,7 +28,7 @@ export interface TrendPrediction {
 export class TrendMonitoringEngine {
   private cache: Map<string, TrendData[]> = new Map();
   private cacheExpiry: Map<string, number> = new Map();
-  private readonly CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+  private readonly CACHEDURATION = 30 * 60 * 1000; // 30 minutes
 
   constructor() {
     console.log('LOG: TRENDS-ENGINE-1 - Trend monitoring engine initialized');
@@ -38,12 +38,12 @@ export class TrendMonitoringEngine {
   async fetchTrendingTopics(region: string = 'US', category?: string): Promise<TrendData[]> {
     console.log('LOG: TRENDS-FETCH-1 - Fetching trending topics for region:', region);
     
-    const cacheKey = `trending_${region}_${category || 'all'}`;
+    const cacheKey = `trending_${region}_${category ?? 'all'}`;
     
     // Check cache first
     if (this.isCacheValid(cacheKey)) {
       console.log('LOG: TRENDS-FETCH-2 - Returning cached trending topics');
-      return this.cache.get(cacheKey) || [];
+      return this.cache.get(cacheKey)  ?? [];
     }
 
     try {
@@ -58,7 +58,7 @@ export class TrendMonitoringEngine {
       
       // Cache the results
       this.cache.set(cacheKey, trends);
-      this.cacheExpiry.set(cacheKey, Date.now() + this.CACHE_DURATION);
+      this.cacheExpiry.set(cacheKey, Date.now() + this.CACHEDURATION);
       
       console.log('LOG: TRENDS-FETCH-3 - Fetched', trends.length, 'trending topics');
       return trends;
@@ -72,11 +72,11 @@ export class TrendMonitoringEngine {
   async getKeywordTrends(keywords: string[], timeRange: string = 'today 3-m'): Promise<TrendData[]> {
     console.log('LOG: TRENDS-KEYWORD-1 - Fetching keyword trends for:', keywords.join(', '));
     
-    const cacheKey = `keywords_${keywords.join('_')}_${timeRange}`;
+    const cacheKey = `keywords_${keywords.join('')}_${timeRange}`;
     
     if (this.isCacheValid(cacheKey)) {
       console.log('LOG: TRENDS-KEYWORD-2 - Returning cached keyword trends');
-      return this.cache.get(cacheKey) || [];
+      return this.cache.get(cacheKey)  ?? [];
     }
 
     try {
@@ -90,7 +90,7 @@ export class TrendMonitoringEngine {
       const trends = this.parseKeywordTrends(parsedData, keywords);
       
       this.cache.set(cacheKey, trends);
-      this.cacheExpiry.set(cacheKey, Date.now() + this.CACHE_DURATION);
+      this.cacheExpiry.set(cacheKey, Date.now() + this.CACHEDURATION);
       
       console.log('LOG: TRENDS-KEYWORD-3 - Processed keyword trends for', keywords.length, 'keywords');
       return trends;
@@ -131,7 +131,7 @@ export class TrendMonitoringEngine {
       const recentTrends = await this.getKeywordTrends([keyword], 'today 1-m');
       const prediction = this.calculateGrowthPrediction(keyword, recentTrends);
       
-      console.log('LOG: TRENDS-PREDICT-2 - Growth prediction calculated:', prediction.predicted_growth);
+      console.log('LOG: TRENDS-PREDICT-2 - Growth prediction calculated:', prediction.predictedgrowth);
       return prediction;
     } catch (error) {
       console.error('LOG: TRENDS-PREDICT-ERROR-1 - Failed to predict growth:', error);
@@ -148,14 +148,13 @@ export class TrendMonitoringEngine {
 
     keywords.forEach(keyword => {
       const matchingTrends = trendData.filter(trend => 
-        trend.keyword.toLowerCase().includes(keyword.toLowerCase()) ||
-        trend.related_queries.some(query => 
+        trend.keyword.toLowerCase().includes(keyword.toLowerCase())  ?? trend.related_queries.some(query => 
           query.toLowerCase().includes(keyword.toLowerCase())
         )
       );
 
       if (matchingTrends.length > 0) {
-        const avgTrendScore = matchingTrends.reduce((sum, trend) => sum + trend.trend_score, 0) / matchingTrends.length;
+        const avgTrendScore = matchingTrends.reduce((sum, trend) => sum + trend.trendscore, 0) / matchingTrends.length;
         viralScore += avgTrendScore;
         matchCount++;
       }
@@ -172,13 +171,12 @@ export class TrendMonitoringEngine {
     console.log('LOG: TRENDS-SUGGEST-1 - Getting content suggestions for topic:', topic);
     
     const relevantTrends = trendData.filter(trend => 
-      trend.keyword.toLowerCase().includes(topic.toLowerCase()) ||
-      trend.category.toLowerCase().includes(topic.toLowerCase())
+      trend.keyword.toLowerCase().includes(topic.toLowerCase())  ?? trend.category.toLowerCase().includes(topic.toLowerCase())
     ).slice(0, 5);
 
     const suggestions = {
       trending_keywords: relevantTrends.map(trend => trend.keyword),
-      related_topics: relevantTrends.flatMap(trend => trend.related_queries).slice(0, 10),
+      related_topics: relevantTrends.flatMap(trend => trend.relatedqueries).slice(0, 10),
       optimal_timing: this.getOptimalTiming(relevantTrends),
       viral_potential: this.analyzeViralPotential([topic], trendData),
       content_angles: this.generateContentAngles(topic, relevantTrends)
@@ -197,11 +195,11 @@ export class TrendMonitoringEngine {
   private parseDailyTrends(data: any, region: string): TrendData[] {
     try {
       const trends: TrendData[] = [];
-      const trendingSearches = data.default?.trendingSearchesDays?.[0]?.trendingSearches || [];
+      const trendingSearches = data.default?.trendingSearchesDays?.[0]?.trendingSearches ?? [];
 
       trendingSearches.forEach((search: any, index: number) => {
-        const title = search.title?.query || 'Unknown';
-        const traffic = search.formattedTraffic || '0';
+        const title = search.title?.query ?? 'Unknown';
+        const traffic = search.formattedTraffic ?? '0';
         
         trends.push({
           id: `trend_${Date.now()}_${index}`,
@@ -209,10 +207,10 @@ export class TrendMonitoringEngine {
           trend_score: this.parseTrafficToScore(traffic),
           search_volume: this.estimateSearchVolume(traffic),
           competition_score: Math.random() * 100, // Placeholder
-          related_queries: search.relatedQueries?.map((q: unknown) => q.query) || [],
+          related_queries: search.relatedQueries?.map((q: unknown) => q.query)  ?? [],
           source: 'google_trends',
           region,
-          category: search.articles?.[0]?.source || 'general',
+          category: search.articles?.[0]?.source ?? 'general',
           timestamp: new Date().toISOString(),
           viral_potential: Math.random() * 100 // Will be calculated properly
         });
@@ -228,12 +226,12 @@ export class TrendMonitoringEngine {
   private parseKeywordTrends(data: any, keywords: string[]): TrendData[] {
     try {
       const trends: TrendData[] = [];
-      const timelineData = data.default?.timelineData || [];
+      const timelineData = data.default?.timelineData ?? [];
 
       keywords.forEach((keyword, keywordIndex) => {
         if (timelineData.length > 0) {
           const latestData = timelineData[timelineData.length - 1];
-          const value = latestData.value?.[keywordIndex] || 0;
+          const value = latestData.value?.[keywordIndex]  ?? 0;
 
           trends.push({
             id: `keyword_${Date.now()}_${keywordIndex}`,
@@ -261,7 +259,7 @@ export class TrendMonitoringEngine {
   private parseRelatedQueries(data: unknown): string[] {
     try {
       const queries: string[] = [];
-      const relatedQueries = data.default?.rankedList || [];
+      const relatedQueries = data.default?.rankedList ?? [];
 
       relatedQueries.forEach((list: unknown) => {
         if (list.rankedKeyword) {
@@ -290,7 +288,7 @@ export class TrendMonitoringEngine {
     
     let growthRate = 0;
     for (let i = 1; i < recent.length; i++) {
-      growthRate += (recent[i].trend_score - recent[i-1].trend_score) / recent[i-1].trend_score;
+      growthRate += (recent[i].trend_score - recent[i-1].trendscore) / recent[i-1].trendscore;
     }
     
     const avgGrowthRate = growthRate / (recent.length - 1);
@@ -366,19 +364,19 @@ export class TrendMonitoringEngine {
 
   private parseTrafficToScore(traffic: string): number {
     const numStr = traffic.replace(/[^0-9]/g, '');
-    const num = parseInt(numStr) || 0;
+    const num = parseInt(numStr)  ?? 0;
     
-    if (traffic.includes('M')) return Math.min(100, num * 2);
-    if (traffic.includes('K')) return Math.min(100, num / 10);
+    if (traffic.includes('M')) {return Math.min(100, num * 2);}
+    if (traffic.includes('K')) {return Math.min(100, num / 10);}
     return Math.min(100, num / 1000);
   }
 
   private estimateSearchVolume(traffic: string): number {
     const numStr = traffic.replace(/[^0-9]/g, '');
-    const num = parseInt(numStr) || 0;
+    const num = parseInt(numStr)  ?? 0;
     
-    if (traffic.includes('M')) return num * 1000000;
-    if (traffic.includes('K')) return num * 1000;
+    if (traffic.includes('M')) {return num * 1000000;}
+    if (traffic.includes('K')) {return num * 1000;}
     return num * 100;
   }
 
@@ -392,10 +390,14 @@ export class TrendMonitoringEngine {
   }
 
   private getOptimalTiming(trends: TrendData[]): string {
-    const avgScore = trends.reduce((sum, trend) => sum + trend.trend_score, 0) / trends.length;
+    const avgScore = trends.reduce((sum, trend) => sum + trend.trendscore, 0) / trends.length;
     
-    if (avgScore > 70) return 'immediate';
-    if (avgScore > 40) return 'within_24h';
+    if (avgScore > 70) {
+    return 'immediate';
+  }
+    if (avgScore > 40) {
+    return 'within_24h';
+  }
     return 'within_week';
   }
 

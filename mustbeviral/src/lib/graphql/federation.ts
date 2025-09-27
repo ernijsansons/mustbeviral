@@ -484,7 +484,7 @@ export class GraphQLFederationGateway {
   }
 
   async getSupergraphSchema(): Promise<string> {
-    return this.supergraph?.schema || '';
+    return this.supergraph?.schema ?? '';
   }
 
   async introspectServices(): Promise<GraphQLService[]> {
@@ -540,8 +540,8 @@ export class GraphQLFederationGateway {
           composition: {
             success: true,
             errors: [],
-            warnings: composition.warnings || [],
-            hints: composition.hints || []
+            warnings: composition.warnings ?? [],
+            hints: composition.hints ?? []
           },
           entities: await this.extractEntities(composition.schema!),
           lastUpdated: Date.now()
@@ -620,7 +620,7 @@ export class GraphQLFederationGateway {
   private async authorize(query: string, context: unknown): Promise<void> {
     const authzConfig = this.config.gateway.security.authorization;
 
-    if (!authzConfig.enabled) return;
+    if (!authzConfig.enabled) {return;}
 
     const operation = this.extractOperation(query);
     const resource = this.extractResource(query);
@@ -694,7 +694,7 @@ export class GraphQLFederationGateway {
         parallelGroup.map(node => this.executeNode(node, context))
       );
 
-      groupResults.forEach((result, _index) => {
+      groupResults.forEach((result, index) => {
         if (result.status === 'fulfilled') {
           results.push(result.value);
         } else {
@@ -734,7 +734,7 @@ export class GraphQLFederationGateway {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ _query,
+      body: JSON.stringify({ query,
         variables
       })
     });
@@ -751,11 +751,11 @@ export class GraphQLFederationGateway {
   }
 
   private estimateExecutionCost(plan: QueryPlan): number {
-    return plan.nodes.reduce((cost, _node) => cost + node.selections.length, 0);
+    return plan.nodes.reduce((cost, node) => cost + node.selections.length, 0);
   }
 
   private mergeResults(results: unknown[]): unknown {
-    return results.reduce((merged, _result) => ({
+    return results.reduce((merged, result) => ({
       ...merged,
       ...result
     }), {});
@@ -840,7 +840,7 @@ export class GraphQLFederationGateway {
   }
 
   private calculateQueryDepth(query: string): number {
-    return (query.match(/{/g) || []).length;
+    return (query.match(/{/g)  ?? []).length;
   }
 
   private calculateQueryComplexity(query: string): number {
@@ -892,13 +892,13 @@ export class GraphQLFederationGateway {
   }
 
   private startHealthMonitoring(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.healthCheck();
     }, 30000); // Every 30 seconds
   }
 
   private startMetricsCollection(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.updateMetrics();
     }, 10000); // Every 10 seconds
   }

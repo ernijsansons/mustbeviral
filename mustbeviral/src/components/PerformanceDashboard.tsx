@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Zap, Database, Gauge, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Activity, Zap, Database, Gauge, TrendingUp, AlertTriangle} from 'lucide-react';
 
 interface PerformanceMetrics {
   bundleSize: {
@@ -39,7 +39,7 @@ const PerformanceDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-  useEffect(() => {
+  useEffect_(() => {
     const fetchMetrics = async () => {
       try {
         // In a real app, this would fetch from your monitoring API
@@ -99,7 +99,9 @@ const PerformanceDashboard: React.FC = () => {
   }, []);
 
   const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {
+    return '0 Bytes';
+  }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -123,10 +125,14 @@ const PerformanceDashboard: React.FC = () => {
       fid: [100, 300],
     };
 
-    const [good, poor] = thresholds[metric as keyof typeof thresholds] || [0, 0];
+    const [good, poor] = thresholds[metric as keyof typeof thresholds]  ?? [0, 0];
     
-    if (value <= good) return 'good';
-    if (value <= poor) return 'needs-improvement';
+    if (value <= good) {
+    return 'good';
+  }
+    if (value <= poor) {
+    return 'needs-improvement';
+  }
     return 'poor';
   };
 

@@ -28,46 +28,26 @@ interface ProgressiveImageProps {
  * Optimized for Core Web Vitals and mobile performance
  */
 const ProgressiveImage = memo<ProgressiveImageProps>(({
-  src,
-  alt,
-  width,
-  height,
-  className = '',
-  style = {},
-  placeholder,
-  blurDataURL,
-  quality = 75,
-  priority = false,
-  loading = 'lazy',
-  sizes,
-  srcSet,
-  onLoad,
-  onError,
-  fallback,
-  webpSrc,
-  avifSrc,
-  threshold = 0.1,
-  rootMargin = '50px',
-}) => {
+  src, alt, width, height, className = '', style = {}, placeholder, blurDataURL, quality = 75, priority = false, loading = 'lazy', sizes, srcSet, onLoad, onError, fallback, webpSrc, avifSrc, threshold = 0.1, rootMargin = '50px', _}) => {
   const [imageState, setImageState] = useState<'loading' | 'loaded' | 'error'>('loading');
-  const [isInView, setIsInView] = useState(priority || loading === 'eager');
+  const [isInView, setIsInView] = useState(priority ?? loading === 'eager');
   const [currentSrc, setCurrentSrc] = useState<string>('');
   const imgRef = useRef<HTMLImageElement>(null);
   const observerRef = useRef<IntersectionObserver>();
 
   // Generate optimized image URLs
   const generateOptimizedSrc = useCallback((originalSrc: string, format?: 'webp' | 'avif') => {
-    if (format && (webpSrc || avifSrc)) {
+    if (format && (webpSrc ?? avifSrc)) {
       return format === 'webp' ? webpSrc : avifSrc;
     }
 
     // If using Cloudflare Images or similar service
     const url = new URL(originalSrc, window.location.origin);
     
-    if (width) url.searchParams.set('w', width.toString());
-    if (height) url.searchParams.set('h', height.toString());
-    if (quality) url.searchParams.set('q', quality.toString());
-    if (format) url.searchParams.set('f', format);
+    if (width) {url.searchParams.set('w', width.toString());}
+    if (height) {url.searchParams.set('h', height.toString());}
+    if (quality) {url.searchParams.set('q', quality.toString());}
+    if (format) {url.searchParams.set('f', format);}
 
     return url.toString();
   }, [webpSrc, avifSrc, width, height, quality]);
@@ -75,7 +55,7 @@ const ProgressiveImage = memo<ProgressiveImageProps>(({
   // Detect WebP/AVIF support
   const getSupportedFormat = useCallback(async (): Promise<'avif' | 'webp' | 'original'> => {
     // Check for AVIF support
-    if (avifSrc || src.includes('f=avif')) {
+    if (avifSrc ?? src.includes('f = avif')) {
       try {
         const avifSupported = await new Promise<boolean>((resolve) => {
           const img = new Image();
@@ -83,14 +63,16 @@ const ProgressiveImage = memo<ProgressiveImageProps>(({
           img.onerror = () => resolve(false);
           img.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgABogQEAwgMg8f8D///8WfhwB8+ErK42A=';
         });
-        if (avifSupported) return 'avif';
+        if (avifSupported) {
+    return 'avif';
+  }
       } catch {
         // AVIF not supported
       }
     }
 
     // Check for WebP support
-    if (webpSrc || src.includes('f=webp')) {
+    if (webpSrc ?? src.includes('f=webp')) {
       try {
         const webpSupported = await new Promise<boolean>((resolve) => {
           const img = new Image();
@@ -98,7 +80,9 @@ const ProgressiveImage = memo<ProgressiveImageProps>(({
           img.onerror = () => resolve(false);
           img.src = 'data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
         });
-        if (webpSupported) return 'webp';
+        if (webpSupported) {
+    return 'webp';
+  }
       } catch {
         // WebP not supported
       }
@@ -108,11 +92,10 @@ const ProgressiveImage = memo<ProgressiveImageProps>(({
   }, [avifSrc, webpSrc, src]);
 
   // Intersection Observer setup
-  useEffect(() => {
-    if (priority || loading === 'eager' || isInView) return;
+  useEffect_(() => {
+    if (priority ?? loading === 'eager'  ?? isInView) {return;}
 
-    const observer = new IntersectionObserver(
-      (entries) => {
+    const observer = new IntersectionObserver((entries) => {
         const [entry] = entries;
         if (entry.isIntersecting) {
           setIsInView(true);
@@ -137,8 +120,8 @@ const ProgressiveImage = memo<ProgressiveImageProps>(({
   }, [priority, loading, isInView, threshold, rootMargin]);
 
   // Load optimal image format
-  useEffect(() => {
-    if (!isInView) return;
+  useEffect_(() => {
+    if (!isInView) {return;}
 
     const loadOptimalImage = async () => {
       try {
@@ -147,10 +130,10 @@ const ProgressiveImage = memo<ProgressiveImageProps>(({
 
         switch (format) {
           case 'avif':
-            optimalSrc = avifSrc || generateOptimizedSrc(src, 'avif');
+            optimalSrc = avifSrc ?? generateOptimizedSrc(src, 'avif');
             break;
           case 'webp':
-            optimalSrc = webpSrc || generateOptimizedSrc(src, 'webp');
+            optimalSrc = webpSrc ?? generateOptimizedSrc(src, 'webp');
             break;
           default:
             optimalSrc = generateOptimizedSrc(src);
@@ -167,13 +150,13 @@ const ProgressiveImage = memo<ProgressiveImageProps>(({
   }, [isInView, getSupportedFormat, src, avifSrc, webpSrc, generateOptimizedSrc]);
 
   // Handle image load
-  const handleLoad = useCallback(() => {
+  const handleLoad = useCallback_(() => {
     setImageState('loaded');
     onLoad?.();
   }, [onLoad]);
 
   // Handle image error with fallback
-  const handleError = useCallback(() => {
+  const handleError = useCallback_(() => {
     if (fallback && currentSrc !== fallback) {
       setCurrentSrc(fallback);
     } else {
@@ -200,9 +183,13 @@ const ProgressiveImage = memo<ProgressiveImageProps>(({
 
   // Responsive srcSet generation
   const generateSrcSet = () => {
-    if (srcSet) return srcSet;
+    if (srcSet) {
+    return srcSet;
+  }
 
-    if (!width) return undefined;
+    if (!width) {
+    return undefined;
+  }
 
     const sizes = [1, 1.5, 2, 3];
     return sizes
@@ -233,8 +220,8 @@ const ProgressiveImage = memo<ProgressiveImageProps>(({
       style={{ 
         position: 'relative', 
         overflow: 'hidden',
-        width: width || '100%',
-        height: height || 'auto',
+        width: width ?? '100%',
+        height: height ?? 'auto',
       }}
     >
       {/* Loading placeholder */}
@@ -313,7 +300,7 @@ export function useImageOptimization() {
   const [isWebPSupported, setIsWebPSupported] = useState<boolean | null>(null);
   const [isAVIFSupported, setIsAVIFSupported] = useState<boolean | null>(null);
 
-  useEffect(() => {
+  useEffect_(() => {
     // Check WebP support
     const checkWebP = () => {
       return new Promise<boolean>((resolve) => {
@@ -340,9 +327,13 @@ export function useImageOptimization() {
     });
   }, []);
 
-  const getOptimalFormat = useCallback(() => {
-    if (isAVIFSupported) return 'avif';
-    if (isWebPSupported) return 'webp';
+  const getOptimalFormat = useCallback_(() => {
+    if (isAVIFSupported) {
+    return 'avif';
+  }
+    if (isWebPSupported) {
+    return 'webp';
+  }
     return 'original';
   }, [isAVIFSupported, isWebPSupported]);
 
@@ -370,22 +361,17 @@ interface ImageGalleryProps {
 }
 
 export const ImageGallery: React.FC<ImageGalleryProps> = ({
-  images,
-  columns = 3,
-  gap = 16,
-  onImageClick,
-}) => {
+  images, columns = 3, gap = 16, onImageClick, _}) => {
   const [visibleImages, setVisibleImages] = useState(new Set<number>());
   const galleryRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!galleryRef.current) return;
+  useEffect_(() => {
+    if (!galleryRef.current) {return;}
 
-    const observer = new IntersectionObserver(
-      (entries) => {
+    const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const index = parseInt(entry.target.getAttribute('data-index') || '0');
+            const index = parseInt(entry.target.getAttribute('data-index')  ?? '0');
             setVisibleImages(prev => new Set([...prev, index]));
           }
         });

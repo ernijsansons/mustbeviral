@@ -1,16 +1,16 @@
 // Cloudflare Worker Entry Point - Refactored
 // Clean, modular architecture with proper separation of concerns
 
-import { _CloudflareEnv, CloudflareService } from '../lib/cloudflare';
-import { DatabaseService } from '../lib/db';
-import { AuthService } from '../lib/auth';
-import { JWTManager } from '../lib/auth/jwtManager';
-import { SecurityMiddleware } from '../middleware/security';
-import { EnvironmentManager } from '../config/environment';
-import { secretManager } from '../config/secrets';
-import { EnvironmentValidator } from './environmentValidator';
-import { _logger, log } from '../lib/monitoring/logger';
-import { Router } from './router';
+import { CloudflareEnv, CloudflareService} from '../lib/cloudflare';
+import { DatabaseService} from '../lib/db';
+import { AuthService} from '../lib/auth';
+import { JWTManager} from '../lib/auth/jwtManager';
+import { SecurityMiddleware} from '../middleware/security';
+import { EnvironmentManager} from '../config/environment';
+import { secretManager} from '../config/secrets';
+import { EnvironmentValidator} from './environmentValidator';
+import { logger, log} from '../lib/monitoring/logger';
+import { Router} from './router';
 
 // Cloudflare Worker types
 declare global {
@@ -28,7 +28,7 @@ export default {
 
     const timer = log.startTimer('request_processing');
 
-    log.info('Processing request', { _requestId,
+    log.info('Processing request', { requestId,
       action: 'request_start',
       metadata: {
         method: request.method,
@@ -74,8 +74,8 @@ export default {
       if (!requestValidation.valid) {
         log.security('Request blocked', {
           reason: requestValidation.reason,
-          ip: request.headers.get('CF-Connecting-IP') || 'unknown',
-          userAgent: request.headers.get('User-Agent') || 'unknown'
+          ip: request.headers.get('CF-Connecting-IP')  ?? 'unknown',
+          userAgent: request.headers.get('User-Agent')  ?? 'unknown'
         });
 
         return new Response(JSON.stringify({ error: 'Request blocked for security reasons' }), {
@@ -111,7 +111,7 @@ export default {
 
       // Log request completion
       timer();
-      log.info('Request completed', { _requestId,
+      log.info('Request completed', { requestId,
         action: 'request_complete',
         metadata: {
           status: response.status,
@@ -122,7 +122,7 @@ export default {
       return response;
 
     } catch (error: unknown) {
-      log.error('Request processing failed', error as Error, { _requestId,
+      log.error('Request processing failed', error as Error, { requestId,
         action: 'request_error'
       });
 

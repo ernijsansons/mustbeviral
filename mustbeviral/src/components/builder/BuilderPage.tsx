@@ -6,9 +6,9 @@
  */
 
 import React, { Suspense } from 'react';
-import { useBuilderContent } from '../../providers/BuilderProvider';
-import { LoadingSpinner } from '../ui/LoadingStates';
-import { ErrorBoundary } from '../ErrorBoundary';
+import { useBuilderContent} from '../../providers/BuilderProvider';
+import { LoadingSpinner} from '../ui/LoadingStates';
+import { ErrorBoundary} from '../ErrorBoundary';
 
 // Dynamic import for Builder.io components to avoid build issues
 const BuilderComponent = React.lazy(() => 
@@ -28,12 +28,9 @@ interface BuilderPageProps {
  * BuilderPage - Renders Builder.io content with fallbacks
  */
 export function BuilderPage({ 
-  model, 
-  url, 
-  fallback,
-  className = '' 
+  model, url, fallback, className = '' 
 }: BuilderPageProps) {
-  const { content, loading, error } = useBuilderContent(model, url);
+  const { content, loading, error} = useBuilderContent(model, url);
 
   // Show loading state
   if (loading) {
@@ -72,7 +69,7 @@ export function BuilderPage({
 
   // Show fallback if no content
   if (!content) {
-    return fallback || (
+    return fallback ?? (
       <div className={`min-h-screen flex items-center justify-center p-6 ${className}`}>
         <div className="text-center max-w-md">
           <div className="text-6xl mb-4">📝</div>
@@ -104,7 +101,7 @@ export function BuilderPage({
             content={content}
             data={{
               // Pass any additional data to Builder.io components
-              currentUrl: url || window.location.pathname,
+              currentUrl: url ?? window.location.pathname,
               timestamp: Date.now(),
             }}
           />
@@ -125,12 +122,9 @@ interface BuilderSectionProps {
 }
 
 export function BuilderSection({ 
-  model, 
-  name,
-  fallback,
-  className = '' 
+  model, name, fallback, className = '' 
 }: BuilderSectionProps) {
-  const { content, loading, error } = useBuilderContent(model);
+  const { content, loading, error} = useBuilderContent(model);
 
   if (loading) {
     return (
@@ -140,8 +134,8 @@ export function BuilderSection({
     );
   }
 
-  if (error || !content) {
-    return fallback || null;
+  if (error ?? !content) {
+    return fallback ?? null;
   }
 
   return (
@@ -177,14 +171,10 @@ interface BuilderEntriesProps {
   className?: string;
 }
 
-export function BuilderEntries({ 
-  model, 
-  limit = 10,
-  renderItem,
-  fallback,
-  className = '' 
+export function BuilderEntries(_{ 
+  model, _limit = 10, renderItem, fallback, className = '' 
 }: BuilderEntriesProps) {
-  const { entries, loading, error } = useBuilderContent(model);
+  const { entries, loading, error} = useBuilderContent(model);
 
   if (loading) {
     return (
@@ -194,8 +184,8 @@ export function BuilderEntries({
     );
   }
 
-  if (error || !entries || entries.length === 0) {
-    return fallback || null;
+  if (error ?? !entries  ?? entries.length === 0) {
+    return fallback ?? null;
   }
 
   return (

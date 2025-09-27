@@ -32,10 +32,10 @@ export class SecretManager {
    * Initialize secrets from Cloudflare environment
    */
   async initialize(env: unknown): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {return;}
 
     // Check if we're in local development mode
-    const isLocalDev = env.ENVIRONMENT === 'development' || !env.ENVIRONMENT;
+    const isLocalDev = env.ENVIRONMENT === 'development'  ?? !env.ENVIRONMENT;
 
     // Required secrets - fail fast if missing in production
     const requiredSecrets = [

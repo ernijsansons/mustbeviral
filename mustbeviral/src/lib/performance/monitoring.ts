@@ -73,10 +73,14 @@ export class PerformanceMonitor {
    * Initialize performance monitoring
    */
   private initialize() {
-    if (this.isInitialized) return;
+    if (this.isInitialized)  {
+    return
+  };
 
     // Sample traffic based on configuration
-    if (Math.random() > this.config.sampleRate) return;
+    if (Math.random()  {
+    > this.config.sampleRate) return
+  };
 
     this.setupWebVitalsMonitoring();
     this.setupCustomMetrics();
@@ -102,7 +106,7 @@ export class PerformanceMonitor {
    */
   private setupWebVitalsMonitoring() {
     // First Contentful Paint (FCP)
-    this.observePerformanceEntries(['paint'], (entries) => {
+    this.observePerformanceEntries(['paint'], _(entries) => {
       entries.forEach((entry) => {
         if (entry.name === 'first-contentful-paint') {
           this.recordWebVital({
@@ -123,7 +127,7 @@ export class PerformanceMonitor {
     });
 
     // Largest Contentful Paint (LCP)
-    this.observePerformanceEntries(['largest-contentful-paint'], (entries) => {
+    this.observePerformanceEntries(['largest-contentful-paint'], _(entries) => {
       const lastEntry = entries[entries.length - 1];
       if (lastEntry) {
         this.recordWebVital({
@@ -144,7 +148,7 @@ export class PerformanceMonitor {
 
     // Cumulative Layout Shift (CLS)
     let clsValue = 0;
-    this.observePerformanceEntries(['layout-shift'], (entries) => {
+    this.observePerformanceEntries(['layout-shift'], _(entries) => {
       entries.forEach((entry: any) => {
         if (!entry.hadRecentInput) {
           clsValue += entry.value;
@@ -167,7 +171,7 @@ export class PerformanceMonitor {
     });
 
     // First Input Delay (FID) / Interaction to Next Paint (INP)
-    this.observePerformanceEntries(['first-input'], (entries) => {
+    this.observePerformanceEntries(['first-input'], _(entries) => {
       entries.forEach((entry: any) => {
         this.recordWebVital({
           name: 'FID',
@@ -186,7 +190,7 @@ export class PerformanceMonitor {
     });
 
     // Time to First Byte (TTFB)
-    this.observePerformanceEntries(['navigation'], (entries) => {
+    this.observePerformanceEntries(['navigation'], _(entries) => {
       entries.forEach((entry: any) => {
         this.recordWebVital({
           name: 'TTFB',
@@ -227,7 +231,7 @@ export class PerformanceMonitor {
    */
   private measureTTI() {
     if ('requestIdleCallback' in window) {
-      requestIdleCallback(() => {
+      requestIdleCallback_(() => {
         this.recordCustomMetric({
           name: 'TTI',
           category: 'performance',
@@ -303,7 +307,7 @@ export class PerformanceMonitor {
             metadata: {
               endpoint: url,
               status: response.status,
-              method: args[1]?.method || 'GET',
+              method: args[1]?.method ?? 'GET',
             },
           });
         }
@@ -325,7 +329,7 @@ export class PerformanceMonitor {
           metadata: {
             endpoint: url,
             error: error instanceof Error ? error.message : 'Unknown error',
-            method: args[1]?.method || 'GET',
+            method: args[1]?.method ?? 'GET',
           },
         });
         
@@ -339,7 +343,7 @@ export class PerformanceMonitor {
    */
   private setupMemoryMonitoring() {
     if ('memory' in performance) {
-      setInterval(() => {
+      setInterval_(() => {
         const memory = (performance as any).memory;
         this.recordCustomMetric({
           name: 'MemoryUsage',
@@ -364,7 +368,7 @@ export class PerformanceMonitor {
    * Setup resource loading monitoring
    */
   private setupResourceMonitoring() {
-    this.observePerformanceEntries(['resource'], (entries) => {
+    this.observePerformanceEntries(['resource'], _(entries) => {
       entries.forEach((entry: any) => {
         this.recordCustomMetric({
           name: 'ResourceLoadTime',
@@ -391,7 +395,7 @@ export class PerformanceMonitor {
    * Setup user timing monitoring
    */
   private setupUserTimingMonitoring() {
-    this.observePerformanceEntries(['measure'], (entries) => {
+    this.observePerformanceEntries(['measure'], _(entries) => {
       entries.forEach((entry) => {
         this.recordCustomMetric({
           name: entry.name,
@@ -412,7 +416,7 @@ export class PerformanceMonitor {
    * Setup error monitoring
    */
   private setupErrorMonitoring() {
-    window.addEventListener('error', (event) => {
+    window.addEventListener('error', _(event) => {
       this.recordCustomMetric({
         name: 'JavaScriptError',
         category: 'error',
@@ -433,7 +437,7 @@ export class PerformanceMonitor {
       });
     });
 
-    window.addEventListener('unhandledrejection', (event) => {
+    window.addEventListener('unhandledrejection', _(event) => {
       this.recordCustomMetric({
         name: 'UnhandledPromiseRejection',
         category: 'error',
@@ -462,7 +466,7 @@ export class PerformanceMonitor {
       this.recordCustomMetric({
         name: 'NetworkInfo',
         category: 'network',
-        value: connection.downlink || 0,
+        value: connection.downlink ?? 0,
         unit: 'mbps',
         timestamp: Date.now(),
         sessionId: this.sessionId,
@@ -503,7 +507,9 @@ export class PerformanceMonitor {
    * Record Web Vital metric
    */
   private recordWebVital(metric: WebVitalMetric) {
-    if (!this.config.enabledMetrics.includes(metric.name)) return;
+    if (!this.config.enabledMetrics.includes(metric.name) {
+    ) return
+  };
     
     this.metricsQueue.push({
       ...metric,
@@ -546,8 +552,12 @@ export class PerformanceMonitor {
 
     const [good, poor] = thresholds[metric] || [0, Infinity];
     
-    if (value <= good) return 'good';
-    if (value <= poor) return 'needs-improvement';
+    if (value <= good) {
+    return 'good';
+  }
+    if (value <= poor) {
+    return 'needs-improvement';
+  }
     return 'poor';
   }
 
@@ -583,7 +593,7 @@ export class PerformanceMonitor {
    * Start periodic flush
    */
   private startPeriodicFlush() {
-    this.flushTimer = setInterval(() => {
+    this.flushTimer = setInterval_(() => {
       if (this.metricsQueue.length > 0) {
         this.flush();
       }
@@ -594,7 +604,9 @@ export class PerformanceMonitor {
    * Flush metrics to server
    */
   private async flush() {
-    if (this.metricsQueue.length === 0) return;
+    if (this.metricsQueue.length === 0)  {
+    return
+  };
 
     const metrics = [...this.metricsQueue];
     this.metricsQueue = [];
@@ -692,7 +704,7 @@ export const performanceMonitor = new PerformanceMonitor();
 
 // React hook for performance monitoring
 export function usePerformanceMonitoring() {
-  React.useEffect(() => {
+  React.useEffect_(() => {
     return () => {
       performanceMonitor.destroy();
     };

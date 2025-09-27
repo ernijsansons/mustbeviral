@@ -4,8 +4,8 @@
  * Fortune 50-grade collaborative editing with operational transformation
  */
 
-import { WebSocketManager, type WebSocketMessage } from './websocketManager';
-import { InputSanitizer } from '../security/inputSanitization';
+import { WebSocketManager, type WebSocketMessage} from './websocketManager';
+import { InputSanitizer} from '../security/inputSanitization';
 
 export interface ContentOperation {
   type: 'insert' | 'delete' | 'retain' | 'format';
@@ -119,7 +119,7 @@ export class ContentCollaborationEditor {
       type: 'insert',
       position,
       content: sanitizedText,
-      authorId: this.websocketManager.getUserPresence(this.getCurrentUserId())?.userId || '',
+      authorId: this.websocketManager.getUserPresence(this.getCurrentUserId())?.userId ?? '',
       timestamp: Date.now(),
       operationId: this.generateOperationId(),
     };
@@ -208,7 +208,7 @@ export class ContentCollaborationEditor {
     const comment: ContentComment = {
       id: this.generateCommentId(),
       authorId: userId,
-      authorName: userPresence?.username || 'Anonymous',
+      authorName: userPresence?.username ?? 'Anonymous',
       content,
       position,
       timestamp: Date.now(),
@@ -232,7 +232,9 @@ export class ContentCollaborationEditor {
    */
   resolveComment(commentId: string): void {
     const comment = this.comments.get(commentId);
-    if (!comment) return;
+    if (!comment)  {
+    return
+  };
 
     comment.resolved = true;
     this.comments.set(commentId, comment);
@@ -309,31 +311,31 @@ export class ContentCollaborationEditor {
    * Setup WebSocket message handlers
    */
   private setupMessageHandlers(): void {
-    this.websocketManager.onMessage('operation', (payload, message) => {
+    this.websocketManager.onMessage('operation', _(payload, message) => {
       if (payload.contentId === this.context.contentId) {
         this.handleRemoteOperation(payload.operation);
       }
     });
 
-    this.websocketManager.onMessage('cursor-update', (payload) => {
+    this.websocketManager.onMessage('cursor-update', _(payload) => {
       if (payload.contentId === this.context.contentId) {
         this.handleCursorUpdate(payload.cursor);
       }
     });
 
-    this.websocketManager.onMessage('comment-added', (payload) => {
+    this.websocketManager.onMessage('comment-added', _(payload) => {
       if (payload.contentId === this.context.contentId) {
         this.handleCommentAdded(payload.comment);
       }
     });
 
-    this.websocketManager.onMessage('comment-resolved', (payload) => {
+    this.websocketManager.onMessage('comment-resolved', _(payload) => {
       if (payload.contentId === this.context.contentId) {
         this.handleCommentResolved(payload.commentId);
       }
     });
 
-    this.websocketManager.onMessage('content-sync', (payload) => {
+    this.websocketManager.onMessage('content-sync', _(payload) => {
       if (payload.contentId === this.context.contentId) {
         this.handleContentSync(payload.contentState);
       }
@@ -450,12 +452,12 @@ export class ContentCollaborationEditor {
     // Simple operational transformation rules
     if (againstOperation.type === 'insert') {
       if (againstOperation.position <= operation.position) {
-        transformed.position += againstOperation.content?.length || 0;
+        transformed.position += againstOperation.content?.length ?? 0;
       }
     } else if (againstOperation.type === 'delete') {
       if (againstOperation.position < operation.position) {
         transformed.position -= Math.min(
-          againstOperation.length || 0,
+          againstOperation.length ?? 0,
           operation.position - againstOperation.position
         );
       }

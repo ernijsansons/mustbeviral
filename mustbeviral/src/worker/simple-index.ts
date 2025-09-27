@@ -1,7 +1,7 @@
 // Simplified Cloudflare Worker for Must Be Viral
 // Basic API endpoints for authentication and content
 
-import { CloudflareEnv } from '../lib/cloudflare';
+import { CloudflareEnv} from '../lib/cloudflare';
 
 // CORS headers
 const corsHeaders = {
@@ -41,7 +41,7 @@ export default {
         const body = await request.json() as unknown;
 
         // Basic validation
-        if (!body.email || !body.username || !body.password) {
+        if (!body.email ?? !body.username ?? !body.password) {
           return Response.json(
             { success: false, error: 'Missing required fields' },
             { status: 400, headers: corsHeaders }
@@ -65,25 +65,25 @@ export default {
         const passwordHash = await hashPassword(body.password);
 
         await env.DB.prepare(`
-          INSERT INTO users (id, email, username, password_hash, role, onboarding_completed, ai_preference_level)
+          INSERT INTO users (id, email, username, passwordhash, role, onboardingcompleted, aipreferencelevel)
           VALUES (?, ?, ?, ?, ?, ?, ?)
         `).bind(
           userId,
           body.email,
           body.username,
           passwordHash,
-          body.role || 'creator',
+          body.role ?? 'creator',
           false,
-          body.aiPreferenceLevel || 50
+          body.aiPreferenceLevel ?? 50
         ).run();
 
         const user = {
           id: userId,
           email: body.email,
           username: body.username,
-          role: body.role || 'creator',
+          role: body.role ?? 'creator',
           onboarding_completed: false,
-          ai_preference_level: body.aiPreferenceLevel || 50
+          ai_preference_level: body.aiPreferenceLevel ?? 50
         };
 
         return Response.json(
@@ -96,7 +96,7 @@ export default {
       if (path === '/api/auth/login' && request.method === 'POST') {
         const body = await request.json() as unknown;
 
-        if (!body.email || !body.password) {
+        if (!body.email ?? !body.password) {
           return Response.json(
             { success: false, error: 'Email and password required' },
             { status: 400, headers: corsHeaders }
@@ -108,7 +108,7 @@ export default {
           'SELECT * FROM users WHERE email = ?'
         ).bind(body.email).first() as unknown;
 
-        if (!user || !(await verifyPassword(body.password, user.password_hash))) {
+        if (!user ?? !(await verifyPassword(body.password, user.passwordhash))) {
           return Response.json(
             { success: false, error: 'Invalid credentials' },
             { status: 401, headers: corsHeaders }
@@ -129,8 +129,8 @@ export default {
           email: user.email,
           username: user.username,
           role: user.role,
-          onboarding_completed: user.onboarding_completed === 1,
-          ai_preference_level: user.ai_preference_level
+          onboarding_completed: user.onboardingcompleted === 1,
+          ai_preference_level: user.aipreferencelevel
         };
 
         return Response.json(
@@ -150,7 +150,7 @@ export default {
       // Get current user
       if (path === '/api/auth/me' && request.method === 'GET') {
         const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
           return Response.json(
             { success: false, error: 'Authentication required' },
             { status: 401, headers: corsHeaders }
@@ -169,7 +169,7 @@ export default {
           }
 
           const user = await env.DB.prepare(
-            'SELECT id, email, username, role, onboarding_completed, ai_preference_level FROM users WHERE id = ?'
+            'SELECT id, email, username, role, onboardingcompleted, ai_preference_level FROM users WHERE id = ?'
           ).bind(decoded.userId).first() as unknown;
 
           if (!user) {
@@ -184,8 +184,8 @@ export default {
             email: user.email,
             username: user.username,
             role: user.role,
-            onboarding_completed: user.onboarding_completed === 1,
-            ai_preference_level: user.ai_preference_level
+            onboarding_completed: user.onboardingcompleted === 1,
+            ai_preference_level: user.aipreferencelevel
           };
 
           return Response.json(
@@ -203,7 +203,7 @@ export default {
       // Complete onboarding
       if (path === '/api/auth/onboarding' && request.method === 'POST') {
         const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
           return Response.json(
             { success: false, error: 'Authentication required' },
             { status: 401, headers: corsHeaders }
@@ -216,10 +216,10 @@ export default {
 
         await env.DB.prepare(`
           UPDATE users
-          SET onboarding_completed = 1,
+          SET onboardingcompleted = 1,
               industry = ?,
-              primary_goal = ?,
-              ai_preference_level = ?
+              primarygoal = ?,
+              aipreferencelevel = ?
           WHERE id = ?
         `).bind(
           body.industry,
@@ -237,7 +237,7 @@ export default {
       // Create content endpoint
       if (path === '/api/content/create' && request.method === 'POST') {
         const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
           return Response.json(
             { success: false, error: 'Authentication required' },
             { status: 401, headers: corsHeaders }
@@ -248,7 +248,7 @@ export default {
         const decoded = JSON.parse(atob(token));
         const body = await request.json() as unknown;
 
-        if (!body.title || !body.body) {
+        if (!body.title ?? !body.body) {
           return Response.json(
             { success: false, error: 'Title and body are required' },
             { status: 400, headers: corsHeaders }
@@ -258,15 +258,15 @@ export default {
         const contentId = crypto.randomUUID();
 
         await env.DB.prepare(`
-          INSERT INTO content (id, user_id, title, body, type, status, generated_by_ai)
+          INSERT INTO content (id, userid, title, body, type, status, generatedbyai)
           VALUES (?, ?, ?, ?, ?, ?, ?)
         `).bind(
           contentId,
           decoded.userId,
           body.title,
           body.body,
-          body.type || 'blog_post',
-          body.status || 'draft',
+          body.type ?? 'blog_post',
+          body.status ?? 'draft',
           body.generated_by_ai ? 1 : 0
         ).run();
 
@@ -275,9 +275,9 @@ export default {
           user_id: decoded.userId,
           title: body.title,
           body: body.body,
-          type: body.type || 'blog_post',
-          status: body.status || 'draft',
-          generated_by_ai: body.generated_by_ai || false,
+          type: body.type ?? 'blog_post',
+          status: body.status ?? 'draft',
+          generated_by_ai: body.generated_by_ai ?? false,
           created_at: new Date().toISOString()
         };
 
@@ -290,7 +290,7 @@ export default {
       // Get user's content
       if (path === '/api/content/list' && request.method === 'GET') {
         const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
           return Response.json(
             { success: false, error: 'Authentication required' },
             { status: 401, headers: corsHeaders }
@@ -301,7 +301,7 @@ export default {
         const decoded = JSON.parse(atob(token));
 
         const content = await env.DB.prepare(
-          'SELECT * FROM content WHERE user_id = ? ORDER BY created_at DESC'
+          'SELECT * FROM content WHERE userid = ? ORDER BY created_at DESC'
         ).bind(decoded.userId).all();
 
         return Response.json(
@@ -315,7 +315,7 @@ export default {
         const contentId = path.split('/')[3];
         const authHeader = request.headers.get('Authorization');
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
           return Response.json(
             { success: false, error: 'Authentication required' },
             { status: 401, headers: corsHeaders }
@@ -326,7 +326,7 @@ export default {
         const decoded = JSON.parse(atob(token));
 
         const content = await env.DB.prepare(
-          'SELECT * FROM content WHERE id = ? AND user_id = ?'
+          'SELECT * FROM content WHERE id = ? AND userid = ?'
         ).bind(contentId, decoded.userId).first() as unknown;
 
         if (!content) {
@@ -347,7 +347,7 @@ export default {
         const contentId = path.split('/')[3];
         const authHeader = request.headers.get('Authorization');
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
           return Response.json(
             { success: false, error: 'Authentication required' },
             { status: 401, headers: corsHeaders }
@@ -360,7 +360,7 @@ export default {
 
         // Verify ownership
         const existingContent = await env.DB.prepare(
-          'SELECT id FROM content WHERE id = ? AND user_id = ?'
+          'SELECT id FROM content WHERE id = ? AND userid = ?'
         ).bind(contentId, decoded.userId).first();
 
         if (!existingContent) {
@@ -373,12 +373,12 @@ export default {
         // Update content
         await env.DB.prepare(`
           UPDATE content
-          SET title = ?, body = ?, status = ?, updated_at = CURRENT_TIMESTAMP
-          WHERE id = ? AND user_id = ?
+          SET title = ?, body = ?, status = ?, updatedat = CURRENT_TIMESTAMP
+          WHERE id = ? AND userid = ?
         `).bind(
           body.title,
           body.body,
-          body.status || 'draft',
+          body.status ?? 'draft',
           contentId,
           decoded.userId
         ).run();
@@ -398,7 +398,7 @@ export default {
         const contentId = path.split('/')[3];
         const authHeader = request.headers.get('Authorization');
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
           return Response.json(
             { success: false, error: 'Authentication required' },
             { status: 401, headers: corsHeaders }
@@ -410,7 +410,7 @@ export default {
 
         // Verify ownership and delete
         const result = await env.DB.prepare(
-          'DELETE FROM content WHERE id = ? AND user_id = ?'
+          'DELETE FROM content WHERE id = ? AND userid = ?'
         ).bind(contentId, decoded.userId).run();
 
         if (!result.changes) {
@@ -429,7 +429,7 @@ export default {
       // Create Stripe checkout session
       if (path === '/api/payments/create-checkout' && request.method === 'POST') {
         const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
           return Response.json(
             { success: false, error: 'Authentication required' },
             { status: 401, headers: corsHeaders }
@@ -442,10 +442,10 @@ export default {
 
         // Mock Stripe checkout session creation
         const mockCheckoutSession = {
-          id: 'cs_test_' + crypto.randomUUID(),
+          id: 'cs_test' + crypto.randomUUID(),
           url: 'https://checkout.stripe.com/pay/cs_test_mock#fidkdWxOYHwnPyd1blpxYHZxWjA0T20yZ35xXDZ9SjJmTGFwM2pkZGFpTmJJamBTa3dBanJwU05wSTZtZDJiR2E8NX0%2BPGdpNnZBXHZscDVCZFYlR1XaaBMEczZGbGBUfDZPbEN3QWtWfzdPZ3FHVlcacXF8fnFPbT1VJykmaWRmaWRiYWJxZWZxYSknc3FsZGBsYmVrbGpyJGNiZGpoZGBsJ3EngE5pdWhqaGVpZWVlYWJnZXBqZGF3Zj1iYCkn',
           customer_email: decoded.email,
-          payment_intent: 'pi_test_' + crypto.randomUUID(),
+          payment_intent: 'pi_test' + crypto.randomUUID(),
           amount_total: body.tier === 'professional' ? 2999 : 999, // $29.99 or $9.99
           currency: 'usd'
         };
@@ -453,13 +453,13 @@ export default {
         // Create subscription record
         const subscriptionId = crypto.randomUUID();
         await env.DB.prepare(`
-          INSERT INTO subscriptions (id, user_id, status, tier)
+          INSERT INTO subscriptions (id, userid, status, tier)
           VALUES (?, ?, ?, ?)
         `).bind(
           subscriptionId,
           decoded.userId,
           'pending',
-          body.tier || 'starter'
+          body.tier ?? 'starter'
         ).run();
 
         return Response.json(
@@ -471,7 +471,7 @@ export default {
       // Get user's subscription
       if (path === '/api/payments/subscription' && request.method === 'GET') {
         const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
           return Response.json(
             { success: false, error: 'Authentication required' },
             { status: 401, headers: corsHeaders }
@@ -482,7 +482,7 @@ export default {
         const decoded = JSON.parse(atob(token));
 
         const subscription = await env.DB.prepare(
-          'SELECT * FROM subscriptions WHERE user_id = ? ORDER BY created_at DESC LIMIT 1'
+          'SELECT * FROM subscriptions WHERE userid = ? ORDER BY created_at DESC LIMIT 1'
         ).bind(decoded.userId).first() as unknown;
 
         if (!subscription) {
@@ -513,7 +513,7 @@ export default {
       // Cancel subscription
       if (path === '/api/payments/cancel' && request.method === 'POST') {
         const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
           return Response.json(
             { success: false, error: 'Authentication required' },
             { status: 401, headers: corsHeaders }
@@ -525,8 +525,8 @@ export default {
 
         await env.DB.prepare(`
           UPDATE subscriptions
-          SET status = 'cancelled', cancel_at_period_end = 1, updated_at = CURRENT_TIMESTAMP
-          WHERE user_id = ? AND status = 'active'
+          SET status = 'cancelled', cancelatperiod_end = 1, updatedat = CURRENT_TIMESTAMP
+          WHERE userid = ? AND status = 'active'
         `).bind(decoded.userId).run();
 
         return Response.json(
@@ -610,7 +610,7 @@ export default {
       // AI Content Generation endpoint
       if (path === '/api/content/generate' && request.method === 'POST') {
         const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
           return Response.json(
             { success: false, error: 'Authentication required' },
             { status: 401, headers: corsHeaders }
@@ -629,7 +629,7 @@ export default {
         const generatedContent = {
           title: generateTitleFromPrompt(body.prompt),
           body: generateContentFromPrompt(body.prompt),
-          type: body.type || 'blog_post',
+          type: body.type ?? 'blog_post',
           generated_by_ai: true,
           prompt: body.prompt
         };
@@ -684,7 +684,7 @@ function generateTitleFromPrompt(prompt: string): string {
   ];
 
   // Simple prompt-based title selection
-  if (prompt.toLowerCase().includes('ai') || prompt.toLowerCase().includes('artificial')) {
+  if (prompt.toLowerCase().includes('ai')  ?? prompt.toLowerCase().includes('artificial')) {
     return "How AI is Revolutionizing Content Creation";
   } else if (prompt.toLowerCase().includes('marketing')) {
     return "The Future of Digital Marketing: What You Need to Know";

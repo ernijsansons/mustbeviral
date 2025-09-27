@@ -1,9 +1,9 @@
 // Universe-Bending React Query Configuration
 // Optimized for performance and user experience
 
-import { _QueryClient, DefaultOptions } from '@tanstack/react-query';
-import { ApiClientError } from './api';
-import { _getEnvBoolean, isFeatureEnabled, isDevelopment, isProduction, getEnvVar } from './env';
+import { QueryClient, DefaultOptions} from '@tanstack/react-query';
+import { ApiClientError} from './api';
+import { getEnvBoolean, isFeatureEnabled, isDevelopment, isProduction, getEnvVar} from './env';
 
 // Query configuration optimized for universe-bending UX
 const queryConfig: DefaultOptions = {
@@ -15,7 +15,7 @@ const queryConfig: DefaultOptions = {
     gcTime: 1000 * 60 * 10,
 
     // Retry configuration for resilience
-    retry: (failureCount, _error) => {
+    retry: (failureCount, error) => {
       // Don't retry authentication errors
       if (error instanceof ApiClientError && error.status === 401) {
         return false;
@@ -31,7 +31,7 @@ const queryConfig: DefaultOptions = {
     },
 
     // Retry delay with exponential backoff
-    retryDelay: (_attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
 
     // Background refetch configuration
     refetchOnWindowFocus: true,
@@ -41,7 +41,7 @@ const queryConfig: DefaultOptions = {
 
   mutations: {
     // Optimistic updates and error handling
-    retry: (failureCount, _error) => {
+    retry: (failureCount, error) => {
       // Don't retry mutations with client errors
       if (error instanceof ApiClientError && error.status >= 400 && error.status < 500) {
         return false;
@@ -125,11 +125,11 @@ export const queryUtils = {
 
 // Performance monitoring for queries
 if (typeof window !== 'undefined' && isFeatureEnabled('ENABLE_PERFORMANCE_MONITORING')) {
-  queryClient.getQueryCache().subscribe((_event) => {
+  queryClient.getQueryCache().subscribe((event) => {
     if (event.type === 'queryAdded') {
       const startTime = Date.now();
 
-      event.query.subscribe(() => {
+      event.query.subscribe_(() => {
         const endTime = Date.now();
         const duration = endTime - startTime;
 
@@ -143,7 +143,7 @@ if (typeof window !== 'undefined' && isFeatureEnabled('ENABLE_PERFORMANCE_MONITO
 }
 
 // Error reporting integration
-queryClient.getQueryCache().subscribe((_event) => {
+queryClient.getQueryCache().subscribe((event) => {
   if (event.type === 'queryError') {
     const error = event.query.state.error;
 

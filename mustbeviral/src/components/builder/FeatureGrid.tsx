@@ -5,9 +5,9 @@
  */
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/Card';
-import { Button } from '../ui/Button';
-import { cn } from '../../lib/utils';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent} from '../ui/Card';
+import { Button} from '../ui/Button';
+import { cn} from '../../lib/utils';
 
 interface Feature {
   id: string;
@@ -32,17 +32,8 @@ interface FeatureGridProps {
   builderState?: any;
 }
 
-export function FeatureGrid({
-  title,
-  subtitle,
-  features,
-  columns = 3,
-  animation = 'float',
-  variant = 'cosmic',
-  className,
-  builderBlock,
-  builderState,
-  ...props
+export function FeatureGrid(_{
+  title, subtitle, features, columns = 3, animation = 'float', variant = 'cosmic', className, _builderBlock, _builderState, ...props
 }: FeatureGridProps) {
   const gridClasses = {
     1: 'grid-cols-1',
@@ -71,7 +62,7 @@ export function FeatureGrid({
     <section className={cn('py-16 px-6', className)} {...props}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        {(title || subtitle) && (
+        {(title ?? subtitle) && (
           <div className="text-center mb-16">
             {title && (
               <h2 className="text-4xl md:text-5xl font-bold font-heading mb-6">
@@ -92,8 +83,8 @@ export function FeatureGrid({
         <div className={cn('grid gap-8', gridClasses[columns])}>
           {features.map((feature, index) => (
             <Card
-              key={feature.id || index}
-              variant={feature.variant || variant}
+              key={feature.id ?? index}
+              variant={feature.variant ?? variant}
               animation={animation}
               interactive="hover"
               className={cn(
@@ -106,7 +97,7 @@ export function FeatureGrid({
               {/* Background Gradient */}
               <div className={cn(
                 'absolute inset-0 bg-gradient-to-br opacity-10 group-hover:opacity-20 transition-opacity duration-300',
-                variantClasses[feature.variant || variant]
+                variantClasses[feature.variant ?? variant]
               )} />
 
               <CardHeader spacing="normal">
@@ -114,14 +105,14 @@ export function FeatureGrid({
                 {feature.icon && (
                   <div className={cn(
                     'w-16 h-16 rounded-2xl bg-gradient-to-r flex items-center justify-center mb-6 text-2xl',
-                    variantClasses[feature.variant || variant]
+                    variantClasses[feature.variant ?? variant]
                   )}>
                     {feature.icon}
                   </div>
                 )}
 
                 {/* Title */}
-                <CardTitle level={3} gradient={!feature.variant || feature.variant === 'default'}>
+                  <CardTitle level={3} gradient={!feature.variant  ?? feature.variant === 'default'}>
                   {feature.title}
                 </CardTitle>
 
@@ -135,7 +126,7 @@ export function FeatureGrid({
               {feature.ctaText && (
                 <CardContent spacing="md">
                   <Button
-                    variant={feature.ctaVariant || 'outline'}
+                    variant={feature.ctaVariant ?? 'outline'}
                     size="sm"
                     className="w-full group-hover:scale-105 transition-transform duration-200"
                   >

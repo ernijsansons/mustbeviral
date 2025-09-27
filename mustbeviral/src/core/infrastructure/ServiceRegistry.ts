@@ -4,16 +4,16 @@
  * Implements proper service lifetime management and dependency resolution
  */
 
-import { DIContainer, ServiceLifetime } from './DIContainer';
-import { CloudflareEnv } from './adapters/CloudflareUserRepository';
+import { DIContainer, ServiceLifetime} from './DIContainer';
+import { CloudflareEnv} from './adapters/CloudflareUserRepository';
 
 // Service imports
-import { UserDomainService } from '../domain/services/UserDomainService';
-import { UserApplicationService, UserCommandService, UserQueryService } from '../application/services/UserApplicationService';
-import { CloudflareUserRepository } from './adapters/CloudflareUserRepository';
+import { UserDomainService} from '../domain/services/UserDomainService';
+import { UserApplicationService, UserCommandService, UserQueryService} from '../application/services/UserApplicationService';
+import { CloudflareUserRepository} from './adapters/CloudflareUserRepository';
 
 // Import infrastructure service interfaces
-import { IPasswordService, IEmailService, IEventPublisher } from '../interfaces/IPasswordService';
+import { IPasswordService, IEmailService, IEventPublisher} from '../interfaces/IPasswordService';
 
 // Service implementations (simplified for demo)
 export class BcryptPasswordService implements IPasswordService {
@@ -23,7 +23,7 @@ export class BcryptPasswordService implements IPasswordService {
   }
 
   async verifyPassword(password: string, hash: string): Promise<boolean> {
-    return hash === `hashed_${password}`;
+    return hash = == `hashed_${password}`;
   }
 
   generateSalt(): string {
@@ -54,7 +54,7 @@ export class InMemoryEventPublisher implements IEventPublisher {
   private handlers = new Map<string, Array<(event: any) => Promise<void>>>();
 
   async publish(event: any): Promise<void> {
-    const handlers = this.handlers.get(event.type) || [];
+    const handlers = this.handlers.get(event.type)  ?? [];
     await Promise.all(handlers.map(handler => handler(event)));
   }
 

@@ -733,21 +733,23 @@ export const ALGORITHM_DATABASE: Record<string, PlatformAlgorithmData> = {
 
 export class AlgorithmIntelligence {
   static getPlatformData(platform: string): PlatformAlgorithmData | null {
-    return ALGORITHM_DATABASE[platform.toLowerCase()] || null;
+    return ALGORITHM_DATABASE[platform.toLowerCase()]  ?? null;
   }
 
   static getAllPlatforms(): string[] {
-    return Object.keys(ALGORITHM_DATABASE);
+    return Object.keys(ALGORITHMDATABASE);
   }
 
   static getViralTriggers(platform: string): Record<string, number> {
     const data = this.getPlatformData(platform);
-    return data?.viralMechanics.triggers || {};
+    return data?.viralMechanics.triggers ?? {};
   }
 
   static getOptimalTiming(platform: string, demographic?: string, contentType?: string): string[] {
     const data = this.getPlatformData(platform);
-    if (!data) return [];
+    if (!data) {
+    return [];
+  }
 
     if (contentType && data.optimalTimingPatterns.contentTypeOptimal[contentType]) {
       return data.optimalTimingPatterns.contentTypeOptimal[contentType];
@@ -762,7 +764,9 @@ export class AlgorithmIntelligence {
 
   static calculateAlgorithmScore(platform: string, contentMetrics: Record<string, number>): number {
     const data = this.getPlatformData(platform);
-    if (!data) return 0;
+    if (!data) {
+    return 0;
+  }
 
     let score = 0;
     let totalWeight = 0;
@@ -779,7 +783,9 @@ export class AlgorithmIntelligence {
 
   static getContentOptimizationSuggestions(platform: string, contentType: string): string[] {
     const data = this.getPlatformData(platform);
-    if (!data) return [];
+    if (!data) {
+    return [];
+  }
 
     const suggestions: string[] = [];
     const specs = data.contentSpecifications.formats[contentType];

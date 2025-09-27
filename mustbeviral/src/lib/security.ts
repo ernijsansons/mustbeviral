@@ -1,7 +1,7 @@
 // Security features per plan with SSO, encryption, and bias detection
 // LOG: SECURITY-INIT-1 - Initialize security framework
 
-import { createHash, randomBytes, createCipheriv, createDecipheriv } from 'crypto';
+import { createHash, randomBytes, createCipheriv, createDecipheriv} from 'crypto';
 
 export interface SecurityTier {
   id: string;
@@ -60,7 +60,7 @@ export class SecurityManager {
   }
 
   private deriveEncryptionKey(): Buffer {
-    const secret = process.env.ENCRYPTION_SECRET;
+    const secret = process.env.ENCRYPTIONSECRET;
     if (!secret) {
       throw new Error('ENCRYPTION_SECRET environment variable is required and must be set');
     }
@@ -132,7 +132,7 @@ export class SecurityManager {
         id: 'google',
         name: 'Google',
         type: 'oauth2',
-        client_id: process.env.GOOGLE_CLIENT_ID || '',  // No fallback - must be configured
+        client_id: process.env.GOOGLE_CLIENT_ID ?? '',  // No fallback - must be configured
         auth_url: 'https://accounts.google.com/oauth2/auth',
         token_url: 'https://oauth2.googleapis.com/token',
         user_info_url: 'https://www.googleapis.com/oauth2/v2/userinfo',
@@ -142,7 +142,7 @@ export class SecurityManager {
         id: 'github',
         name: 'GitHub',
         type: 'oauth2',
-        client_id: process.env.GITHUB_CLIENT_ID || '',  // No fallback - must be configured
+        client_id: process.env.GITHUB_CLIENT_ID ?? '',  // No fallback - must be configured
         auth_url: 'https://github.com/login/oauth/authorize',
         token_url: 'https://github.com/login/oauth/access_token',
         user_info_url: 'https://api.github.com/user',
@@ -240,14 +240,14 @@ export class SecurityManager {
     }
 
     const params = new URLSearchParams({
-      client_id: provider.client_id,
+      client_id: provider.clientid,
       redirect_uri: redirectUri,
       scope: provider.scopes.join(' '),
       response_type: 'code',
       state: state
     });
 
-    const authUrl = `${provider.auth_url}?${params.toString()}`;
+    const authUrl = `${provider.authurl}?${params.toString()}`;
     console.log('LOG: SECURITY-SSO-4 - SSO auth URL generated');
     return authUrl;
   }
@@ -261,12 +261,12 @@ export class SecurityManager {
     }
 
     try {
-      const response = await fetch(provider.token_url, {
+      const response = await fetch(provider.tokenurl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
-          client_id: provider.client_id,
-          client_secret: process.env[`${providerId.toUpperCase()}_CLIENT_SECRET`] || '',  // No fallback - must be configured
+          client_id: provider.clientid,
+          client_secret: process.env[`${providerId.toUpperCase()}_CLIENT_SECRET`]  ?? '',  // No fallback - must be configured
           code,
           redirect_uri: redirectUri,
           grant_type: 'authorization_code'
@@ -297,27 +297,27 @@ export class SecurityManager {
       };
 
       // Basic keyword-based detection
-      result.bias_score = this.calculateKeywordBiasScore(content);
+      result.biasscore = this.calculateKeywordBiasScore(content);
       
-      if (checkLevel === 'advanced' || checkLevel === 'comprehensive') {
+      if (checkLevel === 'advanced'  ?? checkLevel === 'comprehensive') {
         // Advanced pattern detection
         const patternBias = this.detectBiasPatterns(content);
-        result.bias_score = Math.max(result.bias_score, patternBias.score);
+        result.biasscore = Math.max(result.biasscore, patternBias.score);
         result.detected_biases.push(...patternBias.types);
       }
 
       if (checkLevel === 'comprehensive') {
         // Comprehensive semantic analysis
         const semanticBias = await this.performSemanticBiasAnalysis(content);
-        result.bias_score = Math.max(result.bias_score, semanticBias.score);
+        result.biasscore = Math.max(result.biasscore, semanticBias.score);
         result.detected_biases.push(...semanticBias.types);
         result.recommendations.push(...semanticBias.recommendations);
       }
 
       result.passed = result.bias_score < this.getBiasThreshold(checkLevel);
-      result.confidence = this.calculateConfidence(result.bias_score, checkLevel);
+      result.confidence = this.calculateConfidence(result.biasscore, checkLevel);
 
-      console.log('LOG: SECURITY-BIAS-4 - Bias check completed:', result.passed, 'Score:', result.bias_score);
+      console.log('LOG: SECURITY-BIAS-4 - Bias check completed:', result.passed, 'Score:', result.biasscore);
       return result;
     } catch (error) {
       console.error('LOG: SECURITY-BIAS-ERROR-1 - Bias check failed:', error);
@@ -384,7 +384,7 @@ export class SecurityManager {
         types.push('sentiment_bias');
       }
       
-      if (context.problematic_framing) {
+      if (context.problematicframing) {
         semanticScore += 12;
         types.push('framing_bias');
         recommendations.push('Consider reframing statements to be more inclusive');
@@ -443,7 +443,7 @@ export class SecurityManager {
 
   // Security tier management
   getSecurityTier(tierId: string): SecurityTier | null {
-    return this.securityTiers.get(tierId) || null;
+    return this.securityTiers.get(tierId)  ?? null;
   }
 
   getUserSecurityFeatures(userTierId: string): SecurityTier['features'] | null {
@@ -455,7 +455,9 @@ export class SecurityManager {
     console.log('LOG: SECURITY-ACCESS-1 - Checking feature access:', feature, 'for tier:', userTierId);
     
     const features = this.getUserSecurityFeatures(userTierId);
-    if (!features) return false;
+    if (!features) {
+    return false;
+  }
     
     const hasAccess = Boolean(features[feature]);
     console.log('LOG: SECURITY-ACCESS-2 - Feature access result:', hasAccess);
@@ -464,7 +466,7 @@ export class SecurityManager {
 
   // SSO provider management
   getSSOProvider(providerId: string): SSOProvider | null {
-    return this.ssoProviders.get(providerId) || null;
+    return this.ssoProviders.get(providerId)  ?? null;
   }
 
   getAvailableSSOProviders(userTierId: string): SSOProvider[] {
@@ -479,10 +481,12 @@ export class SecurityManager {
     console.log('LOG: SECURITY-RATE-1 - Checking rate limit for tier:', userTierId);
     
     const features = this.getUserSecurityFeatures(userTierId);
-    if (!features) return false;
+    if (!features) {
+    return false;
+  }
     
-    const withinLimit = currentRequests < features.api_rate_limit;
-    console.log('LOG: SECURITY-RATE-2 - Rate limit check:', withinLimit, 'Requests:', currentRequests, 'Limit:', features.api_rate_limit);
+    const withinLimit = currentRequests < features.apiratelimit;
+    console.log('LOG: SECURITY-RATE-2 - Rate limit check:', withinLimit, 'Requests:', currentRequests, 'Limit:', features.apiratelimit);
     return withinLimit;
   }
 
@@ -494,17 +498,17 @@ export class SecurityManager {
     status: 'success' | 'failure';
     source: string;
   }): Promise<void> {
-    console.log('LOG: SECURITY-AUDIT-1 - Logging security event:', event.event_type);
+    console.log('LOG: SECURITY-AUDIT-1 - Logging security event:', event.eventtype);
     
     try {
       // In production, this would write to audit_logs table
       const auditEntry = {
         id: this.generateAuditId(),
         timestamp: new Date().toISOString(),
-        user_id: event.user_id,
-        event_type: event.event_type,
+        user_id: event.userid,
+        event_type: event.eventtype,
         entity_type: 'security',
-        entity_id: event.user_id || 'system',
+        entity_id: event.user_id ?? 'system',
         details: JSON.stringify(event.details),
         source: event.source,
         status: event.status,
@@ -515,7 +519,7 @@ export class SecurityManager {
       // This is a critical security requirement and must be implemented
       // before production deployment
       // For now, log to console in development only
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODEENV === 'development') {
         console.log('[AUDIT]', JSON.stringify(auditEntry));
       }
 
@@ -544,7 +548,7 @@ export class SecurityManager {
     }
 
     // Check encryption level for data operations
-    if (operation === 'data_export' && features.encryption_level === 'basic') {
+    if (operation === 'data_export' && features.encryptionlevel === 'basic') {
       return { allowed: false, reason: 'Higher encryption level required for data export' };
     }
 

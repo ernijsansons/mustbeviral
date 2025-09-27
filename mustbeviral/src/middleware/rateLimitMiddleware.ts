@@ -3,7 +3,7 @@
  * Integrates multi-layer rate limiting into the application
  */
 
-import { RateLimiter } from '../lib/security/rateLimiter';
+import { RateLimiter} from '../lib/security/rateLimiter';
 import type { Context, Next } from 'hono';
 
 const rateLimiter = new RateLimiter();
@@ -22,9 +22,7 @@ export interface RateLimitOptions {
 /**
  * Rate limiting middleware
  */
-export async function rateLimitMiddleware(
-  options: RateLimitOptions = {}
-) {
+export async function rateLimitMiddleware(options: RateLimitOptions = {}) {
   return async (c: Context, next: Next) => {
     try {
       // Determine identifier
@@ -33,13 +31,13 @@ export async function rateLimitMiddleware(
       if (options.useUserId && c.get('user')) {
         identifier = c.get('user').userId;
       } else if (options.useIp !== false) {
-        identifier = getClientIp(c) || 'unknown';
+        identifier = getClientIp(c)  ?? 'unknown';
       } else {
         identifier = 'anonymous';
       }
 
       // Determine endpoint
-      const endpoint = options.endpoint || getEndpointFromPath(c.req.path);
+      const endpoint = options.endpoint ?? getEndpointFromPath(c.req.path);
 
       // Check global rate limit first
       const globalResult = await rateLimiter.checkGlobalRateLimit(endpoint);
@@ -161,7 +159,7 @@ function getClientIp(c: Context): string | null {
     'X-Client-IP'
   ];
 
-  for (const header of headers) {
+  for(const header of headers) {
     const value = c.req.header(header);
     if (value) {
       // Handle comma-separated IPs
@@ -184,29 +182,25 @@ function isValidIp(ip: string): boolean {
   // Simple IPv6 validation
   const ipv6Regex = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/;
 
-  return ipv4Regex.test(ip) || ipv6Regex.test(ip);
+  return ipv4Regex.test(ip)  ?? ipv6Regex.test(ip);
 }
 
 /**
  * Determine endpoint category from path
  */
 function getEndpointFromPath(path: string): string {
-  if (path.startsWith('/api/auth')) return 'auth';
-  if (path.startsWith('/api/ai') || path.includes('/generate')) return 'ai';
-  if (path.startsWith('/api/upload')) return 'upload';
-  if (path.startsWith('/api/payment')) return 'payment';
-  if (path.startsWith('/api/content')) return 'content';
+  if (path.startsWith('/api/auth')) {return 'auth';}
+  if (path.startsWith('/api/ai')  ?? path.includes('/generate')) {return 'ai';}
+  if (path.startsWith('/api/upload')) {return 'upload';}
+  if (path.startsWith('/api/payment')) {return 'payment';}
+  if (path.startsWith('/api/content')) {return 'content';}
   return 'api';
 }
 
 /**
  * Respond with rate limit error
  */
-function respondWithRateLimit(
-  c: Context,
-  result: any,
-  message: string = 'Rate limit exceeded'
-) {
+function respondWithRateLimit(c: Context, result: any, message: string = 'Rate limit exceeded') {
   return c.json(
     {
       error: message,

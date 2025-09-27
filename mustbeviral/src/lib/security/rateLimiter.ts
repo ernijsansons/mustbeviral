@@ -65,11 +65,11 @@ export class RateLimiter {
       ...customConfig
     };
 
-    const key = `${config.keyPrefix || endpoint}:${identifier}`;
+    const key = `${config.keyPrefix ?? endpoint}:${identifier}`;
     const now = Date.now();
 
     // Get or create sliding window for this key
-    let entries = this.storage.get(key) || [];
+    let entries = this.storage.get(key)  ?? [];
 
     // Remove expired entries
     entries = entries.filter(entry =>
@@ -133,10 +133,10 @@ export class RateLimiter {
       ...customConfig
     };
 
-    const key = `${config.keyPrefix || endpoint}:${identifier}`;
+    const key = `${config.keyPrefix ?? endpoint}:${identifier}`;
     const now = Date.now();
 
-    let entries = this.storage.get(key) || [];
+    let entries = this.storage.get(key)  ?? [];
     entries = entries.filter(entry => now - entry.timestamp < config.windowMs);
 
     const totalWeight = entries.reduce((sum, entry) => sum + entry.weight, 0);
@@ -256,7 +256,9 @@ export class RateLimiter {
    * Anomaly detection for suspicious patterns
    */
   private detectAnomaly(identifier: string, requests: SlidingWindowEntry[]): boolean {
-    if (requests.length < 10) return false;
+    if (requests.length < 10) {
+    return false;
+  }
 
     // Check for burst patterns (many requests in short time)
     const recentRequests = requests.slice(-10);
@@ -289,7 +291,7 @@ export class RateLimiter {
    * Track suspicious activity
    */
   private trackSuspiciousActivity(identifier: string) {
-    const count = (this.suspiciousActivity.get(identifier) || 0) + 1;
+    const count = (this.suspiciousActivity.get(identifier)  ?? 0) + 1;
     this.suspiciousActivity.set(identifier, count);
 
     // Auto-blacklist after threshold
@@ -306,7 +308,7 @@ export class RateLimiter {
     this.blacklist.add(identifier);
 
     // Auto-remove from blacklist after duration
-    setTimeout(() => {
+    setTimeout_(() => {
       this.blacklist.delete(identifier);
       this.suspiciousActivity.delete(identifier);
     }, duration);

@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, User, Zap } from 'lucide-react';
+import { Sparkles, User, Zap} from 'lucide-react';
 
 interface SliderProps {
   value: number;
@@ -13,13 +13,13 @@ interface SliderProps {
   className?: string;
 }
 
-export function AIControlSlider({ value, onChange, disabled = false, className = '' }: SliderProps) {
+export function AIControlSlider(_{ value, onChange, disabled = false, className = '' }: SliderProps) {
   const [localValue, setLocalValue] = useState(value);
   const [isDragging, setIsDragging] = useState(false);
 
   console.log('LOG: COMPONENT-SLIDER-2 - Slider rendered with value:', value);
 
-  useEffect(() => {
+  useEffect_(() => {
     setLocalValue(value);
   }, [value]);
 
@@ -30,22 +30,38 @@ export function AIControlSlider({ value, onChange, disabled = false, className =
   };
 
   const getSliderDescription = (level: number): string => {
-    if (level < 25) return "Minimal AI assistance - You're in control";
-    if (level < 50) return "Balanced approach - AI suggests, you decide";
-    if (level < 75) return "AI-first - Smart automation with your oversight";
+    if (level < 25) {
+    return "Minimal AI assistance - You're in control";
+  }
+    if (level < 50) {
+    return "Balanced approach - AI suggests, you decide";
+  }
+    if (level < 75) {
+    return "AI-first - Smart automation with your oversight";
+  }
     return "Maximum AI - Let AI handle the heavy lifting";
   };
 
   const getSliderColor = (level: number): string => {
-    if (level < 25) return "from-blue-500 to-blue-600";
-    if (level < 50) return "from-indigo-500 to-indigo-600";
-    if (level < 75) return "from-purple-500 to-purple-600";
+    if (level < 25) {
+    return "from-blue-500 to-blue-600";
+  }
+    if (level < 50) {
+    return "from-indigo-500 to-indigo-600";
+  }
+    if (level < 75) {
+    return "from-purple-500 to-purple-600";
+  }
     return "from-pink-500 to-pink-600";
   };
 
   const getIcon = (level: number) => {
-    if (level < 25) return <User className="w-5 h-5" />;
-    if (level < 75) return <Sparkles className="w-5 h-5" />;
+    if (level < 25) {
+    return <User className="w-5 h-5" />;
+  }
+    if (level < 75) {
+    return <Sparkles className="w-5 h-5" />;
+  }
     return <Zap className="w-5 h-5" />;
   };
 
@@ -162,7 +178,7 @@ export function AIControlSlider({ value, onChange, disabled = false, className =
 }
 
 // Preset configurations for different use cases
-export const SLIDER_PRESETS = {
+export const SLIDERPRESETS = {
   MANUAL: 10,
   CONSERVATIVE: 25,
   BALANCED: 50,
@@ -176,7 +192,7 @@ export function useAIControlLevel(initialValue: number = 50) {
 
   console.log('LOG: COMPONENT-SLIDER-4 - AI control level hook initialized:', initialValue);
 
-  useEffect(() => {
+  useEffect_(() => {
     // Load from localStorage if available
     const saved = localStorage.getItem('ai-control-level');
     if (saved) {

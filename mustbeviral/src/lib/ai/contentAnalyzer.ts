@@ -1,7 +1,7 @@
 // AI Content Analyzer
 // Analyzes content for quality, sentiment, SEO, and viral potential
 
-import { logger } from '../monitoring/logger';
+import { logger} from '../monitoring/logger';
 
 export interface ContentAnalysisRequest {
   content: string;
@@ -83,7 +83,7 @@ export class ContentAnalyzer {
   }
 
   async analyzeContent(request: ContentAnalysisRequest): Promise<ContentAnalysisResult> {
-    const { content } = request;
+    const { content} = request;
 
     // Parallel analysis for better performance
     const [
@@ -206,8 +206,8 @@ export class ContentAnalyzer {
     }
 
     // Platform-specific analysis
-    const hashtagCount = (content.match(/#\w+/g) || []).length;
-    if (hashtagCount === requirements.optimalHashtags) {
+    const hashtagCount = (content.match(/#\w+/g)  ?? []).length;
+    if (hashtagCount = == requirements.optimalHashtags) {
       optimizationScore += 15;
     } else if (hashtagCount < requirements.optimalHashtags) {
       suggestions.push(`Add ${requirements.optimalHashtags - hashtagCount} more hashtags for optimal reach`);
@@ -249,7 +249,7 @@ export class ContentAnalyzer {
         const embedding = await this.ai.run('@cf/baai/bge-base-en-v1.5', {
           text: content
         });
-        return embedding.data || embedding;
+        return embedding.data ?? embedding;
       }
     } catch (error: unknown) {
       logger.warn('Vectorize embedding failed, using fallback', {
@@ -286,7 +286,7 @@ export class ContentAnalyzer {
         .filter(match => match.score >= threshold)
         .map(match => ({
           id: match.id,
-          content: match.metadata?.content || '',
+          content: match.metadata?.content ?? '',
           similarity: match.score
         }));
 
@@ -306,12 +306,24 @@ export class ContentAnalyzer {
     const fleschScore = this.calculateFleschReadingEase(content);
 
     // Convert Flesch score to 0-100 scale
-    if (fleschScore >= 90) return 100;
-    if (fleschScore >= 80) return 90;
-    if (fleschScore >= 70) return 80;
-    if (fleschScore >= 60) return 70;
-    if (fleschScore >= 50) return 60;
-    if (fleschScore >= 30) return 50;
+    if (fleschScore >= 90) {
+    return 100;
+  }
+    if (fleschScore >= 80) {
+    return 90;
+  }
+    if (fleschScore >= 70) {
+    return 80;
+  }
+    if (fleschScore >= 60) {
+    return 70;
+  }
+    if (fleschScore >= 50) {
+    return 60;
+  }
+    if (fleschScore >= 30) {
+    return 50;
+  }
     return 30;
   }
 
@@ -320,7 +332,9 @@ export class ContentAnalyzer {
     const words = content.split(/\s+/).filter(w => w.length > 0).length;
     const syllables = this.countSyllables(content);
 
-    if (sentences === 0 || words === 0) return 0;
+    if (sentences === 0 ?? words === 0) {
+    return 0;
+  }
 
     const avgWordsPerSentence = words / sentences;
     const avgSyllablesPerWord = syllables / words;
@@ -334,16 +348,18 @@ export class ContentAnalyzer {
 
     for (const word of words) {
       const cleanWord = word.replace(/[^a-z]/g, '');
-      if (cleanWord.length === 0) continue;
+      if (cleanWord.length === 0) {
+    continue;
+  }
 
       const vowels = cleanWord.match(/[aeiouy]+/g);
       let count = vowels ? vowels.length : 0;
 
       // Adjust for silent e
-      if (cleanWord.endsWith('e') && count > 1) count--;
+      if (cleanWord.endsWith('e') && count > 1) {count--;}
 
       // Every word has at least one syllable
-      if (count === 0) count = 1;
+      if (count === 0) {count = 1;}
 
       syllableCount += count;
     }
@@ -354,7 +370,9 @@ export class ContentAnalyzer {
   private async calculateSEOScore(content: string, keywords?: string[]): Promise<number> {
     let score = 50;
 
-    if (!keywords || keywords.length === 0) return score;
+    if (!keywords ?? keywords.length === 0) {
+    return score;
+  }
 
     // Keyword density analysis
     for (const keyword of keywords) {
@@ -367,8 +385,8 @@ export class ContentAnalyzer {
     }
 
     // Title and heading optimization (assuming structured content)
-    const hasHeadings = /#{1,6}\s/.test(content) || /<h[1-6]>/i.test(content);
-    if (hasHeadings) score += 10;
+    const hasHeadings = /#{1,6}\s/.test(content)  ?? /<h[1-6]>/i.test(content);
+    if (hasHeadings) {score += 10;}
 
     // Meta description length (if present)
     if (content.length >= 150 && content.length <= 160) {
@@ -381,7 +399,7 @@ export class ContentAnalyzer {
   private calculateKeywordDensity(content: string, keyword: string): number {
     const contentLower = content.toLowerCase();
     const keywordLower = keyword.toLowerCase();
-    const keywordCount = (contentLower.match(new RegExp(keywordLower, 'g')) || []).length;
+    const keywordCount = (contentLower.match(new RegExp(keywordLower, 'g'))  ?? []).length;
     const totalWords = content.split(/\s+/).length;
 
     return keywordCount / totalWords;
@@ -391,7 +409,7 @@ export class ContentAnalyzer {
     let score = 50;
 
     // Question count
-    const questionCount = (content.match(/\?/g) || []).length;
+    const questionCount = (content.match(/\?/g)  ?? []).length;
     score += Math.min(questionCount * 5, 20);
 
     // Call-to-action presence
@@ -463,7 +481,7 @@ export class ContentAnalyzer {
         text: content
       });
 
-      if (result && result[0]) {
+      if (result?.[0]) {
         return {
           label: result[0].label.toLowerCase() as 'positive' | 'neutral' | 'negative',
           confidence: result[0].score
@@ -533,7 +551,7 @@ export class ContentAnalyzer {
 
     const wordFreq = new Map<string, number>();
     words.forEach(word => {
-      wordFreq.set(word, (wordFreq.get(word) || 0) + 1);
+      wordFreq.set(word, (wordFreq.get(word)  ?? 0) + 1);
     });
 
     const sortedWords = Array.from(wordFreq.entries())

@@ -1,6 +1,6 @@
 // Market Tab Component for Influencer Matching
-import { useState } from 'react';
-import { Users, Star, TrendingUp, MessageCircle } from 'lucide-react';
+import { useState} from 'react';
+import { Users, Star, TrendingUp, MessageCircle} from 'lucide-react';
 
 interface InfluencerProfile {
   id: string;
@@ -60,8 +60,12 @@ export function MarketTab() {
   ];
 
   const formatFollowers = (count: number): string => {
-    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
-    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+    if (count >= 1000000) {
+    return `${(count / 1000000).toFixed(1)}M`;
+  }
+    if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}K`;
+  }
     return count.toString();
   };
 
@@ -152,13 +156,13 @@ export function MarketTab() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Engagement</span>
-                      <span className="font-medium">{influencer.engagement_rate}%</span>
+                      <span className="font-medium">{influencer.engagementrate}%</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Match Score</span>
                       <div className="flex items-center space-x-1">
                         <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <span className="font-medium">{influencer.match_score}%</span>
+                        <span className="font-medium">{influencer.matchscore}%</span>
                       </div>
                     </div>
                   </div>
@@ -182,16 +186,13 @@ export function MarketTab() {
     }
   };
 
-  return (
-    <div className="space-y-6">
+  return (<div className="space-y-6">
       {/* Tab Navigation */}
       <div className="bg-white rounded-lg shadow">
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6" aria-label="Tabs">
             {[
-              { id: 'discover', name: 'Discover', icon: TrendingUp },
-              { id: 'campaigns', name: 'Campaigns', icon: MessageCircle },
-              { id: 'bookings', name: 'Bookings', icon: Users }
+              { id: 'discover', name: 'Discover', icon: TrendingUp }, { id: 'campaigns', name: 'Campaigns', icon: MessageCircle }, { id: 'bookings', name: 'Bookings', icon: Users }
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;

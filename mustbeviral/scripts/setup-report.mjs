@@ -49,7 +49,7 @@ const safeExec = (command, options = {}) => {
 const safeReadJSON = (filePath) => {
   try {
     const fullPath = join(projectRoot, filePath);
-    if (!existsSync(fullPath)) return null;
+    if (!existsSync(fullPath)) {return null;}
     return JSON.parse(readFileSync(fullPath, 'utf8'));
   } catch (error) {
     return { error: error.message };

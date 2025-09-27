@@ -1,5 +1,5 @@
-import { Star } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { Star} from 'lucide-react';
+import { cn} from '../../lib/utils';
 
 interface TestimonialCardProps {
   quote: string;
@@ -16,16 +16,8 @@ interface TestimonialCardProps {
   className?: string;
 }
 
-export function TestimonialCard({
-  quote,
-  author,
-  role,
-  company,
-  avatar,
-  rating = 5,
-  metric,
-  className,
-}: TestimonialCardProps) {
+export function TestimonialCard(_{
+  quote, author, role, company, avatar, rating = 5, metric, className, }: TestimonialCardProps) {
   return (
     <div
       className={cn(

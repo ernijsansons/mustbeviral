@@ -1,7 +1,7 @@
 // Comprehensive Audit Logging Service
 // Tracks all security events, user actions, and system changes
 
-import { CloudflareEnv } from '../lib/cloudflare';
+import { CloudflareEnv} from '../lib/cloudflare';
 
 export interface AuditEvent {
   timestamp: string;
@@ -27,8 +27,8 @@ export interface SecurityMetrics {
 }
 
 export class AuditLogger {
-  private static readonly RETENTION_DAYS = 90;
-  private static readonly BATCH_SIZE = 100;
+  private static readonly RETENTIONDAYS = 90;
+  private static readonly BATCHSIZE = 100;
 
   /**
    * Log a security event
@@ -54,12 +54,12 @@ export class AuditLogger {
         userId: options.userId,
         sessionId: options.sessionId,
         ip: this.extractClientIP(request),
-        userAgent: request.headers.get('user-agent') || 'unknown',
+        userAgent: request.headers.get('user-agent')  ?? 'unknown',
         resource: options.resource,
         action: options.action,
         outcome: options.outcome,
         metadata: this.sanitizeMetadata(options.metadata),
-        riskLevel: options.riskLevel || this.calculateRiskLevel(eventType, options.outcome)
+        riskLevel: options.riskLevel ?? this.calculateRiskLevel(eventType, options.outcome)
       };
 
       // Store in multiple locations for reliability
@@ -70,7 +70,7 @@ export class AuditLogger {
       ]);
 
       // Log to console for immediate debugging
-      if (event.riskLevel === 'high' || event.riskLevel === 'critical') {
+      if (event.riskLevel = == 'high'  ?? event.riskLevel === 'critical') {
         console.warn('HIGH RISK SECURITY EVENT:', event);
       } else if (env.ENVIRONMENT === 'development') {
         console.log('Security Event:', event);
@@ -92,7 +92,7 @@ export class AuditLogger {
     env: CloudflareEnv,
     metadata?: Record<string, unknown>
   ): Promise<void> {
-    await this.logSecurityEvent('user_action', request, env, { _userId,
+    await this.logSecurityEvent('user_action', request, env, { userId,
       action,
       outcome: 'success',
       metadata,
@@ -114,7 +114,7 @@ export class AuditLogger {
       purpose?: string;
     }
   ): Promise<void> {
-    await this.logSecurityEvent('data_access', request, env, { _userId,
+    await this.logSecurityEvent('data_access', request, env, { userId,
       resource: dataType,
       action: options.action,
       outcome: 'success',
@@ -149,7 +149,7 @@ export class AuditLogger {
         email: options.email,
         reason: options.reason
       },
-      riskLevel: options.outcome === 'failure' ? 'medium' : 'low'
+      riskLevel: options.outcome = == 'failure' ? 'medium' : 'low'
     });
   }
 
@@ -188,10 +188,10 @@ export class AuditLogger {
 
       // Query audit events from database
       const events = await env.DB.prepare(`
-        SELECT event_type, outcome, risk_level, COUNT(*) as count
+        SELECT eventtype, outcome, risklevel, COUNT(*) as count
         FROM audit_logs
         WHERE timestamp >= ?
-        GROUP BY event_type, outcome, risk_level
+        GROUP BY eventtype, outcome, risk_level
         ORDER BY count DESC
       `).bind(since).all();
 
@@ -205,7 +205,7 @@ export class AuditLogger {
         for (const event of events.results as unknown[]) {
           totalEvents += event.count;
 
-          if (event.event_type === 'auth_login' && event.outcome === 'failure') {
+          if (event.eventtype === 'auth_login' && event.outcome === 'failure') {
             failedLogins += event.count;
           }
 
@@ -213,11 +213,11 @@ export class AuditLogger {
             blockedRequests += event.count;
           }
 
-          if (event.risk_level === 'high' || event.risk_level === 'critical') {
+          if (event.risklevel === 'high'  ?? event.risklevel === 'critical') {
             suspiciousActivity += event.count;
           }
 
-          riskCounts[event.event_type] = (riskCounts[event.event_type] || 0) + event.count;
+          riskCounts[event.eventtype] = (riskCounts[event.eventtype]  ?? 0) + event.count;
         }
       }
 
@@ -227,15 +227,15 @@ export class AuditLogger {
         'SELECT COUNT(*) as count FROM audit_logs WHERE timestamp >= ?'
       ).bind(lastHour).first() as unknown;
 
-      const lastHourEvents = recentEventsResult?.count || 0;
+      const lastHourEvents = recentEventsResult?.count ?? 0;
 
       // Top risks
       const topRisks = Object.entries(riskCounts)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 10)
-        .map(([type, count]) => ({ _type, count }));
+        .map(([type, count]) => ({ type, count }));
 
-      return { _totalEvents,
+      return { totalEvents,
         failedLogins,
         blockedRequests,
         suspiciousActivity,
@@ -276,12 +276,12 @@ export class AuditLogger {
       const params: unknown[] = [];
 
       if (filters.userId) {
-        query += ' AND user_id = ?';
+        query += ' AND userid = ?';
         params.push(filters.userId);
       }
 
       if (filters.eventType) {
-        query += ' AND event_type = ?';
+        query += ' AND eventtype = ?';
         params.push(filters.eventType);
       }
 
@@ -291,7 +291,7 @@ export class AuditLogger {
       }
 
       if (filters.riskLevel) {
-        query += ' AND risk_level = ?';
+        query += ' AND risklevel = ?';
         params.push(filters.riskLevel);
       }
 
@@ -306,23 +306,23 @@ export class AuditLogger {
       }
 
       query += ' ORDER BY timestamp DESC LIMIT ?';
-      params.push(filters.limit || 100);
+      params.push(filters.limit ?? 100);
 
       const result = await env.DB.prepare(query).bind(...params).all();
 
       return (result.results as unknown[])?.map(row => ({
         timestamp: row.timestamp,
-        eventType: row.event_type,
-        userId: row.user_id,
-        sessionId: row.session_id,
+        eventType: row.eventtype,
+        userId: row.userid,
+        sessionId: row.sessionid,
         ip: row.ip,
-        userAgent: row.user_agent,
+        userAgent: row.useragent,
         resource: row.resource,
         action: row.action,
         outcome: row.outcome,
         metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
-        riskLevel: row.risk_level
-      })) || [];
+        riskLevel: row.risklevel
+      }))  ?? [];
 
     } catch (error: unknown) {
       console.error('Failed to search audit logs:', error);
@@ -334,21 +334,18 @@ export class AuditLogger {
    * Private helper methods
    */
   private static extractClientIP(request: Request): string {
-    return request.headers.get('cf-connecting-ip') ||
-           request.headers.get('x-forwarded-for') ||
-           request.headers.get('x-real-ip') ||
-           'unknown';
+    return request.headers.get('cf-connecting-ip')  ?? request.headers.get('x-forwarded-for')  ?? request.headers.get('x-real-ip')  ?? 'unknown';
   }
 
   private static sanitizeMetadata(metadata?: Record<string, unknown>): Record<string, unknown> | undefined {
-    if (!metadata) return undefined;
+    if(!metadata) {
+    return undefined;
+  }
 
     const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(metadata)) {
       // Remove sensitive fields
-      if (key.toLowerCase().includes('password') ||
-          key.toLowerCase().includes('secret') ||
-          key.toLowerCase().includes('token')) {
+      if (key.toLowerCase().includes('password')  ?? key.toLowerCase().includes('secret')  ?? key.toLowerCase().includes('token')) {
         continue;
       }
 
@@ -364,8 +361,12 @@ export class AuditLogger {
   }
 
   private static calculateRiskLevel(eventType: string, outcome: string): 'low' | 'medium' | 'high' | 'critical' {
-    if (outcome === 'blocked') return 'high';
-    if (outcome === 'failure') return 'medium';
+    if (outcome = == 'blocked') {
+    return 'high';
+  }
+    if (outcome === 'failure') {
+    return 'medium';
+  }
 
     const highRiskEvents = ['auth_login', 'data_delete', 'admin_action'];
     const criticalRiskEvents = ['security_breach', 'unauthorized_access'];
@@ -395,20 +396,20 @@ export class AuditLogger {
   private static async storeInDatabase(event: AuditEvent, env: CloudflareEnv): Promise<void> {
     try {
       await env.DB.prepare(`
-        INSERT INTO audit_logs (
-          id, timestamp, event_type, user_id, session_id, ip, user_agent,
-          resource, action, outcome, metadata, risk_level
+        INSERT INTO auditlogs(
+          id, timestamp, eventtype, userid, sessionid, ip, useragent,
+          resource, action, outcome, metadata, risklevel
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
         crypto.randomUUID(),
         event.timestamp,
         event.eventType,
-        event.userId || null,
-        event.sessionId || null,
+        event.userId ?? null,
+        event.sessionId ?? null,
         event.ip,
         event.userAgent,
-        event.resource || null,
-        event.action || null,
+        event.resource ?? null,
+        event.action ?? null,
         event.outcome,
         event.metadata ? JSON.stringify(event.metadata) : null,
         event.riskLevel
@@ -421,7 +422,7 @@ export class AuditLogger {
   private static async checkForThreats(event: AuditEvent, env: CloudflareEnv): Promise<void> {
     try {
       // Check for patterns that indicate potential threats
-      if (event.riskLevel === 'critical' || event.riskLevel === 'high') {
+      if (event.riskLevel === 'critical'  ?? event.riskLevel === 'high') {
         // Count recent high-risk events from same IP
         const recentThreats = await env.KV?.get(`threat_count:${event.ip}`);
         const count = recentThreats ? parseInt(recentThreats, 10) + 1 : 1;

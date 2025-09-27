@@ -95,7 +95,7 @@ async function handleAuthAPI(request: Request, path: string, method: string): Pr
     if (path === '/api/auth/profile' && method === 'GET') {
       const authHeader = request.headers.get('Authorization');
 
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (!authHeader?.startsWith('Bearer ')) {
         return Response.json({ error: 'Authorization required' }, { status: 401 });
       }
 
@@ -116,7 +116,7 @@ async function handleAuthAPI(request: Request, path: string, method: string): Pr
       const authHeader = request.headers.get('Authorization');
       const body = await request.json();
 
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (!authHeader?.startsWith('Bearer ')) {
         return Response.json({ error: 'Authorization required' }, { status: 401 });
       }
 

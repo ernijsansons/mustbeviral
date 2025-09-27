@@ -3,7 +3,7 @@
  * Implements advanced rate limiting with sliding window and distributed tracking
  */
 
-import { CloudflareEnv } from '../lib/cloudflare';
+// import { CloudflareEnv} from '../lib/cloudflare';
 
 export interface RateLimitConfig {
   windowMs: number;
@@ -97,7 +97,9 @@ export class KVRateLimitStore implements RateLimitStore {
     const fullKey = `${this.prefix}${key}`;
     const data = await this.kv.get(fullKey);
 
-    if (!data) return null;
+    if (!data) {
+      return null;
+    }
 
     try {
       return JSON.parse(data);
@@ -122,7 +124,9 @@ export class KVRateLimitStore implements RateLimitStore {
     const fullKey = `${this.prefix}block:${key}`;
     const data = await this.kv.get(fullKey);
 
-    if (!data) return false;
+    if (!data) {
+      return false;
+    }
 
     try {
       const blockEntry = JSON.parse(data);
@@ -172,7 +176,7 @@ export class MemoryRateLimitStore implements RateLimitStore {
   }
 
   async get(key: string): Promise<RateLimitEntry | null> {
-    return this.store.get(key) || null;
+    return this.store.get(key)  ?? null;
   }
 
   async block(key: string, duration: number): Promise<void> {
@@ -181,7 +185,9 @@ export class MemoryRateLimitStore implements RateLimitStore {
 
   async isBlocked(key: string): Promise<boolean> {
     const blockExpires = this.blocks.get(key);
-    if (!blockExpires) return false;
+    if (!blockExpires) {
+      return false;
+    }
 
     if (blockExpires > Date.now()) {
       return true;
@@ -221,7 +227,7 @@ export class RateLimiter {
       console.log(`LOG: RATE-LIMIT-1 - Key ${key} is blocked`);
       return {
         limited: true,
-        retryAfter: this.config.blockDuration || 3600000,
+        retryAfter: this.config.blockDuration ?? 3600000,
         remaining: 0,
         limit: this.config.maxRequests
       };
@@ -236,7 +242,6 @@ export class RateLimiter {
     if (entry.firstRequest < windowStart) {
       // Reset the window
       await this.store.reset(key);
-      const newEntry = await this.store.increment(key);
 
       return {
         limited: false,
@@ -253,7 +258,7 @@ export class RateLimiter {
       // Progressive blocking for repeat offenders
       if (this.config.progressiveDelay && entry.count > this.config.maxRequests * 2) {
         const blockDuration = Math.min(
-          this.config.blockDuration || 3600000,
+          this.config.blockDuration ?? 3600000,
           (entry.count - this.config.maxRequests) * 60000 // 1 minute per excess request
         );
         await this.store.block(key, blockDuration);
@@ -282,7 +287,7 @@ export class RateLimiter {
    * Create rate limit response
    */
   createLimitResponse(retryAfter: number): Response {
-    const message = this.config.message || 'Too many requests, please try again later.';
+    const message = this.config.message ?? 'Too many requests, please try again later.';
 
     const headers = new Headers({
       'Content-Type': 'application/json',
@@ -313,7 +318,9 @@ export class RateLimiter {
     limit?: number;
     reset?: number;
   }): Response {
-    if (!this.config.headers) return response;
+    if (!this.config.headers) {
+      return response;
+    }
 
     const headers = new Headers(response.headers);
 
@@ -391,15 +398,15 @@ export const rateLimitConfigs = {
 export const keyGenerators = {
   // By IP address
   byIP: (request: Request): string => {
-    return request.headers.get('CF-Connecting-IP') ||
-           request.headers.get('X-Forwarded-For')?.split(',')[0] ||
-           'unknown';
+    return request.headers.get('CF-Connecting-IP')  ?? request.headers.get('X-Forwarded-For')?.split(',')[0]  ?? 'unknown';
   },
 
   // By user ID (from JWT token)
-  byUser: (request: Request): string => {
+  byUser: (request: Request): string = > {
     const auth = request.headers.get('Authorization');
-    if (!auth) return 'anonymous';
+     if (!auth) {
+       return 'anonymous';
+     }
 
     // Extract user ID from JWT token (simplified)
     const token = auth.replace('Bearer ', '');
@@ -416,15 +423,14 @@ export const keyGenerators = {
 
   // By API key
   byAPIKey: (request: Request): string => {
-    return request.headers.get('X-API-Key') || 'no-key';
+    return request.headers.get('X-API-Key')  ?? 'no-key';
   }
 };
 
 /**
  * Create rate limiter middleware
  */
-export function createRateLimiter(
-  config: Partial<RateLimitConfig> & { keyGenerator: (request: Request) => string },
+export function createRateLimiter(config: Partial<RateLimitConfig> & { keyGenerator: (request: Request) => string },
   store: RateLimitStore
 ) {
   const fullConfig: RateLimitConfig = {
@@ -441,7 +447,7 @@ export function createRateLimiter(
 
     if (result.limited) {
       console.log('LOG: RATE-LIMIT-MIDDLEWARE-1 - Request rate limited');
-      return limiter.createLimitResponse(result.retryAfter || 0);
+      return limiter.createLimitResponse(result.retryAfter ?? 0);
     }
 
     const response = await next();
@@ -465,9 +471,11 @@ export class RateLimitCleaner {
   }
 
   start(): void {
-    if (this.intervalId) return;
+     if (this.intervalId) {
+       return;
+     }
 
-    this.intervalId = setInterval(async () => {
+    this.intervalId = setInterval(async() => {
       console.log('LOG: RATE-LIMIT-CLEANER-1 - Running cleanup');
       // Cleanup logic would go here
       // In KV store, TTL handles this automatically

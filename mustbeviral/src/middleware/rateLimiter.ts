@@ -3,9 +3,9 @@
  * Provides multi-tier rate limiting with different strategies
  */
 
-import { CloudflareEnv } from '../lib/cloudflare';
-import { EnvironmentManager } from '../config/environment';
-import { ValidationError } from './validation';
+import { CloudflareEnv} from '../lib/cloudflare';
+import { EnvironmentManager} from '../config/environment';
+import { ValidationError} from './validation';
 
 export interface RateLimitConfig {
   windowMs: number;      // Time window in milliseconds
@@ -35,7 +35,7 @@ export class RateLimiter {
   private config: RateLimitConfig;
 
   constructor(env: CloudflareEnv, config: RateLimitConfig) {
-    this.kv = env.TRENDS_CACHE; // Using existing KV namespace
+    this.kv = env.TRENDSCACHE; // Using existing KV namespace
     this.config = {
       windowMs: 60000, // Default 1 minute
       maxRequests: 100, // Default 100 requests
@@ -55,13 +55,13 @@ export class RateLimiter {
     try {
       const key = this.generateKey(request);
       const now = Date.now();
-      const windowStart = now - this.config.windowMs;
+      // const windowStart = now - this.config.windowMs;
 
       // Get current rate limit data
       const entry = await this.getRateLimitEntry(key);
 
       // If no entry exists or window has expired, create new entry
-      if (!entry || entry.resetTime <= now) {
+      if (!entry  ?? entry.resetTime <= now) {
         const newEntry: RateLimitEntry = {
           count: 1,
           resetTime: now + this.config.windowMs,
@@ -125,9 +125,7 @@ export class RateLimiter {
    * Default key generator (IP address)
    */
   private defaultKeyGenerator(request: Request): string {
-    return request.headers.get('CF-Connecting-IP') ||
-           request.headers.get('X-Forwarded-For') ||
-           'unknown';
+    return request.headers.get('CF-Connecting-IP')  ?? request.headers.get('X-Forwarded-For')  ?? 'unknown';
   }
 
   /**
@@ -178,7 +176,7 @@ export class RateLimiter {
         retryAfter: result.retryAfter
       }),
       {
-        status: this.config.statusCode || 429,
+        status: this.config.statusCode ?? 429,
         headers
       }
     );
@@ -226,7 +224,7 @@ export class MultiTierRateLimiter {
     return {
       allowed: true,
       remaining: minRemaining === Infinity ? 100 : minRemaining,
-      resetTime: latestResetTime || Date.now() + 60000
+      resetTime: latestResetTime ?? Date.now() + 60000
     };
   }
 
@@ -295,17 +293,16 @@ export function createRateLimitMiddleware(env: CloudflareEnv) {
   multiLimiter.addTier('global', {
     windowMs: config.rateLimits.windowMs,
     maxRequests: config.rateLimits.maxRequests,
-    keyGenerator: (_request) => request.headers.get('CF-Connecting-IP') || 'unknown'
+    keyGenerator: (request) => request.headers.get('CF-Connecting-IP')  ?? 'unknown'
   });
 
   // API rate limit (more restrictive for API endpoints)
   multiLimiter.addTier('api', {
     windowMs: 60000, // 1 minute
-    maxRequests: 50,
-    keyGenerator: (_request) => {
+    maxRequests: 50, keyGenerator: (request) => {
       const url = new URL(request.url);
       if (url.pathname.startsWith('/api/')) {
-        return `api:${request.headers.get('CF-Connecting-IP') || 'unknown'}`;
+        return `api:${request.headers.get('CF-Connecting-IP')  ?? 'unknown'}`;
       }
       return 'non-api'; // Skip for non-API requests
     }
@@ -314,11 +311,10 @@ export function createRateLimitMiddleware(env: CloudflareEnv) {
   // Authentication rate limit (very restrictive for auth endpoints)
   multiLimiter.addTier('auth', {
     windowMs: 900000, // 15 minutes
-    maxRequests: 5,
-    keyGenerator: (_request) => {
+    maxRequests: 5, keyGenerator: (request) => {
       const url = new URL(request.url);
       if (url.pathname.includes('/auth/')) {
-        return `auth:${request.headers.get('CF-Connecting-IP') || 'unknown'}`;
+        return `auth:${request.headers.get('CF-Connecting-IP')  ?? 'unknown'}`;
       }
       return 'non-auth'; // Skip for non-auth requests
     }
@@ -369,8 +365,7 @@ export class UserRateLimiter {
 
     this.limiter = new RateLimiter(env, {
       windowMs: 3600000, // 1 hour
-      maxRequests: limits.requestsPerHour,
-      keyGenerator: (_request) => {
+      maxRequests: limits.requestsPerHour, keyGenerator: (request) => {
         // Extract user ID from Authorization header
         const authHeader = request.headers.get('authorization');
         if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -378,7 +373,7 @@ export class UserRateLimiter {
             const token = authHeader.substring(7);
             const payload = JSON.parse(atob(token.split('.')[1]));
             return `user:${payload.sub}:${userTier}`;
-          } catch (error: unknown) {
+          } catch (_error: unknown) {
             return 'anonymous';
           }
         }
@@ -415,9 +410,9 @@ export function createGeographicRateLimiter(env: CloudflareEnv) {
   return new RateLimiter(env, {
     windowMs: 60000, // 1 minute
     maxRequests: 10, // Very restrictive
-    keyGenerator: (_request) => {
-      const country = request.headers.get('CF-IPCountry') || 'XX';
-      const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    keyGenerator: (request) => {
+      const country = request.headers.get('CF-IPCountry')  ?? 'XX';
+      const ip = request.headers.get('CF-Connecting-IP')  ?? 'unknown';
 
       if (restrictedRegions.has(country)) {
         return `restricted:${country}:${ip}`;

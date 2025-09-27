@@ -5,22 +5,9 @@
  */
 
 import {
-  PlatformMetrics,
-  AlgorithmFactors,
-  ViralMechanics,
-  ContentSpecification,
-  ContentOptimization,
-  ContentGenerationRequest,
-  BatchGenerationRequest,
-  AdvancedAnalysis,
-  ReasoningChain,
-  TrendAnalysis,
-  CompetitorInsights,
-  PlatformAgentConfig,
-  IPlatformAgent
-} from './IPlatformAgent';
-import { ALGORITHM_DATABASE } from './AlgorithmData';
-import { AIBinding, CloudflareEnvironment, AIResponse } from '../../types/environment';
+  PlatformMetrics, AlgorithmFactors, ViralMechanics, ContentSpecification, ContentOptimization, ContentGenerationRequest, BatchGenerationRequest, AdvancedAnalysis, ReasoningChain, TrendAnalysis, CompetitorInsights, PlatformAgentConfig, IPlatformAgent} from './IPlatformAgent';
+import { ALGORITHMDATABASE} from './AlgorithmData';
+import { AIBinding, CloudflareEnvironment, AIResponse} from '../../types/environment';
 
 export class TikTokAgent implements IPlatformAgent {
   readonly platformName = 'TikTok';
@@ -96,8 +83,7 @@ export class TikTokAgent implements IPlatformAgent {
   }
 
   getContentSpecifications(contentType: string): ContentSpecification {
-    const specs = this.algorithmData.contentSpecifications.formats[contentType] ||
-                  this.algorithmData.contentSpecifications.formats.short_video;
+    const specs = this.algorithmData.contentSpecifications.formats[contentType]  ?? this.algorithmData.contentSpecifications.formats.shortvideo;
 
     return {
       format: contentType,
@@ -123,7 +109,7 @@ export class TikTokAgent implements IPlatformAgent {
     };
   }> {
     const startTime = Date.now();
-    const maxTokens = request.maxTokens || this.maxTokenOutput;
+    const maxTokens = request.maxTokens ?? this.maxTokenOutput;
 
     // Advanced TikTok reasoning chain
     const reasoningChain = await this.buildTikTokReasoningChain(request);
@@ -170,11 +156,11 @@ export class TikTokAgent implements IPlatformAgent {
       // Inject current TikTok trends into batch
       const trendingElements = await this.getCurrentTrendingElements();
 
-      const batchPromises = batch.map(async (req) => {
+      const batchPromises = batch.map(async(req) => {
         // Enhance request with trending elements
         const enhancedRequest = {
           ...req,
-          context: `${req.context || ''} TRENDING NOW: ${trendingElements.join(', ')}`
+          context: `${req.context ?? ''} TRENDING NOW: ${trendingElements.join(', ')}`
         };
 
         const generated = await this.generateContent(enhancedRequest);
@@ -675,7 +661,7 @@ export class TikTokAgent implements IPlatformAgent {
   private async buildTikTokPrompt(request: ContentGenerationRequest, reasoningChain: ReasoningChain[]): Promise<string> {
     const trendingElements = await this.getCurrentTrendingElements();
     const viralTriggers = Object.keys(this.algorithmData.viralMechanics.triggers)
-      .sort((a, _b) => this.algorithmData.viralMechanics.triggers[b] - this.algorithmData.viralMechanics.triggers[a])
+      .sort((a, b) => this.algorithmData.viralMechanics.triggers[b] - this.algorithmData.viralMechanics.triggers[a])
       .slice(0, 3);
 
     return `You are the world's most advanced TikTok content strategist with deep FYP algorithm knowledge.
@@ -708,7 +694,7 @@ TIKTOK VIRAL FORMULA:
 4. TRENDING INTEGRATION: Sound, hashtag, or challenge participation
 
 REASONING INSIGHTS:
-${reasoningChain.map((step, _i) => `${i + 1}. ${step.reasoning} (Confidence: ${step.confidence * 100}%)`).join('n')}
+${reasoningChain.map((step, i) => `${i + 1}. ${step.reasoning} (Confidence: ${step.confidence * 100}%)`).join('n')}
 
 MAXIMUM VIRAL OPTIMIZATION:
 - Create immediate pattern interrupt
@@ -741,10 +727,18 @@ TikTok Video Script:`;
   }
 
   private extractContent(result: unknown): string {
-    if (typeof result === 'string') return result.trim();
-    if (result.response) return result.response.trim();
-    if (result.content) return result.content.trim();
-    if (result.text) return result.text.trim();
+    if (typeof result === 'string') {
+    return result.trim();
+  }
+    if (result.response) {
+    return result.response.trim();
+  }
+    if (result.content) {
+    return result.content.trim();
+  }
+    if (result.text) {
+    return result.text.trim();
+  }
     return String(result).trim();
   }
 
@@ -752,19 +746,19 @@ TikTok Video Script:`;
     let score = 45;
 
     // Completion rate indicators
-    if (content.toLowerCase().includes('hook:') || content.startsWith('POV:')) score += 20;
-    if (content.toLowerCase().includes('wait for it') || content.toLowerCase().includes('watch till end')) score += 15;
+    if (content.toLowerCase().includes('hook:')  ?? content.startsWith('POV:')) {score += 20;}
+    if (content.toLowerCase().includes('wait for it')  ?? content.toLowerCase().includes('watch till end')) {score += 15;}
 
     // Trending element analysis
-    if (this.containsTrendingSound(content)) score += 25;
-    if (this.containsChallenge(content)) score += 20;
+    if (this.containsTrendingSound(content)) {score += 25;}
+    if (this.containsChallenge(content)) {score += 20;}
 
     // Engagement velocity triggers
-    if (content.includes('?') || content.toLowerCase().includes('comment')) score += 12;
-    if (content.toLowerCase().includes('duet') || content.toLowerCase().includes('stitch')) score += 18;
+    if (content.includes('?')  ?? content.toLowerCase().includes('comment')) {score += 12;}
+    if (content.toLowerCase().includes('duet')  ?? content.toLowerCase().includes('stitch')) {score += 18;}
 
     // Visual/format optimization
-    if (content.includes('transformation') || content.includes('reveal')) score += 15;
+    if (content.includes('transformation')  ?? content.includes('reveal')) {score += 15;}
 
     return Math.min(score, 100);
   }
@@ -784,12 +778,12 @@ TikTok Video Script:`;
     score += this.predictCompletionRate(content) * 0.3;
 
     // Duet/stitch potential
-    if (content.toLowerCase().includes('duet') || content.toLowerCase().includes('response')) {
+    if (content.toLowerCase().includes('duet')  ?? content.toLowerCase().includes('response')) {
       score += 20;
     }
 
     // Educational entertainment
-    if (content.toLowerCase().includes('learn') || content.toLowerCase().includes('tutorial')) {
+    if (content.toLowerCase().includes('learn')  ?? content.toLowerCase().includes('tutorial')) {
       score += 12;
     }
 
@@ -800,16 +794,16 @@ TikTok Video Script:`;
     let score = 50;
 
     // Comment triggers
-    if (content.includes('?') || content.toLowerCase().includes('what do you think')) score += 15;
+    if (content.includes('?')  ?? content.toLowerCase().includes('what do you think')) {score += 15;}
 
     // Share potential
-    if (content.toLowerCase().includes('send this to') || content.toLowerCase().includes('tag someone')) score += 18;
+    if (content.toLowerCase().includes('send this to')  ?? content.toLowerCase().includes('tag someone')) {score += 18;}
 
     // Follow triggers
-    if (content.toLowerCase().includes('follow for more') || content.toLowerCase().includes('part 2')) score += 12;
+    if (content.toLowerCase().includes('follow for more')  ?? content.toLowerCase().includes('part 2')) {score += 12;}
 
     // Save triggers
-    if (content.toLowerCase().includes('save this') || content.toLowerCase().includes('tutorial')) score += 10;
+    if (content.toLowerCase().includes('save this')  ?? content.toLowerCase().includes('tutorial')) {score += 10;}
 
     return Math.min(score, 100);
   }
@@ -826,38 +820,34 @@ TikTok Video Script:`;
       emotional_moment: ['emotional', 'crying', 'heartwarming', 'touching']
     };
 
-    const keywords = triggerMappings[trigger] || [trigger];
-    return keywords.some(keyword => content.toLowerCase().includes(keyword.toLowerCase()));
+    const keywords = triggerMappings[trigger]  ?? [trigger];
+    return keywords.some(keyword = > content.toLowerCase().includes(keyword.toLowerCase()));
   }
 
   private predictCompletionRate(content: string): number {
     let score = 50;
 
     // Strong hook indicators
-    if (content.toLowerCase().includes('pov:') || content.toLowerCase().includes('hook:')) score += 25;
-    if (content.toLowerCase().includes('wait for it') || content.toLowerCase().includes('watch till the end')) score += 20;
+    if (content.toLowerCase().includes('pov:')  ?? content.toLowerCase().includes('hook:')) {score += 25;}
+    if (content.toLowerCase().includes('wait for it')  ?? content.toLowerCase().includes('watch till the end')) {score += 20;}
 
     // Pacing indicators
-    if (content.includes('transformation') || content.includes('reveal')) score += 15;
+    if (content.includes('transformation')  ?? content.includes('reveal')) {score += 15;}
 
-    // Length optimization (shorter = better completion)
+    // Length optimization(shorter = better completion)
     const estimatedLength = content.split(' ').length * 0.5; // Rough seconds estimate
-    if (estimatedLength <= 30) score += 10;
-    else if (estimatedLength <= 60) score += 5;
+    if (estimatedLength <= 30) {score += 10;}
+    else if (estimatedLength <= 60) {score += 5;}
 
     return Math.min(score, 100);
   }
 
   private containsTrendingSound(content: string): boolean {
-    return content.toLowerCase().includes('sound:') ||
-           content.toLowerCase().includes('audio:') ||
-           content.toLowerCase().includes('music:');
+    return content.toLowerCase().includes('sound:')  ?? content.toLowerCase().includes('audio:')  ?? content.toLowerCase().includes('music:');
   }
 
   private containsChallenge(content: string): boolean {
-    return content.toLowerCase().includes('challenge') ||
-           content.toLowerCase().includes('#challenge') ||
-           content.toLowerCase().includes('trend');
+    return content.toLowerCase().includes('challenge')  ?? content.toLowerCase().includes('#challenge')  ?? content.toLowerCase().includes('trend');
   }
 
   private async getCurrentTrendingElements(): Promise<string[]> {
@@ -1088,8 +1078,8 @@ TikTok Video Script:`;
   }> {
     const sectionKeys = Object.keys(sections);
     return {
-      primaryPost: sections[sectionKeys[0]] || 'Part 1 of series',
-      followUpPosts: sectionKeys.slice(1).map((key, _i) => `Part ${i + 2}: ${sections[key]}`),
+      primaryPost: sections[sectionKeys[0]]  ?? 'Part 1 of series',
+      followUpPosts: sectionKeys.slice(1).map((key, i) => `Part ${i + 2}: ${sections[key]}`),
       crossPromotionPosts: ['Series announcement', 'Behind the scenes', 'Recap video']
     };
   }

@@ -3,9 +3,9 @@
  * Intelligent scaling decisions and resource optimization for Cloudflare Workers
  */
 
-import { CloudflareEnv } from '../cloudflare';
-import { getPerformanceMonitor } from '../monitoring/performanceMonitor';
-import { getConnectionPool } from '../database/connectionPool';
+import { CloudflareEnv} from '../cloudflare';
+import { getPerformanceMonitor} from '../monitoring/performanceMonitor';
+import { getConnectionPool} from '../database/connectionPool';
 
 export interface ScalingMetrics {
   cpuUsage: number;
@@ -73,7 +73,7 @@ export class AutoScaler {
   private scalingHistory: ScalingDecision[] = [];
   private lastScalingAction?: Date;
   private resourceMonitor: ResourceMonitor;
-  private readonly MAX_HISTORY = 100;
+  private readonly MAXHISTORY = 100;
 
   constructor(env: CloudflareEnv, config?: Partial<ScalingConfig>) {
     this.env = env;
@@ -168,7 +168,7 @@ export class AutoScaler {
     // Analyze recent patterns
     const scaleUpCount = recentDecisions.filter(d => d.action === 'scale_up').length;
     const scaleDownCount = recentDecisions.filter(d => d.action === 'scale_down').length;
-    const highUrgencyCount = recentDecisions.filter(d => d.urgency === 'critical' || d.urgency === 'high').length;
+    const highUrgencyCount = recentDecisions.filter(d => d.urgency === 'critical'  ?? d.urgency === 'high').length;
 
     if (scaleUpCount > 5) {
       immediate.push('Consider increasing base capacity');
@@ -188,14 +188,14 @@ export class AutoScaler {
     }
 
     // Performance-based recommendations
-    const avgResponseTime = recentDecisions.reduce((sum, _d) => sum + d.metrics.responseTime, 0) / recentDecisions.length;
+    const avgResponseTime = recentDecisions.reduce((sum, d) => sum + d.metrics.responseTime, 0) / recentDecisions.length;
     if (avgResponseTime > this.config.thresholds.responseTime.scaleUp) {
       immediate.push('Investigate performance bottlenecks');
       shortTerm.push('Consider performance optimization before scaling');
     }
 
     // Resource optimization
-    const avgCacheHitRate = recentDecisions.reduce((sum, _d) => sum + d.metrics.cacheHitRate, 0) / recentDecisions.length;
+    const avgCacheHitRate = recentDecisions.reduce((sum, d) => sum + d.metrics.cacheHitRate, 0) / recentDecisions.length;
     if (avgCacheHitRate < 70) {
       shortTerm.push('Improve caching strategy to reduce backend load');
       longTerm.push('Implement edge caching and CDN optimization');
@@ -206,7 +206,7 @@ export class AutoScaler {
     longTerm.push('Evaluate serverless architecture for better cost optimization');
     longTerm.push('Implement predictive scaling based on historical patterns');
 
-    return { _immediate,
+    return { immediate,
       shortTerm,
       longTerm,
       insights
@@ -252,7 +252,7 @@ export class AutoScaler {
     return {
       current: metrics,
       utilization,
-      capacity: { _remaining,
+      capacity: { remaining,
         projected: Math.min(100, avgUtilization + (growthRate * 30)), // 30 minutes projection
         timeToCapacity: Math.min(timeToCapacity, 1440) // Cap at 24 hours
       }
@@ -265,7 +265,7 @@ export class AutoScaler {
   async forceScalingAction(action: 'scale_up' | 'scale_down', reason: string): Promise<void> {
     const metrics = await this.collectMetrics();
 
-    const decision: ScalingDecision = { _action,
+    const decision: ScalingDecision = { action,
       reason: `Manual: ${reason}`,
       confidence: 100,
       urgency: 'high',
@@ -381,7 +381,7 @@ export class AutoScaler {
     // Determine action
     if (confidence > 70 && urgency === 'critical') {
       action = 'scale_up';
-    } else if (confidence > 50 && (urgency === 'high' || urgency === 'medium')) {
+    } else if (confidence > 50 && (urgency === 'high'  ?? urgency === 'medium')) {
       action = 'scale_up';
     } else if (confidence > 30 && urgency === 'medium') {
       action = 'scale_up';
@@ -399,7 +399,7 @@ export class AutoScaler {
 
     const reason = issues.length > 0 ? issues.join('; ') : 'All metrics within normal ranges';
 
-    return { _action,
+    return { action,
       reason,
       confidence,
       urgency,
@@ -493,7 +493,7 @@ export class AutoScaler {
    */
   private async storeScalingEvent(action: string, decision: ScalingDecision): Promise<void> {
     try {
-      const event = { _action,
+      const event = { action,
         decision,
         timestamp: new Date().toISOString()
       };
@@ -531,7 +531,7 @@ export class AutoScaler {
    * Start scaling evaluation timer
    */
   private startScalingEvaluation(): void {
-    setInterval(async () => {
+    setInterval(async() => {
       try {
         await this.evaluateScaling();
       } catch (error: unknown) {
@@ -545,11 +545,13 @@ export class AutoScaler {
    */
   private escalateUrgency(current: ScalingDecision['urgency'], new_urgency: ScalingDecision['urgency']): ScalingDecision['urgency'] {
     const urgencyLevels = { low: 0, medium: 1, high: 2, critical: 3 };
-    return urgencyLevels[new_urgency] > urgencyLevels[current] ? new_urgency : current;
+    return urgencyLevels[newurgency] > urgencyLevels[current] ? new_urgency : current;
   }
 
   private calculateGrowthRate(metrics: ScalingMetrics[]): number {
-    if (metrics.length < 2) return 0;
+    if (metrics.length < 2) {
+    return 0;
+  }
 
     const latest = metrics[metrics.length - 1];
     const previous = metrics[0];
@@ -572,8 +574,8 @@ export class AutoScaler {
 
   private addToHistory(decision: ScalingDecision): void {
     this.scalingHistory.push(decision);
-    if (this.scalingHistory.length > this.MAX_HISTORY) {
-      this.scalingHistory = this.scalingHistory.slice(-this.MAX_HISTORY);
+    if (this.scalingHistory.length > this.MAXHISTORY) {
+      this.scalingHistory = this.scalingHistory.slice(-this.MAXHISTORY);
     }
   }
 }
@@ -658,9 +660,9 @@ export class LoadBalancer {
 
   private weightedSelection(endpoints: string[]): string {
     // Select based on weights
-    const weights = this.strategy.weights || {};
+    const weights = this.strategy.weights ?? {};
     const weighted = endpoints.filter(ep => weights[ep] && weights[ep] > 0);
-    return weighted[0] || endpoints[0];
+    return weighted[0]  ?? endpoints[0];
   }
 
   private adaptiveSelection(endpoints: string[]): string {

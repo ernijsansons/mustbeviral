@@ -1,8 +1,8 @@
 // Universe-Bending Text Animation Component
-import React, { _useEffect, useRef, useState } from 'react';
-import { cn } from '../../lib/utils';
-import { _useCosmicAnimation, useCosmicSequence } from '../../hooks/useCosmicAnimation';
-import { useTheme } from '../../providers/ThemeProvider';
+import React, { useEffect, useRef, useState } from 'react';
+import { cn} from '../../lib/utils';
+import { useCosmicAnimation, useCosmicSequence} from '../../hooks/useCosmicAnimation';
+import { useTheme} from '../../providers/ThemeProvider';
 
 interface CosmicTextProps {
   children: string;
@@ -15,16 +15,8 @@ interface CosmicTextProps {
   glowEffect?: boolean;
 }
 
-export function CosmicText({ _children,
-  className,
-  variant = 'typewriter',
-  speed = 'normal',
-  delay = 0,
-  loop = false,
-  trigger = 'mount',
-  glowEffect = true,
-}: CosmicTextProps) {
-  const { _cosmicEffectsLevel, isAnimationEnabled } = useTheme();
+export function CosmicText({ children, className, variant = 'typewriter', speed = 'normal', delay = 0, loop = false, trigger = 'mount', glowEffect = true, }: CosmicTextProps) {
+  const { cosmicEffectsLevel, isAnimationEnabled} = useTheme();
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout>();
@@ -40,8 +32,8 @@ export function CosmicText({ _children,
   const baseSpeed = speeds[speed];
 
   // Typewriter effect
-  useEffect(() => {
-    if (variant !== 'typewriter' || !isAnimationEnabled) {
+  useEffect_(() => {
+    if (variant !== 'typewriter'  ?? !isAnimationEnabled) {
       setDisplayText(children);
       return;
     }
@@ -50,9 +42,9 @@ export function CosmicText({ _children,
       setDisplayText('');
       setCurrentIndex(0);
 
-      const timeout = setTimeout(() => {
-        intervalRef.current = setInterval(() => {
-          setCurrentIndex((_prev) => {
+      const timeout = setTimeout_(() => {
+        intervalRef.current = setInterval_(() => {
+          setCurrentIndex((prev) => {
             if (prev >= children.length) {
               if (loop) {
                 setDisplayText('');
@@ -84,9 +76,8 @@ export function CosmicText({ _children,
 
     // Intersection observer for 'intersect' trigger
     if (trigger === 'intersect' && containerRef.current) {
-      const observer = new IntersectionObserver(
-        (_entries) => {
-          entries.forEach((_entry) => {
+      const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
             if (entry.isIntersecting) {
               startTypewriter();
             }
@@ -164,7 +155,9 @@ export function CosmicText({ _children,
 
   // Get event handlers for hover trigger
   const getEventHandlers = () => {
-    if (trigger !== 'hover') return {};
+    if (trigger !== 'hover') {
+    return {};
+  }
 
     switch (variant) {
       case 'wave': return { onMouseEnter: waveAnimation.onMouseEnter, onMouseLeave: waveAnimation.onMouseLeave };
@@ -178,9 +171,11 @@ export function CosmicText({ _children,
 
   // Character-level animations for wave effect
   const renderWaveText = () => {
-    if (variant !== 'wave') return children;
+    if (variant !== 'wave') {
+    return children;
+  }
 
-    return children.split('').map((char, _index) => (
+    return children.split('').map((char, index) => (
       <span
         key={index}
         className={cn(
@@ -199,20 +194,22 @@ export function CosmicText({ _children,
 
   // Glitch text effect
   const renderGlitchText = () => {
-    if (variant !== 'glitch') return children;
+    if (variant !== 'glitch') {
+    return children;
+  }
 
     const glitchChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
     const [glitchedText, setGlitchedText] = useState(children);
 
-    useEffect(() => {
-      if (!isAnimationEnabled) return;
+    useEffect_(() => {
+      if (!isAnimationEnabled) {return;}
 
-      const glitchInterval = setInterval(() => {
+      const glitchInterval = setInterval_(() => {
         const shouldGlitch = Math.random() < 0.1;
         if (shouldGlitch) {
           const glitched = children
             .split('')
-            .map((char, _index) => {
+            .map((char, index) => {
               if (Math.random() < 0.1) {
                 return glitchChars[Math.floor(Math.random() * glitchChars.length)];
               }
@@ -233,7 +230,9 @@ export function CosmicText({ _children,
 
   // Hologram text effect with scan lines
   const renderHologramText = () => {
-    if (variant !== 'hologram') return children;
+    if (variant !== 'hologram') {
+    return children;
+  }
 
     return (
       <div className="relative">
@@ -282,7 +281,7 @@ export function CosmicText({ _children,
       stellar: 'text-gradient-aurora font-bold',
     };
 
-    return classes[variant] || '';
+    return classes[variant]  ?? '';
   };
 
   return (
@@ -308,12 +307,7 @@ export function CosmicText({ _children,
 }
 
 // Word-by-word reveal animation
-export function CosmicWordReveal({ _children,
-  className,
-  delay = 100,
-  trigger = 'intersect',
-  stagger = true,
-}: {
+export function CosmicWordReveal(_{ children, className, delay = 100, trigger = 'intersect', stagger = true, }: {
   children: string;
   className?: string;
   delay?: number;
@@ -321,10 +315,10 @@ export function CosmicWordReveal({ _children,
   stagger?: boolean;
 }) {
   const words = children.split(' ');
-  const { isAnimationEnabled } = useTheme();
+  const { isAnimationEnabled} = useTheme();
 
-  const { _getRef, play, currentIndex } = useCosmicSequence(
-    words.map((_, _index) => ({
+  const { getRef, play, currentIndex} = useCosmicSequence(
+    words.map((_, index) => ({
       preset: 'quantum-leap' as const,
       delay: stagger ? index * delay : 0,
       options: {
@@ -335,7 +329,7 @@ export function CosmicWordReveal({ _children,
     { enabled: isAnimationEnabled }
   );
 
-  useEffect(() => {
+  useEffect_(() => {
     if (trigger === 'mount') {
       play();
     }
@@ -343,13 +337,13 @@ export function CosmicWordReveal({ _children,
 
   return (
     <div className={cn('inline', className)}>
-      {words.map((word, _index) => (
+      {words.map((word, index) => (
         <span
           key={index}
           ref={getRef(index)}
           className={cn(
             'inline-block mr-2',
-            !isAnimationEnabled || currentIndex >= index ? 'opacity-100' : 'opacity-0'
+            !isAnimationEnabled ?? currentIndex >= index ? 'opacity-100' : 'opacity-0'
           )}
         >
           {word}

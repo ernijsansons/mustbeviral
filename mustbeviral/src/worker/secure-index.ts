@@ -1,12 +1,12 @@
 // Secure Must Be Viral Worker
 // Implements comprehensive security measures and best practices
 
-import { CloudflareEnv } from '../lib/cloudflare';
-import { SecureAuth } from './secure-auth';
-import { SecurePassword } from './secure-password';
-import { InputValidator } from './input-validation';
-import { RateLimiter } from './rate-limiter';
-import { SecurityMiddleware } from './security-middleware';
+import { CloudflareEnv} from '../lib/cloudflare';
+import { SecureAuth} from './secure-auth';
+import { SecurePassword} from './secure-password';
+import { InputValidator} from './input-validation';
+import { RateLimiter} from './rate-limiter';
+import { SecurityMiddleware} from './security-middleware';
 
 interface ApiResponse<T = unknown> {
   success: boolean;
@@ -37,14 +37,14 @@ export default {
       // CORS validation
       const corsResult = SecurityMiddleware.validateCORSRequest(request, env);
       if (!corsResult.valid) {
-        return this.createErrorResponse(corsResult.error || 'CORS validation failed', 403, corsResult.headers);
+        return this.createErrorResponse(corsResult.error ?? 'CORS validation failed', 403, corsResult.headers);
       }
 
       // Handle CORS preflight
       if (request.method === 'OPTIONS') {
         return new Response(null, {
           status: 200,
-          headers: SecurityMiddleware.getSecurityHeaders(env, request.headers.get('origin') || undefined)
+          headers: SecurityMiddleware.getSecurityHeaders(env, request.headers.get('origin')  ?? undefined)
         });
       }
 
@@ -59,7 +59,7 @@ export default {
           endpoint: path
         });
         return this.createErrorResponse(
-          rateLimitResult.reason || 'Rate limit exceeded',
+          rateLimitResult.reason ?? 'Rate limit exceeded',
           429,
           RateLimiter.createRateLimitHeaders(rateLimitResult)
         );
@@ -69,7 +69,7 @@ export default {
       const response = await this.handleRequest(request, env, path);
 
       // Add security headers to response
-      const securityHeaders = SecurityMiddleware.getSecurityHeaders(env, request.headers.get('origin') || undefined);
+      const securityHeaders = SecurityMiddleware.getSecurityHeaders(env, request.headers.get('origin')  ?? undefined);
       const rateLimitHeaders = RateLimiter.createRateLimitHeaders(rateLimitResult);
 
       // Combine all headers
@@ -186,7 +186,7 @@ export default {
         return this.createErrorResponse(`Validation failed: ${validation.errors.join(', ')}`, 400);
       }
 
-      const { _email, username, password, role, aiPreferenceLevel } = validation.sanitized!;
+      const { email, username, password, role, aiPreferenceLevel} = validation.sanitized!;
 
       // Check if user exists
       const existingUser = await env.DB.prepare(
@@ -194,7 +194,7 @@ export default {
       ).bind(email, username).first();
 
       if (existingUser) {
-        await this.logSecurityEvent('registration_attempt_duplicate', request, env, { _email, username });
+        await this.logSecurityEvent('registration_attempt_duplicate', request, env, { email, username });
         return this.createErrorResponse('User already exists', 409);
       }
 
@@ -204,20 +204,20 @@ export default {
       // Create user
       const userId = crypto.randomUUID();
       await env.DB.prepare(`
-        INSERT INTO users (id, email, username, password_hash, role, onboarding_completed, ai_preference_level)
+        INSERT INTO users (id, email, username, passwordhash, role, onboardingcompleted, aipreferencelevel)
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `).bind(
         userId,
         email,
         username,
         passwordHash,
-        role || 'creator',
+        role ?? 'creator',
         false,
-        aiPreferenceLevel || 50
+        aiPreferenceLevel ?? 50
       ).run();
 
       // Generate tokens
-      const accessToken = await SecureAuth.generateToken(userId, email, username, role || 'creator', env);
+      const accessToken = await SecureAuth.generateToken(userId, email, username, role ?? 'creator', env);
       const refreshToken = await SecureAuth.generateRefreshToken(userId, env);
 
       // Store refresh token
@@ -227,12 +227,12 @@ export default {
         id: userId,
         email,
         username,
-        role: role || 'creator',
+        role: role ?? 'creator',
         onboarding_completed: false,
-        ai_preference_level: aiPreferenceLevel || 50
+        ai_preference_level: aiPreferenceLevel ?? 50
       };
 
-      await this.logSecurityEvent('user_registered', request, env, { _userId, email });
+      await this.logSecurityEvent('user_registered', request, env, { userId, email });
 
       return this.createSuccessResponse({
         user: SecurityMiddleware.sanitizeResponse(user),
@@ -261,11 +261,11 @@ export default {
         return this.createErrorResponse(`Validation failed: ${validation.errors.join(', ')}`, 400);
       }
 
-      const { _email, password } = validation.sanitized!;
+      const { email, password} = validation.sanitized!;
 
       // Find user
       const user = await env.DB.prepare(
-        'SELECT id, email, username, password_hash, role, onboarding_completed, ai_preference_level FROM users WHERE email = ?'
+        'SELECT id, email, username, passwordhash, role, onboardingcompleted, ai_preference_level FROM users WHERE email = ?'
       ).bind(email).first() as unknown;
 
       if (!user) {
@@ -274,7 +274,7 @@ export default {
       }
 
       // Verify password
-      const validPassword = await SecurePassword.verifyPassword(password, user.password_hash);
+      const validPassword = await SecurePassword.verifyPassword(password, user.passwordhash);
       if (!validPassword) {
         await this.logSecurityEvent('login_attempt_invalid_password', request, env, { userId: user.id });
         return this.createErrorResponse('Invalid credentials', 401);
@@ -292,8 +292,8 @@ export default {
         email: user.email,
         username: user.username,
         role: user.role,
-        onboarding_completed: user.onboarding_completed === 1,
-        ai_preference_level: user.ai_preference_level
+        onboarding_completed: user.onboardingcompleted === 1,
+        ai_preference_level: user.aipreferencelevel
       };
 
       await this.logSecurityEvent('user_login', request, env, { userId: user.id });
@@ -323,7 +323,7 @@ export default {
     }
 
     const user = await env.DB.prepare(
-      'SELECT id, email, username, role, onboarding_completed, ai_preference_level FROM users WHERE id = ?'
+      'SELECT id, email, username, role, onboardingcompleted, ai_preference_level FROM users WHERE id = ?'
     ).bind(authResult.userId).first() as unknown;
 
     if (!user) {
@@ -335,8 +335,8 @@ export default {
       email: user.email,
       username: user.username,
       role: user.role,
-      onboarding_completed: user.onboarding_completed === 1,
-      ai_preference_level: user.ai_preference_level
+      onboarding_completed: user.onboardingcompleted === 1,
+      ai_preference_level: user.aipreferencelevel
     };
 
     return this.createSuccessResponse(SecurityMiddleware.sanitizeResponse(userResponse));
@@ -348,13 +348,13 @@ export default {
   async handleRefreshToken(request: Request, env: CloudflareEnv): Promise<Response> {
     try {
       const body = await request.json();
-      const { refresh_token } = body;
+      const { refreshtoken} = body;
 
-      if (!refresh_token) {
+      if (!refreshtoken) {
         return this.createErrorResponse('Refresh token required', 400);
       }
 
-      const tokenResult = await SecureAuth.verifyRefreshToken(refresh_token, env);
+      const tokenResult = await SecureAuth.verifyRefreshToken(refreshtoken, env);
       if (!tokenResult.valid) {
         return this.createErrorResponse('Invalid refresh token', 401);
       }
@@ -363,7 +363,7 @@ export default {
 
       // Verify refresh token in storage
       const storedToken = await env.KV?.get(`refresh_token:${userId}`);
-      if (storedToken !== refresh_token) {
+      if (storedToken !== refreshtoken) {
         await this.logSecurityEvent('invalid_refresh_token_attempt', request, env, { userId });
         return this.createErrorResponse('Invalid refresh token', 401);
       }
@@ -414,7 +414,7 @@ export default {
 
     const tokenResult = await SecureAuth.verifyToken(authValidation.token!, env);
     if (!tokenResult.valid) {
-      return { success: false, error: tokenResult.error || 'Invalid token' };
+      return { success: false, error: tokenResult.error ?? 'Invalid token' };
     }
 
     return { success: true, userId: tokenResult.payload!.sub };
@@ -427,7 +427,7 @@ export default {
     const identifier = RateLimiter.getIdentifier(request);
 
     if (path.includes('/auth/')) {
-      if (path.includes('/login') || path.includes('/register')) {
+      if (path.includes('/login')  ?? path.includes('/register')) {
         return await RateLimiter.checkAuthRateLimit(identifier, env);
       }
     }
@@ -469,14 +469,14 @@ export default {
       const logEntry = {
         timestamp: new Date().toISOString(),
         event,
-        ip: request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
+        ip: request.headers.get('cf-connecting-ip')  ?? request.headers.get('x-forwarded-for')  ?? 'unknown',
+        userAgent: request.headers.get('user-agent')  ?? 'unknown',
         url: request.url,
         method: request.method,
         metadata
       };
 
-      // Store in KV for analysis (with TTL)
+      // Store in KV for analysis(with TTL)
       const logKey = `security_log:${Date.now()}:${crypto.randomUUID()}`;
       await env.KV?.put(logKey, JSON.stringify(logEntry), { expirationTtl: 30 * 24 * 60 * 60 }); // 30 days
 
@@ -496,14 +496,14 @@ export default {
     duration: number
   ): Promise<void> {
     // Only log in development or for errors
-    if (env.ENVIRONMENT === 'development' || response.status >= 400) {
+    if (env.ENVIRONMENT === 'development'  ?? response.status >= 400) {
       console.log({
         timestamp: new Date().toISOString(),
         method: request.method,
         url: request.url,
         status: response.status,
         duration: `${duration}ms`,
-        ip: request.headers.get('cf-connecting-ip') || 'unknown'
+        ip: request.headers.get('cf-connecting-ip')  ?? 'unknown'
       });
     }
   },
@@ -527,7 +527,7 @@ export default {
       error
     };
 
-    return Response.json(response, { _status, headers });
+    return Response.json(response, { status, headers });
   },
 
   // Placeholder implementations for remaining endpoints

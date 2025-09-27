@@ -3,13 +3,13 @@
  * Comprehensive API management with routing, load balancing, caching, and monitoring
  */
 
-import { CloudflareEnv } from '../cloudflare';
-import { createSecurityMiddleware } from '../../middleware/security';
-import { createRateLimitMiddleware } from '../../middleware/rateLimiter';
-import { createRouteSecurityMiddleware } from '../../middleware/routeSecurity';
-import { getThreatDetector } from '../security/threatDetection';
-import { getPerformanceMonitor } from '../monitoring/performanceMonitor';
-import { RequestContextMiddleware } from '../../worker/requestContext';
+import { CloudflareEnv} from '../cloudflare';
+import { createSecurityMiddleware} from '../../middleware/security';
+import { createRateLimitMiddleware} from '../../middleware/rateLimiter';
+import { createRouteSecurityMiddleware} from '../../middleware/routeSecurity';
+import { getThreatDetector} from '../security/threatDetection';
+import { getPerformanceMonitor} from '../monitoring/performanceMonitor';
+import { RequestContextMiddleware} from '../../worker/requestContext';
 
 export interface APIRoute {
   id: string;
@@ -215,7 +215,7 @@ export class AdvancedAPIGateway {
     });
 
     // Sort by order
-    this.middleware.sort((a, _b) => a.order - b.order);
+    this.middleware.sort((a, b) => a.order - b.order);
     console.log(`LOG: API-GATEWAY-MIDDLEWARE-1 - Registered middleware: ${middleware.name}`);
   }
 
@@ -235,7 +235,7 @@ export class AdvancedAPIGateway {
 
     try {
       // Create request context
-      const { request: contextualRequest, context } = await this.requestContextMiddleware.processRequest(request);
+      const { request: contextualRequest, context} = await this.requestContextMiddleware.processRequest(request);
 
       // Find matching route
       const route = this.findMatchingRoute(request);
@@ -312,8 +312,8 @@ export class AdvancedAPIGateway {
       ? [this.routes.get(routeId)].filter(Boolean) as APIRoute[]
       : Array.from(this.routes.values());
 
-    return routes.map(route => ({ _route,
-      metrics: this.metrics.routes[route.id] || this.createEmptyRouteMetrics(),
+    return routes.map(route => ({ route,
+      metrics: this.metrics.routes[route.id]  ?? this.createEmptyRouteMetrics(),
       trends: this.generateTrendData(route.id),
       errors: this.generateErrorData(route.id)
     }));
@@ -324,7 +324,9 @@ export class AdvancedAPIGateway {
    */
   updateRouteConfig(routeId: string, config: Partial<RouteConfig>): boolean {
     const route = this.routes.get(routeId);
-    if (!route) return false;
+    if (!route) {
+    return false;
+  }
 
     route.config = { ...route.config, ...config };
     console.log(`LOG: API-GATEWAY-UPDATE-1 - Updated route config: ${routeId}`);
@@ -336,7 +338,9 @@ export class AdvancedAPIGateway {
    */
   toggleRoute(routeId: string, enabled: boolean): boolean {
     const route = this.routes.get(routeId);
-    if (!route) return false;
+    if (!route) {
+    return false;
+  }
 
     if (!enabled) {
       route.deprecated = true;
@@ -359,11 +363,11 @@ export class AdvancedAPIGateway {
 
     for (const route of this.routes.values()) {
       // Check method
-      if (!route.methods.includes(method)) continue;
+      if (!route.methods.includes(method)) {continue;}
 
       // Check path
       const pathMatch = typeof route.path === 'string'
-        ? url.pathname === route.path || url.pathname.startsWith(route.path)
+        ? url.pathname === route.path ?? url.pathname.startsWith(route.path)
         : route.path.test(url.pathname);
 
       if (pathMatch && !route.deprecated) {
@@ -386,7 +390,7 @@ export class AdvancedAPIGateway {
     // Extract query parameters
     const query = Object.fromEntries(url.searchParams.entries());
 
-    const apiRequest = Object.assign(request, { _params,
+    const apiRequest = Object.assign(request, { params,
       query,
       context: {
         requestId: context.id,
@@ -395,8 +399,8 @@ export class AdvancedAPIGateway {
         ip: context.ip,
         userAgent: context.userAgent,
         route,
-        authenticated: context.authenticated || false,
-        permissions: context.permissions || []
+        authenticated: context.authenticated ?? false,
+        permissions: context.permissions ?? []
       },
       startTime: Date.now()
     }) as APIRequest;
@@ -445,7 +449,7 @@ export class AdvancedAPIGateway {
     const allMiddleware = [
       ...this.middleware.filter(m => m.enabled),
       ...route.middleware.filter(m => m.enabled)
-    ].sort((a, _b) => a.order - b.order);
+    ].sort((a, b) => a.order - b.order);
 
     let index = 0;
 
@@ -514,7 +518,7 @@ export class AdvancedAPIGateway {
       }
 
       // Map status codes
-      if (config.status?.map && config.status.map[response.status]) {
+      if (config.status?.map?.[response.status]) {
         const newStatus = config.status.map[response.status];
         response = new Response(response.body, {
           status: newStatus,
@@ -540,14 +544,14 @@ export class AdvancedAPIGateway {
    */
   private async cacheResponse(request: APIRequest, response: APIResponse): Promise<void> {
     const cacheConfig = request.context.route.config.caching;
-    if (!cacheConfig?.enabled) return;
+    if (!cacheConfig?.enabled) {return;}
 
     // Check cache conditions
     if (cacheConfig.conditions) {
       const shouldCache = cacheConfig.conditions.every(condition =>
         this.evaluateCacheCondition(condition, request, response)
       );
-      if (!shouldCache) return;
+      if (!shouldCache) {return;}
     }
 
     await this.cache.set(request, response, cacheConfig.ttl);
@@ -559,8 +563,7 @@ export class AdvancedAPIGateway {
   private initializeMiddleware(): void {
     // Security middleware
     this.registerMiddleware({
-      name: 'security',
-      handler: async (request, _next) => {
+      name: 'security', handler: async (request, next) => {
         const security = createSecurityMiddleware();
         const securityCheck = security.processRequest(request);
         if (securityCheck) {
@@ -574,8 +577,7 @@ export class AdvancedAPIGateway {
 
     // Rate limiting middleware
     this.registerMiddleware({
-      name: 'rate_limit',
-      handler: async (request, _next) => {
+      name: 'rate_limit', handler: async (request, next) => {
         const rateLimiter = createRateLimitMiddleware(this.env);
         const rateLimitResult = await rateLimiter(request);
         if (rateLimitResult) {
@@ -588,8 +590,7 @@ export class AdvancedAPIGateway {
 
     // Request/response logging
     this.registerMiddleware({
-      name: 'logging',
-      handler: async (request, _next) => {
+      name: 'logging', handler: async (request, next) => {
         const startTime = Date.now();
         console.log(`LOG: API-GATEWAY-REQUEST-1 - ${request.method} ${request.url}`);
 
@@ -604,15 +605,14 @@ export class AdvancedAPIGateway {
 
     // Performance monitoring
     this.registerMiddleware({
-      name: 'monitoring',
-      handler: async (request, _next) => {
+      name: 'monitoring', handler: async (request, next) => {
         const perfMonitor = getPerformanceMonitor(this.env);
         const response = await next();
 
         perfMonitor.recordRequest(request.context as unknown, {
           duration: Date.now() - request.startTime,
           statusCode: response.status,
-          cacheHit: response.metadata?.cacheHit || false
+          cacheHit: response.metadata?.cacheHit ?? false
         });
 
         return response;
@@ -637,7 +637,7 @@ export class AdvancedAPIGateway {
         const routePart = routeParts[i];
         if (routePart.startsWith(':')) {
           const paramName = routePart.substring(1);
-          params[paramName] = requestParts[i] || '';
+          params[paramName] = requestParts[i]  ?? '';
         }
       }
     }
@@ -650,10 +650,10 @@ export class AdvancedAPIGateway {
 
     switch (condition.type) {
       case 'header':
-        value = request.headers.get(condition.key) || '';
+        value = request.headers.get(condition.key)  ?? '';
         break;
       case 'query':
-        value = request.query[condition.key] || '';
+        value = request.query[condition.key]  ?? '';
         break;
       case 'method':
         value = request.method;
@@ -678,7 +678,9 @@ export class AdvancedAPIGateway {
   }
 
   private async transformResponseBody(response: APIResponse, config: ResponseTransformation['body']): Promise<APIResponse> {
-    if (!config) return response;
+    if (!config) {
+    return response;
+  }
 
     try {
       const body = await response.text();
@@ -741,7 +743,7 @@ export class AdvancedAPIGateway {
         message,
         timestamp: new Date().toISOString()
       }),
-      { _status,
+      { status,
         headers: {
           'Content-Type': 'application/json'
         }
@@ -923,7 +925,7 @@ class APICache {
 
   private generateCacheKey(request: APIRequest): string {
     const url = new URL(request.url);
-    const varyBy = request.context.route.config.caching?.varyBy || [];
+    const varyBy = request.context.route.config.caching?.varyBy ?? [];
 
     let key = `${request.method}:${url.pathname}`;
 

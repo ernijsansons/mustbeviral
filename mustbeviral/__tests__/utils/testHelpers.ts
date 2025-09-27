@@ -266,8 +266,8 @@ export class MemoryLeakDetector {
       const lastRecent = recent[recent.length - 1].memory;
       const trendDelta = lastRecent - firstRecent;
       
-      if (trendDelta > 10) trend = 'increasing';
-      else if (trendDelta < -10) trend = 'decreasing';
+      if (trendDelta > 10) {trend = 'increasing';}
+      else if (trendDelta < -10) {trend = 'decreasing';}
     }
 
     return {
@@ -463,7 +463,7 @@ export const testUtils = {
     
     while (Date.now() - startTime < timeout) {
       const result = await condition();
-      if (result) return;
+      if (result) {return;}
       await this.waitFor(interval);
     }
     

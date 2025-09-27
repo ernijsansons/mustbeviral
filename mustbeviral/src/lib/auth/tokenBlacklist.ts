@@ -3,8 +3,8 @@
  * Manages blacklisted JWT tokens using Cloudflare KV
  */
 
-import { CloudflareEnv } from '../cloudflare';
-import { ValidationError } from '../../middleware/validation';
+import { CloudflareEnv} from '../cloudflare';
+import { ValidationError} from '../../middleware/validation';
 
 export interface BlacklistEntry {
   jti: string; // JWT ID
@@ -19,7 +19,7 @@ export class TokenBlacklist {
   private kv: KVNamespace;
 
   constructor(env: CloudflareEnv) {
-    this.kv = env.TRENDS_CACHE; // Using existing KV namespace
+    this.kv = env.TRENDSCACHE; // Using existing KV namespace
   }
 
   /**
@@ -33,7 +33,7 @@ export class TokenBlacklist {
     sessionId?: string
   ): Promise<void> {
     try {
-      const entry: BlacklistEntry = { _jti,
+      const entry: BlacklistEntry = { jti,
         reason,
         blacklistedAt: new Date().toISOString(),
         expiresAt: expiresAt.toISOString(),
@@ -102,7 +102,7 @@ export class TokenBlacklist {
     try {
       // Store a user-level blacklist entry
       const key = `user_blacklist:${userId}`;
-      const entry = { _userId,
+      const entry = { userId,
         reason,
         blacklistedAt: new Date().toISOString()
       };
@@ -143,7 +143,7 @@ export class TokenBlacklist {
   async blacklistSessionTokens(sessionId: string, reason: string = 'session_invalidated'): Promise<void> {
     try {
       const key = `session_blacklist:${sessionId}`;
-      const entry = { _sessionId,
+      const entry = { sessionId,
         reason,
         blacklistedAt: new Date().toISOString()
       };
@@ -300,7 +300,7 @@ export function extractJTI(token: string): string {
     }
 
     const payload = JSON.parse(atob(parts[1]));
-    return payload.jti || `${payload.sub}_${payload.iat}`;
+    return payload.jti ?? `${payload.sub}_${payload.iat}`;
   } catch (error: unknown) {
     throw new ValidationError(
       [{ field: 'token', message: 'Failed to extract token identifier' }],

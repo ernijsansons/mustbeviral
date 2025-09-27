@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Clock, CheckCircle, AlertCircle, Calendar, Download } from 'lucide-react';
+import { DollarSign, TrendingUp, Clock, CheckCircle, AlertCircle, Calendar, Download} from 'lucide-react';
 
 interface EarningsOverview {
   user_id: string;
@@ -38,16 +38,15 @@ export function EarningsDashboard({ userId = 'demo-user' }: { userId?: string })
 
   console.log('LOG: COMPONENT-EARNINGS-2 - EarningsDashboard rendered for user:', userId);
 
-  useEffect(() => {
+  useEffect_(() => {
     loadEarningsData();
   }, [userId]);
 
-  const loadEarningsData = async () => {
     console.log('LOG: COMPONENT-EARNINGS-3 - Loading earnings data');
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/revenue?type=earnings&user_id=${userId}`);
+      const response = await fetch(`/api/revenue?type=earnings&userid=${userId}`);
       const result = await response.json();
 
       if (result.success) {
@@ -136,7 +135,7 @@ export function EarningsDashboard({ userId = 'demo-user' }: { userId?: string })
           
           <div className="flex items-center space-x-4">
             <div className="text-right">
-              <p className="text-2xl font-bold text-green-600">{formatCurrency(overview.total_earned)}</p>
+              <p className="text-2xl font-bold text-green-600">{formatCurrency(overview.totalearned)}</p>
               <p className="text-sm text-gray-500">Total Earned</p>
             </div>
           </div>
@@ -176,7 +175,7 @@ export function EarningsDashboard({ userId = 'demo-user' }: { userId?: string })
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Earned</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(overview.total_earned)}
+                  {formatCurrency(overview.totalearned)}
                 </p>
               </div>
             </div>
@@ -190,7 +189,7 @@ export function EarningsDashboard({ userId = 'demo-user' }: { userId?: string })
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Pending</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(overview.pending_amount)}
+                  {formatCurrency(overview.pendingamount)}
                 </p>
               </div>
             </div>
@@ -204,7 +203,7 @@ export function EarningsDashboard({ userId = 'demo-user' }: { userId?: string })
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Completed</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(overview.completed_amount)}
+                  {formatCurrency(overview.completedamount)}
                 </p>
               </div>
             </div>
@@ -218,7 +217,7 @@ export function EarningsDashboard({ userId = 'demo-user' }: { userId?: string })
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Avg Rate</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatPercentage(overview.avg_commission_rate)}
+                  {formatPercentage(overview.avgcommissionrate)}
                 </p>
               </div>
             </div>
@@ -231,7 +230,7 @@ export function EarningsDashboard({ userId = 'demo-user' }: { userId?: string })
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Commission Transactions</h3>
-            <span className="text-sm text-gray-500">{overview.total_transactions} total</span>
+            <span className="text-sm text-gray-500">{overview.totaltransactions} total</span>
           </div>
           
           <div className="space-y-4">
@@ -245,15 +244,15 @@ export function EarningsDashboard({ userId = 'demo-user' }: { userId?: string })
                     </span>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-gray-900">{formatCurrency(transaction.commission_amount)}</p>
+                    <p className="font-semibold text-gray-900">{formatCurrency(transaction.commissionamount)}</p>
                     <p className="text-xs text-gray-500">
-                      {formatPercentage(transaction.commission_rate)} of {formatCurrency(transaction.amount)}
+                      {formatPercentage(transaction.commissionrate)} of {formatCurrency(transaction.amount)}
                     </p>
                   </div>
                 </div>
                 <div className="text-sm text-gray-600">
-                  <p>Match ID: {transaction.match_id}</p>
-                  <p>Created: {new Date(transaction.created_at).toLocaleDateString()}</p>
+                  <p>Match ID: {transaction.matchid}</p>
+                  <p>Created: {new Date(transaction.createdat).toLocaleDateString()}</p>
                 </div>
               </div>
             )) : (
@@ -279,7 +278,7 @@ export function EarningsDashboard({ userId = 'demo-user' }: { userId?: string })
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Pending Amount:</span>
-                    <span className="font-semibold">{formatCurrency(overview.pending_amount)}</span>
+                    <span className="font-semibold">{formatCurrency(overview.pendingamount)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Minimum Required:</span>
@@ -298,7 +297,7 @@ export function EarningsDashboard({ userId = 'demo-user' }: { userId?: string })
               
               <button
                 onClick={requestPayout}
-                disabled={!overview.next_payout_eligible}
+                disabled={!overview.nextpayouteligible}
                 className="w-full bg-indigo-600 text-white px-4 py-3 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Request Payout
@@ -320,7 +319,7 @@ export function EarningsDashboard({ userId = 'demo-user' }: { userId?: string })
             <div className="mt-6 bg-green-50 p-4 rounded-lg">
               <h4 className="font-medium text-green-900 mb-2">Last Payout</h4>
               <p className="text-sm text-green-800">
-                {new Date(overview.last_payout).toLocaleDateString()} - Check your connected account for details
+                {new Date(overview.lastpayout).toLocaleDateString()} - Check your connected account for details
               </p>
             </div>
           )}
@@ -340,7 +339,7 @@ export function useEarnings(userId: string) {
     setLoading(true);
     
     try {
-      const response = await fetch(`/api/revenue?type=earnings&user_id=${userId}`);
+      const response = await fetch(`/api/revenue?type=earnings&userid=${userId}`);
       const result = await response.json();
       
       if (result.success) {

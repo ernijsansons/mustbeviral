@@ -47,8 +47,8 @@ export class DIContainer {
     const registration: ServiceRegistration<T> = {
       name: descriptor.name,
       factory: descriptor.factory,
-      dependencies: descriptor.dependencies || [],
-      lifetime: descriptor.lifetime || ServiceLifetime.TRANSIENT,
+      dependencies: descriptor.dependencies ?? [],
+      lifetime: descriptor.lifetime ?? ServiceLifetime.TRANSIENT,
       isAsync: this.isAsyncFactory(descriptor.factory)
     };
 
@@ -339,11 +339,11 @@ export class DIContainer {
   }
 
   private getExistingInstance<T>(name: string, lifetime: ServiceLifetime): T | null {
-    switch (lifetime) {
+    switch(lifetime) {
       case ServiceLifetime.SINGLETON:
-        return this.singletonInstances.get(name) || null;
+        return this.singletonInstances.get(name)  ?? null;
       case ServiceLifetime.SCOPED:
-        return this.scopedInstances.get(name) || null;
+        return this.scopedInstances.get(name)  ?? null;
       case ServiceLifetime.TRANSIENT:
         return null; // Always create new instance
       default:

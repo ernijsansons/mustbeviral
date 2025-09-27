@@ -1,6 +1,6 @@
-import { Brain, Zap, BarChart3, Layers, Target, Shield } from 'lucide-react';
-import { ViralCard } from './ui/ViralCard';
-import { GradientText } from './ui/GradientText';
+import { Brain, Zap, BarChart3, Layers, Target, Shield} from 'lucide-react';
+import { ViralCard} from './ui/ViralCard';
+import { GradientText} from './ui/GradientText';
 
 const features = [
   {

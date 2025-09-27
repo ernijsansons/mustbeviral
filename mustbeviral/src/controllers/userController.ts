@@ -1,7 +1,7 @@
 // User Controller for profile management
-import { JWTManager } from '../lib/auth/jwtManager';
-import { DatabaseService } from '../lib/db';
-import { logger } from '../lib/monitoring/logger';
+import { JWTManager} from '../lib/auth/jwtManager';
+import { DatabaseService} from '../lib/db';
+import { logger} from '../lib/monitoring/logger';
 
 // Cloudflare KV namespace type definition
 interface KVNamespace {
@@ -66,7 +66,7 @@ export class UserController {
       const token = authHeader.substring(7);
       const payload = await this.jwt.verifyAccessToken(token);
 
-      if (!payload || !payload.userId) {
+      if (!payload ?? !payload.userId) {
         return new Response(JSON.stringify({
           success: false,
           error: 'Invalid or expired token'
@@ -126,11 +126,11 @@ export class UserController {
         email: user.email,
         username: user.username,
         role: user.role as 'creator' | 'influencer' | 'admin',
-        onboarding_completed: user.onboarding_completed,
-        ai_preference_level: user.ai_preference_level || 1,
-        profile_data: user.profile_data || {},
-        created_at: user.created_at,
-        updated_at: user.updated_at
+        onboarding_completed: user.onboardingcompleted,
+        ai_preference_level: user.ai_preference_level ?? 1,
+        profile_data: user.profile_data ?? {},
+        created_at: user.createdat,
+        updated_at: user.updatedat
       };
 
       // Cache the result
@@ -198,7 +198,7 @@ export class UserController {
       const token = authHeader.substring(7);
       const payload = await this.jwt.verifyAccessToken(token);
 
-      if (!payload || !payload.userId) {
+      if (!payload ?? !payload.userId) {
         return new Response(JSON.stringify({
           success: false,
           error: 'Invalid or expired token'
@@ -238,7 +238,7 @@ export class UserController {
       if (!validationResult.valid) {
         return new Response(JSON.stringify({
           success: false,
-          error: validationResult.errors?.join(', ') || 'Validation failed'
+          error: validationResult.errors?.join(', ')  ?? 'Validation failed'
         }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' }
@@ -262,7 +262,7 @@ export class UserController {
       // Update user in database
       const updatedUser = await this.db.updateUser(userId, {
         username: updateData.username,
-        profile_data: updateData.profile_data,
+        profile_data: updateData.profiledata,
         updated_at: new Date().toISOString()
       });
 
@@ -282,11 +282,11 @@ export class UserController {
         email: updatedUser.email,
         username: updatedUser.username,
         role: updatedUser.role as 'creator' | 'influencer' | 'admin',
-        onboarding_completed: updatedUser.onboarding_completed,
-        ai_preference_level: updatedUser.ai_preference_level || 1,
-        profile_data: updatedUser.profile_data || {},
-        created_at: updatedUser.created_at,
-        updated_at: updatedUser.updated_at
+        onboarding_completed: updatedUser.onboardingcompleted,
+        ai_preference_level: updatedUser.ai_preference_level ?? 1,
+        profile_data: updatedUser.profile_data ?? {},
+        created_at: updatedUser.createdat,
+        updated_at: updatedUser.updatedat
       };
 
       // Invalidate cache
@@ -357,7 +357,7 @@ export class UserController {
       const token = authHeader.substring(7);
       const payload = await this.jwt.verifyAccessToken(token);
 
-      if (!payload || !payload.userId) {
+      if (!payload ?? !payload.userId) {
         return new Response(JSON.stringify({
           success: false,
           error: 'Invalid or expired token'
@@ -433,7 +433,7 @@ export class UserController {
     if (data.username !== undefined) {
       if (typeof data.username !== 'string') {
         errors.push('Username must be a string');
-      } else if (data.username.length < 3 || data.username.length > 30) {
+      } else if (data.username.length < 3 ?? data.username.length > 30) {
         errors.push('Username must be between 3 and 30 characters');
       } else if (!/^[a-zA-Z0-9_-]+$/.test(data.username)) {
         errors.push('Username can only contain letters, numbers, hyphens, and underscores');
@@ -442,11 +442,11 @@ export class UserController {
 
     // Validate profile_data
     if (data.profile_data !== undefined) {
-      if (typeof data.profile_data !== 'object' || data.profile_data === null) {
+      if (typeof data.profile_data !== 'object'  ?? data.profiledata === null) {
         errors.push('Profile data must be an object');
       } else {
         // Check for reasonable size limits
-        const jsonSize = JSON.stringify(data.profile_data).length;
+        const jsonSize = JSON.stringify(data.profiledata).length;
         if (jsonSize > 10000) { // 10KB limit
           errors.push('Profile data is too large (max 10KB)');
         }
@@ -458,10 +458,10 @@ export class UserController {
         if (data.profile_data.lastName && typeof data.profile_data.lastName !== 'string') {
           errors.push('Last name must be a string');
         }
-        if (data.profile_data.bio && (typeof data.profile_data.bio !== 'string' || data.profile_data.bio.length > 500)) {
+        if (data.profile_data.bio && (typeof data.profile_data.bio !== 'string'  ?? data.profile_data.bio.length > 500)) {
           errors.push('Bio must be a string with maximum 500 characters');
         }
-        if (data.profile_data.website && (typeof data.profile_data.website !== 'string' || !this.isValidUrl(data.profile_data.website))) {
+        if (data.profile_data.website && (typeof data.profile_data.website !== 'string'  ?? !this.isValidUrl(data.profile_data.website))) {
           errors.push('Website must be a valid URL');
         }
       }

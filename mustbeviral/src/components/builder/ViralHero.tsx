@@ -6,10 +6,10 @@
  */
 
 import React from 'react';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
-import { GradientText } from '../ui/GradientText';
-import { cn } from '../../lib/utils';
+import { Button} from '../ui/Button';
+import { Card} from '../ui/Card';
+import { GradientText} from '../ui/GradientText';
+import { cn} from '../../lib/utils';
 
 interface ViralHeroProps {
   title: string;
@@ -25,18 +25,8 @@ interface ViralHeroProps {
   builderState?: any;
 }
 
-export function ViralHero({
-  title,
-  subtitle,
-  description,
-  ctaText = "Start Creating",
-  ctaVariant = "viral",
-  backgroundVariant = "cosmic",
-  animation = "float",
-  className,
-  builderBlock,
-  builderState,
-  ...props
+export function ViralHero(_{
+  title, subtitle, description, ctaText = "Start Creating", ctaVariant = "viral", backgroundVariant = "cosmic", animation = "float", className, _builderBlock, _builderState, ...props
 }: ViralHeroProps) {
   const backgroundClasses = {
     cosmic: 'bg-gradient-to-br from-purple-900/20 to-blue-900/20',
@@ -46,7 +36,6 @@ export function ViralHero({
     energy: 'bg-gradient-to-br from-indigo-900/20 to-purple-900/20',
   };
 
-  const animationClasses = {
     float: 'animate-float',
     pulse: 'animate-pulse-glow',
     shimmer: 'animate-shimmer',
@@ -64,7 +53,7 @@ export function ViralHero({
     >
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-transparent to-viral-500/10" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary-500/20 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipseatcenter,var(--tw-gradient-stops))] from-primary-500/20 via-transparent to-transparent" />
       
       {/* Floating Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

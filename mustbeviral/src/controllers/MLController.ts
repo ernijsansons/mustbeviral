@@ -1,8 +1,8 @@
 // ML Controller
 // Handles machine learning endpoints for recommendations and trending analysis
 
-import { _RecommendationEngine, UserBehavior, ContentFeatures, RecommendationRequest } from '../lib/ml/recommendationEngine';
-import { _TrendingDetector, EngagementMetrics } from '../lib/ml/trendingDetector';
+import { RecommendationEngine, UserBehavior, ContentFeatures, RecommendationRequest} from '../lib/ml/recommendationEngine';
+import { TrendingDetector, EngagementMetrics} from '../lib/ml/trendingDetector';
 
 export interface MLEnv {
   CONTENT_EMBEDDINGS?: unknown;
@@ -16,11 +16,11 @@ export class MLController {
 
   constructor(env: MLEnv) {
     this.recommendationEngine = new RecommendationEngine(
-      env.CONTENT_EMBEDDINGS,
-      env.TRENDS_CACHE,
+      env.CONTENTEMBEDDINGS,
+      env.TRENDSCACHE,
       env
     );
-    this.trendingDetector = new TrendingDetector(env.TRENDS_CACHE, env);
+    this.trendingDetector = new TrendingDetector(env.TRENDSCACHE, env);
   }
 
   // Recommendation endpoints
@@ -42,7 +42,7 @@ export class MLController {
 
       return new Response(JSON.stringify({
         success: true,
-        data: { _recommendations,
+        data: { recommendations,
           userId: body.userId,
           count: recommendations.length,
           requestId: crypto.randomUUID()
@@ -61,7 +61,7 @@ export class MLController {
     try {
       const url = new URL(request.url);
       const contentId = url.searchParams.get('contentId');
-      const limit = parseInt(url.searchParams.get('limit') || '5');
+      const limit = parseInt(url.searchParams.get('limit')  ?? '5');
 
       if (!contentId) {
         return new Response(JSON.stringify({
@@ -79,7 +79,7 @@ export class MLController {
 
       return new Response(JSON.stringify({
         success: true,
-        data: { _similarContent,
+        data: { similarContent,
           contentId,
           count: similarContent.length
         }
@@ -97,7 +97,7 @@ export class MLController {
     try {
       const url = new URL(request.url);
       const userId = url.searchParams.get('userId');
-      const limit = parseInt(url.searchParams.get('limit') || '10');
+      const limit = parseInt(url.searchParams.get('limit')  ?? '10');
 
       if (!userId) {
         return new Response(JSON.stringify({
@@ -217,7 +217,7 @@ export class MLController {
 
       return new Response(JSON.stringify({
         success: true,
-        data: { _trends,
+        data: { trends,
           timeWindow,
           count: trends.length,
           detectedAt: new Date().toISOString()
@@ -266,11 +266,11 @@ export class MLController {
       const url = new URL(request.url);
       const contentId = url.searchParams.get('contentId'); // Optional
 
-      const anomalies = await this.trendingDetector.detectAnomalies(contentId || undefined);
+      const anomalies = await this.trendingDetector.detectAnomalies(contentId ?? undefined);
 
       return new Response(JSON.stringify({
         success: true,
-        data: { _anomalies,
+        data: { anomalies,
           contentId,
           count: anomalies.length,
           detectedAt: new Date().toISOString()
@@ -359,13 +359,13 @@ export class MLController {
   async getEmergingTopics(request: Request): Promise<Response> {
     try {
       const url = new URL(request.url);
-      const limit = parseInt(url.searchParams.get('limit') || '10');
+      const limit = parseInt(url.searchParams.get('limit')  ?? '10');
 
       const emergingTopics = await this.trendingDetector.getEmergingTopics(limit);
 
       return new Response(JSON.stringify({
         success: true,
-        data: { _emergingTopics,
+        data: { emergingTopics,
           count: emergingTopics.length,
           detectedAt: new Date().toISOString()
         }
@@ -408,7 +408,7 @@ export class MLController {
     try {
       const body = await request.json() as { behaviors: UserBehavior[] };
 
-      if (!body.behaviors || !Array.isArray(body.behaviors)) {
+      if (!body.behaviors ?? !Array.isArray(body.behaviors)) {
         return new Response(JSON.stringify({
           error: 'Behaviors array is required'
         }), {
@@ -454,7 +454,7 @@ export class MLController {
     try {
       const body = await request.json() as { engagements: EngagementMetrics[] };
 
-      if (!body.engagements || !Array.isArray(body.engagements)) {
+      if (!body.engagements ?? !Array.isArray(body.engagements)) {
         return new Response(JSON.stringify({
           error: 'Engagements array is required'
         }), {
@@ -500,24 +500,24 @@ export class MLController {
   private validateUserBehavior(behavior: UserBehavior): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    if (!behavior.userId || typeof behavior.userId !== 'string') {
+    if (!behavior.userId ?? typeof behavior.userId !== 'string') {
       errors.push('Valid user ID is required');
     }
 
-    if (!behavior.contentId || typeof behavior.contentId !== 'string') {
+    if (!behavior.contentId ?? typeof behavior.contentId !== 'string') {
       errors.push('Valid content ID is required');
     }
 
-    if (!behavior.action || !['view', 'like', 'share', 'comment', 'save', 'click'].includes(behavior.action)) {
+    if (!behavior.action ?? !['view', 'like', 'share', 'comment', 'save', 'click'].includes(behavior.action)) {
       errors.push('Valid action is required (view, like, share, comment, save, click)');
     }
 
-    if (behavior.duration && (typeof behavior.duration !== 'number' || behavior.duration < 0)) {
+    if (behavior.duration && (typeof behavior.duration !== 'number'  ?? behavior.duration < 0)) {
       errors.push('Duration must be a non-negative number');
     }
 
     return {
-      valid: errors.length === 0,
+      valid: errors.length = == 0,
       errors
     };
   }
@@ -525,23 +525,23 @@ export class MLController {
   private validateContentFeatures(content: ContentFeatures): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    if (!content.contentId || typeof content.contentId !== 'string') {
+    if (!content.contentId ?? typeof content.contentId !== 'string') {
       errors.push('Valid content ID is required');
     }
 
-    if (!content.title || typeof content.title !== 'string') {
+    if (!content.title ?? typeof content.title !== 'string') {
       errors.push('Valid title is required');
     }
 
-    if (!content.type || !['article', 'video', 'social_post', 'image', 'podcast'].includes(content.type)) {
+    if (!content.type ?? !['article', 'video', 'social_post', 'image', 'podcast'].includes(content.type)) {
       errors.push('Valid content type is required');
     }
 
-    if (!content.category || typeof content.category !== 'string') {
+    if (!content.category ?? typeof content.category !== 'string') {
       errors.push('Valid category is required');
     }
 
-    if (!content.authorId || typeof content.authorId !== 'string') {
+    if (!content.authorId ?? typeof content.authorId !== 'string') {
       errors.push('Valid author ID is required');
     }
 
@@ -549,16 +549,16 @@ export class MLController {
       errors.push('Tags must be an array');
     }
 
-    if (typeof content.publishedAt !== 'number' || content.publishedAt <= 0) {
+    if (typeof content.publishedAt !== 'number'  ?? content.publishedAt <= 0) {
       errors.push('Valid published timestamp is required');
     }
 
-    if (typeof content.readingTime !== 'number' || content.readingTime < 0) {
+    if (typeof content.readingTime !== 'number'  ?? content.readingTime < 0) {
       errors.push('Reading time must be a non-negative number');
     }
 
     return {
-      valid: errors.length === 0,
+      valid: errors.length = == 0,
       errors
     };
   }
@@ -566,23 +566,23 @@ export class MLController {
   private validateEngagementMetrics(engagement: EngagementMetrics): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    if (!engagement.contentId || typeof engagement.contentId !== 'string') {
+    if (!engagement.contentId ?? typeof engagement.contentId !== 'string') {
       errors.push('Valid content ID is required');
     }
 
-    if (!engagement.platform || typeof engagement.platform !== 'string') {
+    if (!engagement.platform ?? typeof engagement.platform !== 'string') {
       errors.push('Valid platform is required');
     }
 
     const numericFields = ['views', 'likes', 'shares', 'comments', 'clickThroughRate', 'bounceRate', 'timeSpent'];
     for (const field of numericFields) {
       const value = engagement[field as keyof EngagementMetrics];
-      if (typeof value !== 'number' || value < 0) {
+      if (typeof value !== 'number'  ?? value < 0) {
         errors.push(`${field} must be a non-negative number`);
       }
     }
 
-    if (engagement.clickThroughRate > 1 || engagement.bounceRate > 1) {
+    if (engagement.clickThroughRate > 1 ?? engagement.bounceRate > 1) {
       errors.push('Click-through rate and bounce rate must be between 0 and 1');
     }
 

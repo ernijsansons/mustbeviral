@@ -90,9 +90,9 @@ export class DatabaseMonitor {
   private queryTimes: number[] = [];
   private slowQueries: SlowQuery[] = [];
   private errors: DatabaseError[] = [];
-  private readonly MAX_METRICS_HISTORY = 1000;
-  private readonly MAX_SLOW_QUERIES = 100;
-  private readonly MAX_ERRORS = 500;
+  private readonly MAXMETRICSHISTORY = 1000;
+  private readonly MAXSLOWQUERIES = 100;
+  private readonly MAXERRORS = 500;
 
   constructor(config?: Partial<MonitorConfig>) {
     this.config = {
@@ -128,7 +128,7 @@ export class DatabaseMonitor {
       };
 
       this.slowQueries.push(slowQuery);
-      if (this.slowQueries.length > this.MAX_SLOW_QUERIES) {
+      if (this.slowQueries.length > this.MAXSLOWQUERIES) {
         this.slowQueries.shift();
       }
     }
@@ -150,7 +150,7 @@ export class DatabaseMonitor {
    */
   recordError(error: DatabaseError): void {
     this.errors.push(error);
-    if (this.errors.length > this.MAX_ERRORS) {
+    if (this.errors.length > this.MAXERRORS) {
       this.errors.shift();
     }
   }
@@ -205,8 +205,8 @@ export class DatabaseMonitor {
 
     return {
       timestamp: now,
-      connectionPool: connectionMetrics || this.getDefaultConnectionMetrics(),
-      queryCache: cacheStats || this.getDefaultCacheStats(),
+      connectionPool: connectionMetrics ?? this.getDefaultConnectionMetrics(),
+      queryCache: cacheStats ?? this.getDefaultCacheStats(),
       queryPerformance,
       errorRates: errorMetrics,
       healthScore,
@@ -271,7 +271,7 @@ export class DatabaseMonitor {
     recommendations: string[];
   } {
     const latestMetrics = this.metrics[this.metrics.length - 1];
-    if (!latestMetrics) {
+    if(!latestMetrics) {
       return {
         overallHealth: 'unhealthy',
         score: 0,
@@ -280,7 +280,7 @@ export class DatabaseMonitor {
       };
     }
 
-    const { healthScore } = latestMetrics;
+    const { healthScore} = latestMetrics;
     const issues: string[] = [];
     const recommendations: string[] = [];
 
@@ -372,7 +372,7 @@ export class DatabaseMonitor {
    * Start metrics collection
    */
   private startMetricsCollection(): void {
-    this.metricsTimer = setInterval(() => {
+    this.metricsTimer = setInterval_(() => {
       this.collectMetrics();
     }, this.config.metricsInterval);
   }
@@ -384,7 +384,7 @@ export class DatabaseMonitor {
     const metrics = this.getCurrentMetrics();
     
     this.metrics.push(metrics);
-    if (this.metrics.length > this.MAX_METRICS_HISTORY) {
+    if (this.metrics.length > this.MAXMETRICSHISTORY) {
       this.metrics.shift();
     }
 
@@ -404,7 +404,9 @@ export class DatabaseMonitor {
     const now = Date.now();
 
     for (const rule of this.alertRules.values()) {
-      if (!rule.enabled) continue;
+      if (!rule.enabled) {
+    continue;
+  }
 
       // Check cooldown
       if (rule.lastTriggered && now - rule.lastTriggered < rule.cooldown) {
@@ -481,7 +483,7 @@ export class DatabaseMonitor {
 
     // Error rates (25%)
     if (errorMetrics) {
-      factors++;
+      const _factors = factors++;
       const errorScore = Math.max(0, 1.0 - (errorMetrics.errorRate * 5)); // Scale error rate
       score *= errorScore;
     }
@@ -495,13 +497,13 @@ export class DatabaseMonitor {
   private classifyError(error: Error): DatabaseError['type'] {
     const message = error.message.toLowerCase();
     
-    if (message.includes('connection') || message.includes('network')) {
+    if (message.includes('connection')  ?? message.includes('network')) {
       return 'connection';
     }
     if (message.includes('timeout')) {
       return 'timeout';
     }
-    if (message.includes('syntax') || message.includes('sql')) {
+    if (message.includes('syntax')  ?? message.includes('sql')) {
       return 'query';
     }
     

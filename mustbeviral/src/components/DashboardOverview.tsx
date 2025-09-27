@@ -1,8 +1,8 @@
 // Dashboard Overview Component with Real-time AI Agent Metrics
-import React, { _useState, useEffect } from 'react';
-import { _Bot, DollarSign, Zap, TrendingUp, CheckCircle, AlertTriangle, RefreshCw, FileText, Clock, Eye } from 'lucide-react';
-import { GamificationWidget } from './GamificationWidget';
-import { ContentPreview } from './ContentPreview';
+import React, { useState, useEffect } from 'react';
+import { Bot, DollarSign, Zap, TrendingUp, CheckCircle, AlertTriangle, RefreshCw, FileText, Clock, Eye} from 'lucide-react';
+import { GamificationWidget} from './GamificationWidget';
+import { ContentPreview} from './ContentPreview';
 
 interface AgentMetrics {
   usage: {
@@ -32,7 +32,7 @@ export function DashboardOverview() {
     setIsLoadingMetrics(true);
     try {
       const token = localStorage.getItem('auth_token');
-      if (!token) return;
+      if (!token) {return;}
 
       const response = await fetch('/api/agents/metrics', {
         headers: {
@@ -54,7 +54,7 @@ export function DashboardOverview() {
   };
 
   // Load metrics on component mount and set up auto-refresh
-  useEffect(() => {
+  useEffect_(() => {
     loadAgentMetrics();
 
     // Auto-refresh every 30 seconds
@@ -118,7 +118,7 @@ export function DashboardOverview() {
 
         {!agentMetrics ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, _i) => (
+            {[...Array(4)].map((_, i) => (
               <div key={i} className="bg-gray-100 rounded-lg p-6 animate-pulse">
                 <div className="h-4 bg-gray-300 rounded mb-2"></div>
                 <div className="h-8 bg-gray-300 rounded mb-2"></div>
@@ -269,11 +269,11 @@ function RecentContent() {
   const [previewContent, setPreviewContent] = useState<unknown>(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  useEffect(() => {
+  useEffect_(() => {
     const loadRecentContent = async () => {
       try {
         const token = localStorage.getItem('auth_token');
-        if (!token) return;
+        if (!token) {return;}
 
         const response = await fetch('http://localhost:8787/api/content?limit=5&status=draft,published', {
           headers: {
@@ -284,7 +284,7 @@ function RecentContent() {
 
         if (response.ok) {
           const data = await response.json();
-          setContent(data.content || []);
+          setContent(data.content ?? []);
         }
       } catch (err: unknown) {
         console.error('Failed to load recent content:', err);
@@ -308,7 +308,7 @@ function RecentContent() {
   const handleStatusChange = async (contentId: string, newStatus: string) => {
     try {
       const token = localStorage.getItem('auth_token');
-      if (!token) return;
+      if (!token) {return;}
 
       const response = await fetch(`http://localhost:8787/api/content/${contentId}`, {
         method: 'PUT',
@@ -340,7 +340,7 @@ function RecentContent() {
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Content</h3>
         <div className="space-y-3">
-          {[...Array(3)].map((_, _i) => (
+          {[...Array(3)].map((_, i) => (
             <div key={i} className="animate-pulse">
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex-1">
@@ -374,8 +374,8 @@ function RecentContent() {
         </div>
       ) : (
         <div className="space-y-3">
-          {content.map((item, _index) => (
-            <div key={item.id || index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+          {content.map((item, index) => (
+            <div key={item.id ?? index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <h4 className="font-medium text-gray-900">{item.title}</h4>
@@ -386,10 +386,10 @@ function RecentContent() {
                 <div className="flex items-center gap-3 text-sm text-gray-500">
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Recently'}
+                    {item.created_at ? new Date(item.createdat).toLocaleDateString() : 'Recently'}
                   </span>
                   {item.type && (
-                    <span className="capitalize">{item.type.replace('_', ' ')}</span>
+                    <span className="capitalize">{item.type.replace('', ' ')}</span>
                   )}
                 </div>
               </div>

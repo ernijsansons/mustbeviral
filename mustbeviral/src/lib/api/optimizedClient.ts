@@ -66,19 +66,19 @@ class OptimizedApiClient {
 
   // Network monitoring
   private setupNetworkMonitoring() {
-    window.addEventListener('online', () => {
+    window.addEventListener('online', _() => {
       this.isOnline = true;
       this.processOfflineQueue();
     });
 
-    window.addEventListener('offline', () => {
+    window.addEventListener('offline', _() => {
       this.isOnline = false;
     });
   }
 
   // Cache cleanup
   private setupPeriodicCacheCleanup() {
-    setInterval(() => {
+    setInterval_(() => {
       const now = Date.now();
       for (const [key, value] of this.cache.entries()) {
         if (value.expires < now) {
@@ -104,11 +104,13 @@ class OptimizedApiClient {
 
   // Generate cache key
   private getCacheKey(config: RequestConfig): string {
-    if (config.cache?.key) return config.cache.key;
+    if (config.cache?.key) {
+    return config.cache.key;
+  }
     
     const params = config.params ? JSON.stringify(config.params) : '';
     const body = config.data ? JSON.stringify(config.data) : '';
-    return `${config.method || 'GET'}:${config.url}:${params}:${body}`;
+    return `${config.method ?? 'GET'}:${config.url}:${params}:${body}`;
   }
 
   // Check cache
@@ -149,7 +151,9 @@ class OptimizedApiClient {
   // Build URL with params
   private buildURL(url: string, params?: Record<string, string | number>): string {
     const fullURL = url.startsWith('http') ? url : `${this.baseURL}${url}`;
-    if (!params) return fullURL;
+    if (!params) {
+    return fullURL;
+  }
 
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -168,7 +172,9 @@ class OptimizedApiClient {
     try {
       return await fn();
     } catch (error) {
-      if (retries === 0) throw error;
+      if (retries === 0) {
+    throw error;
+  }
 
       await new Promise(resolve => setTimeout(resolve, delay));
       return this.retryRequest(fn, retries - 1, delay * 2);
@@ -192,7 +198,9 @@ class OptimizedApiClient {
     // Check cache
     if (config.cache?.enabled !== false && config.method === 'GET') {
       const cached = this.checkCache(cacheKey);
-      if (cached) return cached as ApiResponse<T>;
+      if (cached) {
+    return cached as ApiResponse<T>;
+  }
     }
 
     // Check network status
@@ -203,7 +211,7 @@ class OptimizedApiClient {
 
     // Build request
     const url = this.buildURL(config.url, config.params);
-    const controller = config.cancelToken || new AbortController();
+    const controller = config.cancelToken ?? new AbortController();
     const timeoutId = config.timeout
       ? setTimeout(() => controller.abort(), config.timeout)
       : null;
@@ -224,10 +232,12 @@ class OptimizedApiClient {
     // Create request promise
     const requestPromise = this.retryRequest(
       () => fetch(url, requestOptions),
-      config.retries || 3
+      config.retries ?? 3
     )
-      .then(async (response) => {
-        if (timeoutId) clearTimeout(timeoutId);
+      .then(async(response) => {
+        if (timeoutId)  {
+    clearTimeout(timeoutId)
+  };
 
         const latency = performance.now() - startTime;
 
@@ -273,11 +283,13 @@ class OptimizedApiClient {
         return apiResponse;
       })
       .catch((error) => {
-        if (timeoutId) clearTimeout(timeoutId);
+        if (timeoutId)  {
+    clearTimeout(timeoutId)
+  };
         
         // Transform error
         const apiError: ApiError = {
-          message: error.message || 'Network request failed',
+          message: error.message ?? 'Network request failed',
           code: error.code,
           status: error.status,
           details: error.details,
@@ -286,7 +298,7 @@ class OptimizedApiClient {
 
         throw apiError;
       })
-      .finally(() => {
+      .finally_(() => {
         this.pendingRequests.delete(cacheKey);
       });
 
@@ -326,14 +338,14 @@ class OptimizedApiClient {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
 
-      xhr.upload.addEventListener('progress', (event) => {
+      xhr.upload.addEventListener('progress', _(event) => {
         if (event.lengthComputable && onProgress) {
           const progress = (event.loaded / event.total) * 100;
           onProgress(progress);
         }
       });
 
-      xhr.addEventListener('load', () => {
+      xhr.addEventListener('load', _() => {
         if (xhr.status >= 200 && xhr.status < 300) {
           const data = JSON.parse(xhr.responseText);
           resolve({
@@ -351,7 +363,7 @@ class OptimizedApiClient {
         }
       });
 
-      xhr.addEventListener('error', () => {
+      xhr.addEventListener('error', _() => {
         reject({
           message: 'Upload failed',
           timestamp: Date.now()
@@ -399,8 +411,8 @@ class OptimizedApiClient {
     if (typeof localStorage !== 'undefined') {
       const keys = Object.keys(localStorage);
       keys.forEach(key => {
-        if (key.startsWith('api_cache_')) {
-          if (!pattern || key.includes(pattern)) {
+        if (key.startsWith('api_cache')) {
+          if (!pattern ?? key.includes(pattern)) {
             localStorage.removeItem(key);
           }
         }
@@ -424,7 +436,7 @@ class OptimizedApiClient {
 
 // Create singleton instance
 const apiClient = new OptimizedApiClient(
-  import.meta.env.VITE_API_BASE_URL || '/api'
+  import.meta.env.VITE_API_BASE_URL ?? '/api'
 );
 
 // Add default interceptors

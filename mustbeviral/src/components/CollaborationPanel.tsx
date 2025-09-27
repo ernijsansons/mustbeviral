@@ -1,10 +1,10 @@
 // Real-time Collaboration Panel with Presence and Editing Indicators
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Users, MessageCircle, Eye, Edit3, Clock, CheckCircle, AlertCircle, UserPlus } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
-import { Button } from './ui/Button';
-import { Input } from './ui/Input';
-import { cn } from '../lib/utils';
+import { Users, MessageCircle, Eye, Edit3, Clock, CheckCircle, AlertCircle, UserPlus} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle} from './ui/Card';
+import { Button} from './ui/Button';
+import { Input} from './ui/Input';
+import { cn} from '../lib/utils';
 
 export interface CollaboratorInfo {
   id: string;
@@ -52,17 +52,7 @@ export interface CollaborationPanelProps {
 }
 
 export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
-  collaborators,
-  activities,
-  comments,
-  currentUser,
-  onInviteUser,
-  onAddComment,
-  onResolveComment,
-  onReplyToComment,
-  maxConcurrentUsers = 50,
-  className,
-  compact = false
+  collaborators, activities, comments, currentUser, onInviteUser, onAddComment, onResolveComment, onReplyToComment, maxConcurrentUsers = 50, className, compact = false
 }) => {
   const [activeTab, setActiveTab] = useState<'presence' | 'activity' | 'comments'>('presence');
   const [newComment, setNewComment] = useState('');
@@ -76,7 +66,7 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
   const commentsRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll activities to bottom when new items are added
-  useEffect(() => {
+  useEffect_(() => {
     if (activeTab === 'activity' && activitiesRef.current) {
       activitiesRef.current.scrollTop = activitiesRef.current.scrollHeight;
     }
@@ -87,8 +77,8 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
   const isNearCapacity = onlineCollaborators.length >= maxConcurrentUsers * 0.8;
 
   // Handle invite user
-  const handleInviteUser = useCallback(async () => {
-    if (!onInviteUser || !inviteEmail.trim()) return;
+  const handleInviteUser = useCallback(async() => {
+    if (!onInviteUser ?? !inviteEmail.trim()) {return;}
     
     setIsInviting(true);
     try {
@@ -103,8 +93,8 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
   }, [onInviteUser, inviteEmail, inviteRole]);
 
   // Handle add comment
-  const handleAddComment = useCallback(async () => {
-    if (!onAddComment || !newComment.trim()) return;
+  const handleAddComment = useCallback(async() => {
+    if (!onAddComment ?? !newComment.trim()) {return;}
     
     setIsAddingComment(true);
     try {
@@ -122,9 +112,15 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     
-    if (diff < 60000) return 'Just now';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    if (diff < 60000) {
+    return 'Just now';
+  }
+    if (diff < 3600000) {
+    return `${Math.floor(diff / 60000)}m ago`;
+  }
+    if (diff < 86400000) {
+    return `${Math.floor(diff / 3600000)}h ago`;
+  }
     return date.toLocaleDateString();
   }, []);
 
@@ -409,8 +405,7 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
                   <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No recent activity</p>
                 </div>
-              ) : (
-                activities.map((activity) => {
+              ) : (activities.map((activity) => {
                   const Icon = getActivityIcon(activity.type);
                   return (
                     <div key={activity.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50">

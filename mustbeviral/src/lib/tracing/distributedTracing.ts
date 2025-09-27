@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4} from 'uuid';
 
 export interface TraceContext {
   traceId: string;
@@ -65,11 +65,11 @@ export class DistributedTracer {
   }
 
   startTrace(operationName: string, parentContext?: TraceContext): TraceContext {
-    const traceId = parentContext?.traceId || uuidv4();
+    const traceId = parentContext?.traceId ?? uuidv4();
     const spanId = uuidv4();
     const sampled = this.shouldSample();
 
-    const context: TraceContext = { _traceId,
+    const context: TraceContext = { traceId,
       spanId,
       parentSpanId: parentContext?.spanId,
       baggage: { ...parentContext?.baggage },
@@ -78,7 +78,7 @@ export class DistributedTracer {
     };
 
     if (sampled) {
-      const span: Span = { _traceId,
+      const span: Span = { traceId,
         spanId,
         parentSpanId: parentContext?.spanId,
         operationName,
@@ -89,7 +89,7 @@ export class DistributedTracer {
         status: 'success',
         service: this.config.serviceName,
         resource: operationName,
-        baggage: context.baggage || {}
+        baggage: context.baggage ?? {}
       };
 
       this.activeSpans.set(spanId, span);
@@ -101,12 +101,12 @@ export class DistributedTracer {
 
   finishSpan(spanId: string, status: Span['status'] = 'success', error?: Error): void {
     const span = this.activeSpans.get(spanId);
-    if (!span) return;
+    if (!span) {return;}
 
     span.endTime = Date.now();
     span.duration = span.endTime - span.startTime;
     span.status = status;
-    if (error) span.error = error;
+    if (error) {span.error = error;}
 
     this.activeSpans.delete(spanId);
     this.completedSpans.push(span);
@@ -151,7 +151,7 @@ export class DistributedTracer {
   setBaggage(key: string, value: string): void {
     const currentContext = this.getCurrentContext();
     if (currentContext) {
-      currentContext.baggage = currentContext.baggage || {};
+      currentContext.baggage = currentContext.baggage ?? {};
       currentContext.baggage[key] = value;
     }
   }
@@ -173,7 +173,7 @@ export class DistributedTracer {
     const sampled = headers['x-sampled'] === '1';
 
     if (traceId && spanId) {
-      return { _traceId,
+      return { traceId,
         spanId,
         parentSpanId,
         baggage,
@@ -200,14 +200,14 @@ export class DistributedTracer {
   }
 
   private startExportTimer(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.exportSpans();
       this.cleanupOldSpans();
     }, this.config.exportInterval);
   }
 
   private async exportSpans(): Promise<void> {
-    if (this.completedSpans.length === 0) return;
+    if (this.completedSpans.length === 0) {return;}
 
     const spans = [...this.completedSpans];
     this.completedSpans = [];
@@ -240,8 +240,8 @@ export class DistributedTracer {
           parentSpanID: span.parentSpanId,
           operationName: span.operationName,
           startTime: span.startTime * 1000,
-          duration: (span.duration || 0) * 1000,
-          tags: Object.entries(span.tags).map(([key, value]) => ({ _key,
+          duration: (span.duration ?? 0) * 1000,
+          tags: Object.entries(span.tags).map(([key, value]) => ({ key,
             type: typeof value === 'string' ? 'string' : 'number',
             value: value.toString()
           })),
@@ -250,7 +250,7 @@ export class DistributedTracer {
             fields: [
               { key: 'level', value: log.level },
               { key: 'message', value: log.message },
-              ...Object.entries(log.fields || {}).map(([key, value]) => ({ _key,
+              ...Object.entries(log.fields ?? {}).map(([key, value]) => ({ key,
                 value: value.toString()
               }))
             ]
@@ -285,7 +285,7 @@ export class DistributedTracer {
   }
 
   private recordMetrics(spans: Span[]): void {
-    const metrics = spans.reduce((acc, _span) => {
+    const metrics = spans.reduce((acc, span) => {
       const operation = span.operationName;
       if (!acc[operation]) {
         acc[operation] = {
@@ -296,8 +296,8 @@ export class DistributedTracer {
       }
 
       acc[operation].count++;
-      acc[operation].totalDuration += span.duration || 0;
-      if (span.status === 'error') acc[operation].errors++;
+      acc[operation].totalDuration += span.duration ?? 0;
+      if (span.status === 'error') {acc[operation].errors++;}
 
       return acc;
     }, {} as Record<string, unknown>);
@@ -312,7 +312,7 @@ export class DistributedTracer {
 
   private cleanupOldSpans(): void {
     const cutoffTime = Date.now() - this.config.maxSpanAge;
-    this.activeSpans.forEach((span, _spanId) => {
+    this.activeSpans.forEach((span, spanId) => {
       if (span.startTime < cutoffTime) {
         this.finishSpan(spanId, 'timeout');
       }
@@ -326,7 +326,7 @@ export class DistributedTracer {
     averageSpanDuration: number;
   } {
     const avgDuration = this.completedSpans.length > 0
-      ? this.completedSpans.reduce((sum, _span) => sum + (span.duration || 0), 0) / this.completedSpans.length
+      ? this.completedSpans.reduce((sum, span) => sum + (span.duration ?? 0), 0) / this.completedSpans.length
       : 0;
 
     return {

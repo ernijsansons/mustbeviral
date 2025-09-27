@@ -3,10 +3,10 @@
  * Provides structured error handling, logging, and monitoring
  */
 
-import { CloudflareEnv } from '../cloudflare';
-import { SecurityAuditLogger } from '../audit/securityLogger';
-import { PIIEncryption } from '../crypto/encryption';
-import { EnvironmentManager } from '../../config/environment';
+import { CloudflareEnv} from '../cloudflare';
+import { SecurityAuditLogger} from '../audit/securityLogger';
+import { PIIEncryption} from '../crypto/encryption';
+import { EnvironmentManager} from '../../config/environment';
 
 export type ErrorSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type ErrorCategory = 'AUTHENTICATION' | 'AUTHORIZATION' | 'VALIDATION' | 'DATABASE' | 'NETWORK' | 'BUSINESS_LOGIC' | 'SYSTEM' | 'SECURITY' | 'EXTERNAL_SERVICE';
@@ -70,8 +70,7 @@ export abstract class BaseApplicationError extends Error implements ApplicationE
   sessionId?: string;
   sensitive: boolean = false;
 
-  constructor(
-    message: string,
+  constructor(message: string,
     details: Record<string, unknown> = {},
     correlationId?: string
   ) {
@@ -265,9 +264,9 @@ export class ErrorHandler {
     }
 
     // Add context to error
-    if (context.userId) appError.userId = context.userId;
-    if (context.sessionId) appError.sessionId = context.sessionId;
-    if (context.correlationId) appError.correlationId = context.correlationId;
+    if (context.userId) {appError.userId = context.userId;}
+    if (context.sessionId) {appError.sessionId = context.sessionId;}
+    if (context.correlationId) {appError.correlationId = context.correlationId;}
 
     // Log the error
     await this.logError(appError, context);
@@ -317,7 +316,7 @@ export class ErrorHandler {
    */
   private convertStandardError(error: Error, context: ErrorContext): ApplicationError {
     // Database errors
-    if (error.message.includes('D1') || error.message.includes('database')) {
+    if (error.message.includes('D1')  ?? error.message.includes('database')) {
       return new DatabaseError(
         error.message,
         { stack: error.stack },
@@ -326,18 +325,16 @@ export class ErrorHandler {
     }
 
     // Network errors
-    if (error.message.includes('fetch') || error.message.includes('network')) {
-      return new ExternalServiceError(
-        error.message,
+    if (error.message.includes('fetch')  ?? error.message.includes('network')) {
+      return new ExternalServiceError(error.message,
         { stack: error.stack },
         context.correlationId
       );
     }
 
     // JWT errors
-    if (error.message.includes('jwt') || error.message.includes('token')) {
-      return new AuthenticationError(
-        error.message,
+    if (error.message.includes('jwt')  ?? error.message.includes('token')) {
+      return new AuthenticationError(error.message,
         { stack: error.stack },
         context.correlationId
       );
@@ -375,7 +372,7 @@ export class ErrorHandler {
           userId: error.userId,
           sessionId: error.sessionId,
           ip: context.request ? this.getIP(context.request) : 'unknown',
-          userAgent: context.request ? context.request.headers.get('User-Agent') || 'unknown' : 'unknown',
+          userAgent: context.request ? context.request.headers.get('User-Agent')  ?? 'unknown' : 'unknown',
           url: context.request ? context.request.url : 'unknown',
           method: context.request ? context.request.method : 'unknown',
           details: {
@@ -405,7 +402,7 @@ export class ErrorHandler {
       const current = await this.env.TRENDS_CACHE.get(key, 'json') as { count: number; lastOccurrence: string } | null;
 
       const analytics = {
-        count: (current?.count || 0) + 1,
+        count: (current?.count ?? 0) + 1,
         lastOccurrence: error.timestamp,
         severity: error.severity,
         category: error.category
@@ -425,10 +422,10 @@ export class ErrorHandler {
    * Update circuit breaker state
    */
   private updateCircuitBreaker(error: ApplicationError): void {
-    if (!error.retryable) return;
+    if (!error.retryable) {return;}
 
     const key = `${error.category}:${error.code}`;
-    const breaker = this.circuitBreakers.get(key) || { failures: 0, lastFailure: 0, isOpen: false };
+    const breaker = this.circuitBreakers.get(key)  ?? { failures: 0, lastFailure: 0, isOpen: false };
 
     breaker.failures++;
     breaker.lastFailure = Date.now();
@@ -449,7 +446,9 @@ export class ErrorHandler {
     const key = `${category}:${code}`;
     const breaker = this.circuitBreakers.get(key);
 
-    if (!breaker || !breaker.isOpen) return false;
+    if (!breaker || !breaker.isOpen) {
+      return false;
+    }
 
     // Reset circuit breaker after 5 minutes
     if (Date.now() - breaker.lastFailure > 300000) {
@@ -523,10 +522,10 @@ export class ErrorHandler {
             errorCounts.set(errorCode, data.count);
 
             // Update category and severity counts
-            stats.errorsByCategory[data.category] = (stats.errorsByCategory[data.category] || 0) + data.count;
-            stats.errorsBySeverity[data.severity] = (stats.errorsBySeverity[data.severity] || 0) + data.count;
+            stats.errorsByCategory[data.category] = (stats.errorsByCategory[data.category]  ?? 0) + data.count;
+            stats.errorsBySeverity[data.severity] = (stats.errorsBySeverity[data.severity]  ?? 0) + data.count;
           }
-        } catch (error: unknown) {
+        } catch(error: unknown) {
           console.warn('LOG: ERROR-STATS-WARN-1 - Failed to parse error data:', error);
         }
       }
@@ -553,9 +552,7 @@ export class ErrorHandler {
    * Helper to get IP from request
    */
   private getIP(request: Request): string {
-    return request.headers.get('CF-Connecting-IP') ||
-           request.headers.get('X-Forwarded-For') ||
-           'unknown';
+    return request.headers.get('CF-Connecting-IP')  ?? request.headers.get('X-Forwarded-For')  ?? 'unknown';
   }
 
   /**

@@ -79,7 +79,7 @@ export class TokenOptimizer {
     let qualityImpact = 0;
 
     // Progressive optimization techniques
-    if (config.aggressivenessLevel === 'moderate' || config.aggressivenessLevel === 'aggressive') {
+    if (config.aggressivenessLevel === 'moderate'  ?? config.aggressivenessLevel === 'aggressive') {
       // Technique 1: Dynamic context pruning
       const contextReduction = this.calculateContextPruning(content, platform);
       optimizedTokens -= contextReduction.tokensSaved;
@@ -87,7 +87,7 @@ export class TokenOptimizer {
       techniques.push(`Context pruning: -${contextReduction.tokensSaved} tokens`);
     }
 
-    if (config.aggressivenessLevel === 'aggressive' || config.aggressivenessLevel === 'extreme') {
+    if (config.aggressivenessLevel === 'aggressive'  ?? config.aggressivenessLevel === 'extreme') {
       // Technique 2: Compression-based optimization
       const compressionReduction = this.applyCompressionOptimization(content, platform);
       optimizedTokens -= compressionReduction.tokensSaved;
@@ -160,7 +160,7 @@ export class TokenOptimizer {
       this.learningData.set(key, {
         allocation: (existing.allocation + allocation * weight) / (1 + weight),
         quality: (existing.quality + qualityScore * weight) / (1 + weight),
-        success: existing.success || success
+        success: existing.success ?? success
       });
     } else {
       this.learningData.set(key, { allocation, quality: qualityScore, success });
@@ -186,7 +186,6 @@ export class TokenOptimizer {
     implementation: string;
   }> {
     const recommendations = [];
-    const platformConfig = this.platformOptimizations.get(platform);
 
     // High token usage recommendations
     if (averageTokenUsage > 3500) {
@@ -280,9 +279,9 @@ export class TokenOptimizer {
     return {
       topicComplexity: Math.min(topicComplexity, 10),
       requiredDetail: contentType === 'educational' ? 8 : 5,
-      platformRequirements: platformComplexityMap[platform] || 6,
+      platformRequirements: platformComplexityMap[platform]  ?? 6,
       audienceLevel: 6, // Default middle ground
-      formatComplexity: formatComplexityMap[contentType] || 5
+      formatComplexity: formatComplexityMap[contentType]  ?? 5
     };
   }
 
@@ -296,7 +295,7 @@ export class TokenOptimizer {
       facebook: { post: 2000, story: 1000 }
     };
 
-    return baseAllocations[platform]?.[contentType] || 2000;
+    return baseAllocations[platform]?.[contentType]  ?? 2000;
   }
 
   private applyOptimizations(
@@ -343,7 +342,7 @@ export class TokenOptimizer {
       linkedin: { contextReduction: 0.2, qualityImpact: 4 }
     };
 
-    const strategy = platformStrategies[platform] || { contextReduction: 0.3, qualityImpact: 3 };
+    const strategy = platformStrategies[platform]  ?? { contextReduction: 0.3, qualityImpact: 3 };
     const estimatedTokens = content.length / 4; // Rough token estimation
 
     return {
@@ -361,7 +360,7 @@ export class TokenOptimizer {
       linkedin: { rate: 0.15, qualityImpact: 5 }
     };
 
-    const compression = compressionRates[platform] || { rate: 0.20, qualityImpact: 4 };
+    const compression = compressionRates[platform]  ?? { rate: 0.20, qualityImpact: 4 };
     const estimatedTokens = content.length / 4;
 
     return {
@@ -382,7 +381,7 @@ export class TokenOptimizer {
     const learningKey = `${platform}-optimization`;
     const learningData = this.learningData.get(learningKey);
 
-    if (learningData && learningData.success) {
+    if (learningData?.success) {
       const adjustment = learningData.allocation > currentTokens ? 1.05 : 0.95;
       return {
         adjustedTokens: Math.round(currentTokens * adjustment),
@@ -436,17 +435,17 @@ export class TokenOptimizer {
 
   private updatePlatformOptimizations(platform: string, qualityScore: number, success: boolean): void {
     const current = this.platformOptimizations.get(platform);
-    if (!current) return;
+    if (!current) {return;}
 
     // Adjust aggressiveness based on results
     if (qualityScore > 90 && success) {
       // Can be more aggressive
-      if (current.aggressivenessLevel === 'conservative') current.aggressivenessLevel = 'moderate';
-      else if (current.aggressivenessLevel === 'moderate') current.aggressivenessLevel = 'aggressive';
-    } else if (qualityScore < 75 || !success) {
+      if (current.aggressivenessLevel === 'conservative') {current.aggressivenessLevel = 'moderate';}
+      else if (current.aggressivenessLevel === 'moderate') {current.aggressivenessLevel = 'aggressive';}
+    } else if (qualityScore < 75 ?? !success) {
       // Be more conservative
-      if (current.aggressivenessLevel === 'aggressive') current.aggressivenessLevel = 'moderate';
-      else if (current.aggressivenessLevel === 'moderate') current.aggressivenessLevel = 'conservative';
+      if (current.aggressivenessLevel === 'aggressive') {current.aggressivenessLevel = 'moderate';}
+      else if (current.aggressivenessLevel === 'moderate') {current.aggressivenessLevel = 'conservative';}
     }
 
     this.platformOptimizations.set(platform, current);

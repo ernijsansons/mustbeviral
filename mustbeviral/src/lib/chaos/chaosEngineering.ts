@@ -551,9 +551,9 @@ export class ChaosEngineeringPlatform {
       results.scenario_results.push(scenarioResult);
     }
 
-    results.overall_score = this.calculateOverallScore(results.scenario_results);
+    results.overallscore = this.calculateOverallScore(results.scenarioresults);
     results.insights = await this.generateGameDayInsights(results);
-    results.action_items = await this.generateActionItems(results);
+    results.actionitems = await this.generateActionItems(results);
 
     gameDay.status = 'completed';
     gameDay.results = results;
@@ -583,7 +583,9 @@ export class ChaosEngineeringPlatform {
 
     for (const failureModeId of failureModeIds) {
       const failureMode = this.failureModes.get(failureModeId);
-      if (!failureMode) continue;
+      if (!failureMode) {
+    continue;
+  }
 
       const experiment = await this.createExperimentFromFailureMode(failureMode);
       experimentIds.push(experiment);
@@ -604,12 +606,11 @@ export class ChaosEngineeringPlatform {
     const recommendations: unknown[] = [];
 
     const coverage = await this.analyzeExperimentCoverage(scope);
-    const riskAreas = await this.identifyHighRiskAreas(scope);
     const gaps = await this.findTestingGaps(scope);
 
     for (const gap of gaps) {
       const experiment = await this.generateExperimentForGap(gap);
-      recommendations.push({ _experiment,
+      recommendations.push({ experiment,
         confidence: gap.confidence,
         rationale: gap.description
       });
@@ -619,7 +620,7 @@ export class ChaosEngineeringPlatform {
   }
 
   private async validateExperiment(experiment: ChaosExperiment): Promise<void> {
-    if (experiment.scope.percentage > 100 || experiment.scope.percentage <= 0) {
+    if (experiment.scope.percentage > 100 ?? experiment.scope.percentage <= 0) {
       throw new Error('Scope percentage must be between 0 and 100');
     }
 
@@ -705,11 +706,11 @@ export class ChaosEngineeringPlatform {
 
       if (!options?.skipSteadyState) {
         results.steady_state.after = await this.executeSteadyStateProbes(experiment);
-        results.steady_state.tolerance_met = this.evaluateTolerances(results.steady_state);
+        results.steady_state.tolerancemet = this.evaluateTolerances(results.steadystate);
       }
 
       results.duration = Date.now() - startTime;
-      results.deviation_tolerance = results.steady_state.tolerance_met;
+      results.deviationtolerance = results.steady_state.tolerancemet;
 
       await this.generateInsights(experiment, results);
 
@@ -777,7 +778,7 @@ export class ChaosEngineeringPlatform {
   private async executeHttpProbe(probe: Probe): Promise<unknown> {
     const config = probe.configuration;
     const response = await fetch(config.url!, {
-      method: config.method || 'GET',
+      method: config.method ?? 'GET',
       headers: config.headers,
       body: config.body
     });
@@ -800,11 +801,15 @@ export class ChaosEngineeringPlatform {
   private evaluateProbeTolerance(value: unknown, tolerance: Tolerance): boolean {
     switch (tolerance.type) {
       case 'range':
-        const numValue = typeof value === 'object' ? value.value : value;
+        {
+    const numValue = typeof value === 'object' ? value.value : value;
+  }
         return tolerance.range ?
           numValue >= tolerance.range[0] && numValue <= tolerance.range[1] : false;
       case 'regex':
-        const strValue = typeof value === 'object' ? value.body : value;
+        {
+    const strValue = typeof value === 'object' ? value.body : value;
+  }
         return tolerance.pattern ? new RegExp(tolerance.pattern).test(strValue) : false;
       default:
         return true;
@@ -860,13 +865,13 @@ export class ChaosEngineeringPlatform {
   }
 
   private async executePause(method: ExperimentMethod): Promise<void> {
-    const duration = method.pauses?.after || 5000;
+    const duration = method.pauses?.after ?? 5000;
     await new Promise(resolve => setTimeout(resolve, duration));
   }
 
   private evaluateTolerances(steadyState: SteadyStateResults): boolean {
-    const beforePassed = steadyState.before.every(r => r.tolerance_met);
-    const afterPassed = steadyState.after.every(r => r.tolerance_met);
+    const beforePassed = steadyState.before.every(r => r.tolerancemet);
+    const afterPassed = steadyState.after.every(r => r.tolerancemet);
     return beforePassed && afterPassed;
   }
 
@@ -885,18 +890,18 @@ export class ChaosEngineeringPlatform {
   }
 
   private async analyzeResults(experiment: ChaosExperiment): Promise<void> {
-    if (!experiment.results) return;
+    if (!experiment.results) {return;}
 
     const insights = experiment.results.insights;
-    insights.resilience_score = this.calculateResilienceScore(experiment.results);
-    insights.weaknesses_discovered = this.identifyWeaknesses(experiment.results);
+    insights.resiliencescore = this.calculateResilienceScore(experiment.results);
+    insights.weaknessesdiscovered = this.identifyWeaknesses(experiment.results);
     insights.recommendations = this.generateRecommendations(experiment.results);
-    insights.confidence_level = this.calculateConfidenceLevel(experiment.results);
+    insights.confidencelevel = this.calculateConfidenceLevel(experiment.results);
   }
 
   private calculateResilienceScore(results: ExperimentResults): number {
     const toleranceMet = results.steady_state.tolerance_met ? 100 : 0;
-    const successRate = results.metrics.success_rate;
+    const successRate = results.metrics.successrate;
     const blastRadius = 100 - (results.metrics.blast_radius.cascade_failures * 10);
 
     return (toleranceMet + successRate + blastRadius) / 3;
@@ -905,7 +910,7 @@ export class ChaosEngineeringPlatform {
   private identifyWeaknesses(results: ExperimentResults): string[] {
     const weaknesses: string[] = [];
 
-    if (!results.steady_state.tolerance_met) {
+    if (!results.steady_state.tolerancemet) {
       weaknesses.push('System failed to maintain steady state during chaos');
     }
 
@@ -941,7 +946,7 @@ export class ChaosEngineeringPlatform {
       results.metrics.targets_affected > 0 ? 1 : 0.3
     ];
 
-    return factors.reduce((sum, _factor) => sum + factor, 0) / factors.length * 100;
+    return factors.reduce((sum, factor) => sum + factor, 0) / factors.length * 100;
   }
 
   private async executeScenario(
@@ -962,7 +967,7 @@ export class ChaosEngineeringPlatform {
       }
     }
 
-    for (const criteria of scenario.success_criteria) {
+    for (const criteria of scenario.successcriteria) {
       if (await this.evaluateSuccessCriteria(criteria)) {
         successCriteriaMet++;
         score += criteria.weight;
@@ -1012,8 +1017,10 @@ export class ChaosEngineeringPlatform {
   }
 
   private calculateOverallScore(scenarioResults: ScenarioResults[]): number {
-    if (scenarioResults.length === 0) return 0;
-    return scenarioResults.reduce((sum, _result) => sum + result.score, 0) / scenarioResults.length;
+    if (scenarioResults.length === 0) {
+    return 0;
+  }
+    return scenarioResults.reduce((sum, result) => sum + result.score, 0) / scenarioResults.length;
   }
 
   private async generateGameDayInsights(results: GameDayResults): Promise<GameDayInsights> {
@@ -1170,10 +1177,10 @@ export class ChaosEngineeringPlatform {
 
   private async updateResilienceMetrics(results: ExperimentResults): Promise<void> {
     this.metrics.experiment_coverage += 1;
-    this.metrics.system_resilience_score =
-      (this.metrics.system_resilience_score + results.insights.resilience_score) / 2;
-    this.metrics.confidence_score =
-      (this.metrics.confidence_score + results.insights.confidence_level) / 2;
+    this.metrics.systemresiliencescore =
+      (this.metrics.system_resilience_score + results.insights.resiliencescore) / 2;
+    this.metrics.confidencescore =
+      (this.metrics.confidence_score + results.insights.confidencelevel) / 2;
   }
 
   private async sendNotification(experiment: ChaosExperiment, event: string): Promise<void> {
@@ -1181,13 +1188,13 @@ export class ChaosEngineeringPlatform {
   }
 
   private startScheduleProcessor(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.processSchedules();
     }, 60000); // Check every minute
   }
 
   private startMetricsCollection(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.updateMetrics();
     }, 300000); // Update every 5 minutes
   }
@@ -1212,7 +1219,7 @@ export class ChaosEngineeringPlatform {
       }
     }
 
-    schedule.last_execution = Date.now();
+    schedule.lastexecution = Date.now();
   }
 
   private calculateNextExecution(schedule: ChaosSchedule): void {
@@ -1220,13 +1227,13 @@ export class ChaosEngineeringPlatform {
 
     switch (schedule.frequency.type) {
       case 'interval':
-        schedule.next_execution = now + (schedule.frequency.interval || 86400000); // Default 1 day
+        schedule.nextexecution = now + (schedule.frequency.interval ?? 86400000); // Default 1 day
         break;
       case 'cron':
-        schedule.next_execution = now + 86400000; // Simplified: next day
+        schedule.nextexecution = now + 86400000; // Simplified: next day
         break;
       default:
-        schedule.next_execution = now + 86400000;
+        schedule.nextexecution = now + 86400000;
     }
   }
 
@@ -1236,12 +1243,12 @@ export class ChaosEngineeringPlatform {
 
     if (completedExperiments.length > 0) {
       const avgMttr = completedExperiments
-        .map(e => e.results?.duration || 0)
-        .reduce((sum, _duration) => sum + duration, 0) / completedExperiments.length;
+        .map(e => e.results?.duration ?? 0)
+        .reduce((sum, duration) => sum + duration, 0) / completedExperiments.length;
 
       this.metrics.mttr = avgMttr;
       this.metrics.availability = 99.5; // Simulated
-      this.metrics.blast_radius_containment = 85; // Simulated
+      this.metrics.blastradiuscontainment = 85; // Simulated
     }
   }
 

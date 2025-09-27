@@ -4,7 +4,7 @@
  * Fortune 50-grade caching strategies
  */
 
-import type { D1Database, D1Result } from '@cloudflare/workers-types';
+// import type { D1Database, D1Result } from '@cloudflare/workers-types';
 
 export interface CacheEntry<T = any> {
   key: string;
@@ -233,7 +233,9 @@ export class QueryCache {
    */
   invalidate(key: string): boolean {
     const entry = this.memoryCache.get(key);
-    if (!entry) return false;
+    if (!entry) {
+    return false;
+  }
 
     // Remove from tag index
     for (const tag of entry.tags) {
@@ -308,7 +310,7 @@ export class QueryCache {
     query: () => Promise<any>;
     options?: QueryCacheOptions;
   }>): Promise<void> {
-    const warmUpPromises = queries.map(async ({ key, query, options }) => {
+    const warmUpPromises = queries.map(async({ key, query, options }) => {
       try {
         const cached = await this.get(key);
         if (!cached) {
@@ -453,7 +455,9 @@ export class QueryCache {
 
     let freedSpace = 0;
     for (const [key, entry] of entries) {
-      if (freedSpace >= requiredSpace) break;
+      if (freedSpace >= requiredSpace) {
+    break;
+  }
       
       freedSpace += entry.size;
       this.invalidate(key);
@@ -464,7 +468,6 @@ export class QueryCache {
    * Cleanup expired entries
    */
   private cleanup(): void {
-    const now = Date.now();
     const entriesToRemove: string[] = [];
 
     for (const [key, entry] of this.memoryCache.entries()) {
@@ -478,7 +481,7 @@ export class QueryCache {
     }
 
     if (entriesToRemove.length > 0) {
-      console.log(`Cache cleanup: removed ${entriesToRemove.length} expired entries`);
+      console.warn(`Cache cleanup: removed ${entriesToRemove.length} expired entries`);
     }
   }
 
@@ -486,7 +489,7 @@ export class QueryCache {
    * Start cleanup timer
    */
   private startCleanup(): void {
-    this.cleanupTimer = setInterval(() => {
+    this.cleanupTimer = setInterval_(() => {
       this.cleanup();
     }, this.config.cleanupInterval);
   }
@@ -540,18 +543,18 @@ export class QueryCache {
  */
 export function cacheable<T>(
   cache: QueryCache,
-  keyGenerator: (...args: any[]) => string,
+  keyGenerator: (..._args: any[]) => string,
   options?: QueryCacheOptions
 ) {
   return function (
-    target: any,
+    _target: any,
     propertyKey: string,
-    descriptor: PropertyDescriptor
+    _descriptor: PropertyDescriptor
   ) {
-    const originalMethod = descriptor.value;
+    const originalMethod = _descriptor.value;
 
-    descriptor.value = async function (...args: any[]): Promise<T> {
-      const cacheKey = keyGenerator(...args);
+    _descriptor.value = async function (..._args: any[]): Promise<T> {
+      const cacheKey = keyGenerator(..._args);
       
       // Try to get from cache
       const cached = await cache.get<T>(cacheKey);
@@ -560,7 +563,7 @@ export function cacheable<T>(
       }
 
       // Execute original method
-      const result = await originalMethod.apply(this, args);
+      const result = await originalMethod.apply(this, _args);
       
       // Cache the result
       await cache.set(cacheKey, result, options);

@@ -3,8 +3,8 @@
  * Comprehensive performance tracking with real-time metrics and alerting
  */
 
-import { CloudflareEnv } from '../cloudflare';
-import { _RequestContext, RequestMetrics } from '../../worker/requestContext';
+import { CloudflareEnv} from '../cloudflare';
+import { RequestContext, RequestMetrics} from '../../worker/requestContext';
 
 export interface PerformanceMetrics {
   responseTime: {
@@ -101,9 +101,9 @@ export class PerformanceMonitor {
     context: RequestContext;
   }> = [];
   private flushTimer?: unknown;
-  private readonly MAX_HISTORY = 10000;
-  private readonly BUFFER_SIZE = 100;
-  private readonly FLUSH_INTERVAL = 10000; // 10 seconds
+  private readonly MAXHISTORY = 10000;
+  private readonly BUFFERSIZE = 100;
+  private readonly FLUSHINTERVAL = 10000; // 10 seconds
 
   constructor(env: CloudflareEnv, config?: Partial<MonitoringConfig>) {
     this.env = env;
@@ -156,7 +156,7 @@ export class PerformanceMonitor {
     });
 
     // Flush if buffer is full
-    if (this.metricsBuffer.length >= this.BUFFER_SIZE) {
+    if (this.metricsBuffer.length >= this.BUFFERSIZE) {
       this.flushMetrics();
     }
 
@@ -180,7 +180,7 @@ export class PerformanceMonitor {
 
     // Calculate throughput
     const recentRequests = this.requestCounts.filter(r => r.timestamp >= oneMinuteAgo);
-    const totalRecentRequests = recentRequests.reduce((sum, _r) => sum + r.count, 0);
+    const totalRecentRequests = recentRequests.reduce((sum, r) => sum + r.count, 0);
     const requestsPerSecond = totalRecentRequests / 60;
     const requestsPerMinute = totalRecentRequests;
 
@@ -208,7 +208,7 @@ export class PerformanceMonitor {
 
     return {
       responseTime: responseTimeStats,
-      throughput: { _requestsPerSecond,
+      throughput: { requestsPerSecond,
         requestsPerMinute,
         peakRPS
       },
@@ -229,7 +229,7 @@ export class PerformanceMonitor {
       metrics = metrics.filter(m => m.path.includes(path));
     }
 
-    return metrics.sort((a, _b) => b.requestCount - a.requestCount);
+    return metrics.sort((a, b) => b.requestCount - a.requestCount);
   }
 
   /**
@@ -242,7 +242,7 @@ export class PerformanceMonitor {
       alerts = alerts.filter(a => a.severity === severity);
     }
 
-    return alerts.sort((a, _b) => b.timestamp.getTime() - a.timestamp.getTime());
+    return alerts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }
 
   /**
@@ -293,20 +293,20 @@ export class PerformanceMonitor {
 
     // Generate insights
     if (responseTimeTrend.length > 0) {
-      const avgResponseTime = responseTimeTrend.reduce((a, _b) => a + b.value, 0) / responseTimeTrend.length;
+      const avgResponseTime = responseTimeTrend.reduce((a, b) => a + b.value, 0) / responseTimeTrend.length;
       if (avgResponseTime > this.config.alertThresholds.responseTime.warning) {
         insights.push(`Average response time (${avgResponseTime.toFixed(0)}ms) is above warning threshold`);
       }
     }
 
     if (errorRateTrend.length > 0) {
-      const avgErrorRate = errorRateTrend.reduce((a, _b) => a + b.value, 0) / errorRateTrend.length;
+      const avgErrorRate = errorRateTrend.reduce((a, b) => a + b.value, 0) / errorRateTrend.length;
       if (avgErrorRate > this.config.alertThresholds.errorRate.warning) {
         insights.push(`Error rate (${avgErrorRate.toFixed(1)}%) is elevated`);
       }
     }
 
-    return { _responseTimeTrend,
+    return { responseTimeTrend,
       throughputTrend,
       errorRateTrend,
       insights
@@ -364,7 +364,7 @@ export class PerformanceMonitor {
   private processRealTime(context: RequestContext, metrics: RequestMetrics): void {
     // Update response time history
     this.responseTimeHistory.push(metrics.duration);
-    if (this.responseTimeHistory.length > this.MAX_HISTORY) {
+    if (this.responseTimeHistory.length > this.MAXHISTORY) {
       this.responseTimeHistory.shift();
     }
 
@@ -516,7 +516,7 @@ export class PerformanceMonitor {
       this.alerts = this.alerts.slice(-100);
     }
 
-    console.log(`LOG: PERF-MONITOR-ALERT-${severity.toUpperCase()}-1 - ${message}`, { _alertId,
+    console.log(`LOG: PERF-MONITOR-ALERT-${severity.toUpperCase()}-1 - ${message}`, { alertId,
       value,
       threshold,
       endpoint
@@ -556,11 +556,11 @@ export class PerformanceMonitor {
       return { avg: 0, min: 0, max: 0, p50: 0, p90: 0, p95: 0, p99: 0 };
     }
 
-    const sorted = [...responseTimes].sort((a, _b) => a - b);
+    const sorted = [...responseTimes].sort((a, b) => a - b);
     const len = sorted.length;
 
     return {
-      avg: responseTimes.reduce((a, _b) => a + b, 0) / len,
+      avg: responseTimes.reduce((a, b) => a + b, 0) / len,
       min: sorted[0],
       max: sorted[len - 1],
       p50: sorted[Math.floor(len * 0.5)],
@@ -609,9 +609,9 @@ export class PerformanceMonitor {
     let totalRequests = 0;
 
     for (const bufferEntry of this.metricsBuffer.slice(-100)) { // Last 100 requests
-      totalDbQueries += bufferEntry.metrics.dbQueries || 0;
-      totalKvOps += (bufferEntry.metrics.kvReads || 0) + (bufferEntry.metrics.kvWrites || 0);
-      totalEncryptionOps += bufferEntry.metrics.encryptionOps || 0;
+      totalDbQueries += bufferEntry.metrics.dbQueries ?? 0;
+      totalKvOps += (bufferEntry.metrics.kvReads ?? 0) + (bufferEntry.metrics.kvWrites ?? 0);
+      totalEncryptionOps += bufferEntry.metrics.encryptionOps ?? 0;
 
       if (bufferEntry.metrics.cacheHit) {
         cacheHits++;
@@ -658,7 +658,7 @@ export class PerformanceMonitor {
           break;
       }
 
-      points.push({ _timestamp, value });
+      points.push({ timestamp, value });
     }
 
     return points;
@@ -692,10 +692,10 @@ export class PerformanceMonitor {
   private formatCSVMetrics(metrics: PerformanceMetrics): string {
     const lines: string[] = [];
     lines.push('metric,value,unit');
-    lines.push(`response_time_avg,${metrics.responseTime.avg},ms`);
-    lines.push(`response_time_p95,${metrics.responseTime.p95},ms`);
-    lines.push(`requests_per_second,${metrics.throughput.requestsPerSecond},rps`);
-    lines.push(`error_rate,${metrics.errors.rate},%`);
+    lines.push(`responsetimeavg,${metrics.responseTime.avg},ms`);
+    lines.push(`responsetimep95,${metrics.responseTime.p95},ms`);
+    lines.push(`requestspersecond,${metrics.throughput.requestsPerSecond},rps`);
+    lines.push(`errorrate,${metrics.errors.rate},%`);
 
     return lines.join('\n');
   }
@@ -704,16 +704,16 @@ export class PerformanceMonitor {
    * Start metrics flush timer
    */
   private startMetricsFlush(): void {
-    this.flushTimer = setInterval(() => {
+    this.flushTimer = setInterval_(() => {
       this.flushMetrics();
-    }, this.FLUSH_INTERVAL);
+    }, this.FLUSHINTERVAL);
   }
 
   /**
    * Flush metrics buffer to storage
    */
   private flushMetrics(): void {
-    if (this.metricsBuffer.length === 0) return;
+    if (this.metricsBuffer.length === 0) {return;}
 
     try {
       // In production, store in time-series database
@@ -731,7 +731,7 @@ export class PerformanceMonitor {
    */
   private startAggregation(): void {
     // Run every 5 minutes
-    setInterval(() => {
+    setInterval_(() => {
       this.aggregateMetrics();
     }, 300000);
   }
@@ -773,7 +773,7 @@ export function getPerformanceMonitor(env: CloudflareEnv, config?: Partial<Monit
 
 // Default instance for browser/component usage
 // Only create if we're in a server environment with CloudflareEnv
-export const performanceMonitor = (() => {
+export const performanceMonitor = _(() => {
   // Guard against browser environment
   if (typeof window !== 'undefined') {
     // Return a stub for browser usage

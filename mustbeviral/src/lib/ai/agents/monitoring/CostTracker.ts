@@ -108,7 +108,6 @@ export class CostTracker {
     qualityScore?: number
   ): void {
     const cost = this.calculateRequestCost(inputTokens, outputTokens, model);
-    const requestId = `${agentName}-${Date.now()}`;
 
     // Update global metrics
     this.updateGlobalMetrics(inputTokens + outputTokens, cost, responseTime, success);
@@ -142,7 +141,7 @@ export class CostTracker {
    */
   getCurrentMetrics(): CostMetrics {
     const global = this.metrics.get('global');
-    return global || {
+    return global ?? {
       totalTokensUsed: 0,
       totalAPICalls: 0,
       totalCostUSD: 0,
@@ -185,7 +184,7 @@ export class CostTracker {
         efficiencyScore: breakdown.costEfficiencyRatio,
         qualityPerDollar: breakdown.averageQualityScore / breakdown.estimatedCost
       }))
-      .sort((a, _b) => b.efficiencyScore - a.efficiencyScore);
+      .sort((a, b) => b.efficiencyScore - a.efficiencyScore);
   }
 
   /**
@@ -282,7 +281,7 @@ export class CostTracker {
       implementation: 'Implement request batching with optimal batch sizes per platform'
     });
 
-    return recommendations.sort((a, _b) => {
+    return recommendations.sort((a, b) => {
       const priorityOrder = { high: 3, medium: 2, low: 1 };
       return priorityOrder[b.priority] - priorityOrder[a.priority];
     });
@@ -310,7 +309,7 @@ export class CostTracker {
   }
 
   private updateGlobalMetrics(tokens: number, cost: number, responseTime: number, success: boolean): void {
-    const current = this.metrics.get('global') || {
+    const current = this.metrics.get('global')  ?? {
       totalTokensUsed: 0,
       totalAPICalls: 0,
       totalCostUSD: 0,
@@ -353,7 +352,7 @@ export class CostTracker {
     qualityScore: number = 75
   ): void {
     const key = `${agentName}-${platform}`;
-    const current = this.agentBreakdowns.get(key) || { _agentName,
+    const current = this.agentBreakdowns.get(key)  ?? { agentName,
       platform,
       totalRequests: 0,
       successfulRequests: 0,

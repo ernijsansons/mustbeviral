@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Zap, Cpu, Image, Video, Sliders, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { Zap, Cpu, Image, Video, Sliders, DollarSign, Clock, CheckCircle} from 'lucide-react';
 
 interface AITier {
   id: string;
@@ -55,18 +55,17 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
 
   console.log('LOG: COMPONENT-TOOL-SELECTOR-2 - ToolSelector rendered');
 
-  useEffect(() => {
+  useEffect_(() => {
     loadTiers();
     loadUsageInfo();
   }, [userId]);
 
-  useEffect(() => {
+  useEffect_(() => {
     if (selectedTier) {
       loadModelsForTier(selectedTier.id);
     }
   }, [selectedTier]);
 
-  const loadTiers = async () => {
     console.log('LOG: COMPONENT-TOOL-SELECTOR-3 - Loading available tiers');
     
     try {
@@ -86,12 +85,12 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
     console.log('LOG: COMPONENT-TOOL-SELECTOR-5 - Loading user usage info');
     
     try {
-      const response = await fetch(`/api/select-tool?action=get_usage&user_id=${userId}`);
+      const response = await fetch(`/api/select-tool?action=get_usage&userid=${userId}`);
       const result = await response.json();
       
       if (result.success && result.data) {
         setUsageInfo(result.data);
-        setSelectedTier(result.data.current_tier);
+        setSelectedTier(result.data.currenttier);
         console.log('LOG: COMPONENT-TOOL-SELECTOR-6 - Usage info loaded');
       }
     } catch (error) {
@@ -99,7 +98,6 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
     }
   };
 
-  const loadModelsForTier = async (tierId: string) => {
     console.log('LOG: COMPONENT-TOOL-SELECTOR-7 - Loading models for tier:', tierId);
     
     try {
@@ -116,7 +114,7 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
       const result = await response.json();
       
       if (result.success) {
-        setAvailableModels(result.data.available_models);
+        setAvailableModels(result.data.availablemodels);
         if (result.data.available_models.length > 0) {
           setSelectedModel(result.data.available_models[0]);
         }
@@ -166,14 +164,22 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
   };
 
   const getUsageColor = (percentage: number) => {
-    if (percentage > 90) return 'bg-red-500';
-    if (percentage > 70) return 'bg-yellow-500';
+    if (percentage > 90) {
+    return 'bg-red-500';
+  }
+    if (percentage > 70) {
+    return 'bg-yellow-500';
+  }
     return 'bg-green-500';
   };
 
   const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`;
+  }
+    if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}K`;
+  }
     return num.toString();
   };
 
@@ -220,15 +226,15 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
               
               <div className="flex items-center justify-between mb-3">
                 <span className="text-2xl font-bold text-gray-900">
-                  ${tier.price_per_month}
+                  ${tier.pricepermonth}
                 </span>
                 <span className="text-sm text-gray-500">/month</span>
               </div>
               
               <div className="space-y-1 text-xs text-gray-600">
-                <div>Text: {formatNumber(tier.daily_limits.text_tokens)} tokens/day</div>
-                <div>Images: {tier.daily_limits.image_generations}/day</div>
-                <div>Video: {tier.daily_limits.video_seconds}s/day</div>
+                <div>Text: {formatNumber(tier.daily_limits.texttokens)} tokens/day</div>
+                <div>Images: {tier.daily_limits.imagegenerations}/day</div>
+                <div>Video: {tier.daily_limits.videoseconds}s/day</div>
               </div>
               
               <div className="mt-3 flex items-center">
@@ -239,7 +245,7 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
                     style={{ width: `${tier.quality_level * 10}%` }}
                   ></div>
                 </div>
-                <span className="text-xs text-gray-500 ml-2">{tier.quality_level}/10</span>
+                <span className="text-xs text-gray-500 ml-2">{tier.qualitylevel}/10</span>
               </div>
             </div>
           ))}
@@ -317,7 +323,7 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
                   <span className="text-gray-600 capitalize">{model.type}</span>
                   <div className="flex items-center text-gray-500">
                     <DollarSign className="w-3 h-3 mr-1" />
-                    <span>{model.cost_multiplier}x</span>
+                    <span>{model.costmultiplier}x</span>
                   </div>
                 </div>
               </div>
@@ -338,7 +344,7 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>Text Tokens</span>
-                <span>{formatNumber(usageInfo.daily_usage.text_tokens)} / {formatNumber(usageInfo.current_tier.daily_limits.text_tokens)}</span>
+                <span>{formatNumber(usageInfo.daily_usage.texttokens)} / {formatNumber(usageInfo.current_tier.daily_limits.texttokens)}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
@@ -351,7 +357,7 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>Image Generations</span>
-                <span>{usageInfo.daily_usage.image_generations} / {usageInfo.current_tier.daily_limits.image_generations}</span>
+                <span>{usageInfo.daily_usage.imagegenerations} / {usageInfo.current_tier.daily_limits.imagegenerations}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
@@ -365,7 +371,7 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>Video Seconds</span>
-                  <span>{usageInfo.daily_usage.video_seconds} / {usageInfo.current_tier.daily_limits.video_seconds}</span>
+                  <span>{usageInfo.daily_usage.videoseconds} / {usageInfo.current_tier.daily_limits.videoseconds}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 

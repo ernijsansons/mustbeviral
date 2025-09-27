@@ -1,7 +1,7 @@
 // API-specific type definitions
 // These replace 'unknown' types in API calls and responses
 
-import { _User, AuthTokens } from './common';
+import { User, AuthTokens} from './common';
 
 // Request types
 export interface ApiRequest {

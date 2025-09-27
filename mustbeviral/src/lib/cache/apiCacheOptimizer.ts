@@ -4,9 +4,9 @@
  * Supports GraphQL, REST, and WebSocket caching strategies
  */
 
-import { Request, Response } from 'express'
-import { enterpriseCache, CacheTier, CacheStrategy } from './enterpriseCache'
-import { cdnService } from './cdnService'
+import { Request, Response} from 'express'
+import { enterpriseCache, CacheTier, CacheStrategy} from './enterpriseCache'
+import { cdnService} from './cdnService'
 import crypto from 'crypto'
 
 export interface ApiCacheRule {
@@ -80,8 +80,7 @@ export class ApiCacheOptimizer {
   addRule(rule: ApiCacheRule): void {
     // Remove existing rule for same endpoint
     this.rules = this.rules.filter(r => 
-      (typeof r.endpoint === 'string' && typeof rule.endpoint === 'string' && r.endpoint !== rule.endpoint) ||
-      (r.endpoint instanceof RegExp && rule.endpoint instanceof RegExp && r.endpoint.source !== rule.endpoint.source)
+      (typeof r.endpoint === 'string' && typeof rule.endpoint === 'string' && r.endpoint !== rule.endpoint)  ?? (r.endpoint instanceof RegExp && rule.endpoint instanceof RegExp && r.endpoint.source !== rule.endpoint.source)
     )
     
     this.rules.push(rule)
@@ -96,7 +95,7 @@ export class ApiCacheOptimizer {
       const startTime = Date.now()
       const rule = this.findMatchingRule(req)
       
-      if (!rule || req.method !== 'GET') {
+      if (!rule ?? req.method !== 'GET') {
         return next()
       }
 
@@ -186,14 +185,14 @@ export class ApiCacheOptimizer {
    */
   graphqlMiddleware() {
     return async (req: Request, res: Response, next: Function) => {
-      if (req.path !== '/graphql' || req.method !== 'POST') {
+      if (req.path !== '/graphql'  ?? req.method !== 'POST') {
         return next()
       }
 
       const { query, variables, operationName } = req.body
 
       // Only cache queries, not mutations
-      if (!query || query.trim().startsWith('mutation')) {
+      if (!query ?? query.trim().startsWith('mutation')) {
         return next()
       }
 
@@ -205,7 +204,7 @@ export class ApiCacheOptimizer {
         const cachedResult = await enterpriseCache.get(cacheKey, {
           key: cacheKey,
           ttl,
-          tiers: [CacheTier.L1_MEMORY, CacheTier.L2_REDIS],
+          tiers: [CacheTier.L1MEMORY, CacheTier.L2REDIS],
           tags: ['graphql', 'api']
         })
 
@@ -227,7 +226,7 @@ export class ApiCacheOptimizer {
             enterpriseCache.set(cacheKey, obj.data, {
               key: cacheKey,
               ttl,
-              tiers: [CacheTier.L1_MEMORY, CacheTier.L2_REDIS],
+              tiers: [CacheTier.L1MEMORY, CacheTier.L2REDIS],
               tags: ['graphql', 'api']
             }).catch(error => {
               console.error('GraphQL cache storage failed:', error)
@@ -260,7 +259,7 @@ export class ApiCacheOptimizer {
     const cacheableTypes = ['user_data', 'campaign_stats', 'notifications']
     
     if (cacheableTypes.includes(messageType)) {
-      const cacheKey = `ws:${messageType}:${message.userId || 'global'}`
+      const cacheKey = `ws:${messageType}:${message.userId ?? 'global'}`
       
       // Try cache first
       enterpriseCache.get(cacheKey).then(cachedData => {
@@ -365,9 +364,9 @@ export class ApiCacheOptimizer {
       {
         endpoint: /^\/api\/public\//,
         method: 'GET',
-        strategy: CacheStrategy.CACHE_FIRST,
+        strategy: CacheStrategy.CACHEFIRST,
         ttl: 300, // 5 minutes
-        tiers: [CacheTier.L1_MEMORY, CacheTier.L2_REDIS],
+        tiers: [CacheTier.L1MEMORY, CacheTier.L2REDIS],
         tags: ['api', 'public'],
         compress: true,
         private: false,
@@ -378,9 +377,9 @@ export class ApiCacheOptimizer {
       {
         endpoint: /^\/api\/campaigns/,
         method: 'GET',
-        strategy: CacheStrategy.CACHE_FIRST,
+        strategy: CacheStrategy.CACHEFIRST,
         ttl: 1800, // 30 minutes
-        tiers: [CacheTier.L1_MEMORY, CacheTier.L2_REDIS],
+        tiers: [CacheTier.L1MEMORY, CacheTier.L2REDIS],
         tags: ['api', 'campaigns'],
         compress: true,
         private: false,
@@ -390,9 +389,9 @@ export class ApiCacheOptimizer {
       {
         endpoint: /^\/api\/users\/[^\/]+$/,
         method: 'GET',
-        strategy: CacheStrategy.CACHE_ASIDE,
+        strategy: CacheStrategy.CACHEASIDE,
         ttl: 600, // 10 minutes
-        tiers: [CacheTier.L1_MEMORY, CacheTier.L2_REDIS],
+        tiers: [CacheTier.L1MEMORY, CacheTier.L2REDIS],
         tags: ['api', 'users'],
         compress: true,
         private: false,
@@ -401,9 +400,9 @@ export class ApiCacheOptimizer {
       {
         endpoint: /^\/api\/analytics/,
         method: 'GET',
-        strategy: CacheStrategy.CACHE_FIRST,
+        strategy: CacheStrategy.CACHEFIRST,
         ttl: 3600, // 1 hour
-        tiers: [CacheTier.L1_MEMORY, CacheTier.L2_REDIS],
+        tiers: [CacheTier.L1MEMORY, CacheTier.L2REDIS],
         tags: ['api', 'analytics'],
         compress: true,
         private: false,
@@ -420,19 +419,19 @@ export class ApiCacheOptimizer {
   }
 
   private findMatchingRule(req: Request): ApiCacheRule | null {
-    return this.rules.find(rule => {
-      const methodMatches = rule.method === 'ALL' || rule.method === req.method
+    return this.rules.find(rule = > {
+      const methodMatches = rule.method === 'ALL'  ?? rule.method === req.method
       const pathMatches = typeof rule.endpoint === 'string' 
         ? rule.endpoint === req.path
         : rule.endpoint.test(req.path)
       
       return methodMatches && pathMatches
-    }) || null
+    })  ?? null
   }
 
   private getRulePriority(rule: ApiCacheRule): number {
     // More specific rules get higher priority
-    if (typeof rule.endpoint === 'string') return 100
+    if (typeof rule.endpoint = == 'string') {return 100}
     
     const source = rule.endpoint.source
     const specificity = source.split('\\').length + source.split('/').length
@@ -461,7 +460,7 @@ export class ApiCacheOptimizer {
     // Add vary headers
     if (rule.varyBy) {
       const varyComponents = rule.varyBy
-        .map(header => `${header}:${req.get(header) || 'none'}`)
+        .map(header => `${header}:${req.get(header)  ?? 'none'}`)
         .join('|')
       components.push(varyComponents)
     }
@@ -478,8 +477,8 @@ export class ApiCacheOptimizer {
   private generateGraphQLCacheKey(query: string, variables: any, operationName?: string): string {
     const components = [
       query.replace(/\s+/g, ' ').trim(),
-      JSON.stringify(variables || {}),
-      operationName || ''
+      JSON.stringify(variables ?? {}),
+      operationName ?? ''
     ]
     
     const keyString = components.join('::')
@@ -488,9 +487,9 @@ export class ApiCacheOptimizer {
 
   private getGraphQLTTL(query: string): number {
     // Different TTL based on query type
-    if (query.includes('user')) return 300 // 5 minutes
-    if (query.includes('campaign')) return 1800 // 30 minutes
-    if (query.includes('analytics')) return 3600 // 1 hour
+    if (query.includes('user')) {return 300} // 5 minutes
+    if (query.includes('campaign')) {return 1800} // 30 minutes
+    if (query.includes('analytics')) {return 3600} // 1 hour
     return 600 // 10 minutes default
   }
 
@@ -499,7 +498,7 @@ export class ApiCacheOptimizer {
     const now = Date.now()
     const limiter = this.rateLimiters.get(key)
 
-    if (!limiter || now >= limiter.resetTime) {
+    if (!limiter ?? now >= limiter.resetTime) {
       this.rateLimiters.set(key, {
         requests: 1,
         resetTime: now + rateLimit.windowMs
@@ -527,10 +526,10 @@ export class ApiCacheOptimizer {
   }
 
   private isCacheValid(cachedResponse: any, rule: ApiCacheRule): boolean {
-    if (!cachedResponse || !cachedResponse.timestamp) return false
+    if (!cachedResponse ?? !cachedResponse.timestamp) {return false}
     
     const age = Date.now() - cachedResponse.timestamp
-    const maxAge = (rule.maxAge || rule.ttl) * 1000
+    const maxAge = (rule.maxAge ?? rule.ttl) * 1000
     
     return age < maxAge
   }
@@ -547,7 +546,7 @@ export class ApiCacheOptimizer {
     
     // Set cache headers
     const age = Math.floor((Date.now() - cachedResponse.timestamp) / 1000)
-    const maxAge = rule.maxAge || rule.ttl
+    const maxAge = rule.maxAge ?? rule.ttl
     
     res.set({
       'Cache-Control': `max-age=${maxAge}${rule.staleWhileRevalidate ? `, stale-while-revalidate=${rule.staleWhileRevalidate}` : ''}`,
@@ -598,7 +597,7 @@ export class ApiCacheOptimizer {
 
       // Cache successful responses
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        if (!rule.shouldCache || rule.shouldCache(req, res)) {
+        if (!rule.shouldCache ?? rule.shouldCache(req, res)) {
           const responseData = {
             data,
             timestamp: Date.now(),
@@ -662,10 +661,10 @@ function determineTags(path: string, method: string, responseBody: any): string[
   const tags: string[] = []
 
   // API-specific tags
-  if (path.includes('/campaigns')) tags.push('campaigns')
-  if (path.includes('/users')) tags.push('users')
-  if (path.includes('/analytics')) tags.push('analytics')
-  if (path.includes('/marketplace')) tags.push('marketplace')
+  if (path.includes('/campaigns')) {tags.push('campaigns')}
+  if (path.includes('/users')) {tags.push('users')}
+  if (path.includes('/analytics')) {tags.push('analytics')}
+  if (path.includes('/marketplace')) {tags.push('marketplace')}
 
   // Method-based invalidation
   if (method !== 'GET') {

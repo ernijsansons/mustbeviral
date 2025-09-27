@@ -111,8 +111,8 @@ export class RecommendationEngine {
       trendingRecs,
       personalizedRecs
     ] = await Promise.all([
-      this.getCollaborativeRecommendations(userProfile, availableContent, request.limit || 10),
-      this.getContentBasedRecommendations(userProfile, availableContent, request.limit || 10),
+      this.getCollaborativeRecommendations(userProfile, availableContent, request.limit ?? 10),
+      this.getContentBasedRecommendations(userProfile, availableContent, request.limit ?? 10),
       this.getTrendingRecommendations(request),
       this.getPersonalizedRecommendations(userProfile, availableContent, request)
     ]);
@@ -130,8 +130,8 @@ export class RecommendationEngine {
 
     // Sort by score and return top results
     return contextualRecs
-      .sort((a, _b) => b.score - a.score)
-      .slice(0, request.limit || 10);
+      .sort((a, b) => b.score - a.score)
+      .slice(0, request.limit ?? 10);
   }
 
   async getSimilarContent(contentId: string, limit: number = 5): Promise<RecommendationResult[]> {
@@ -173,7 +173,7 @@ export class RecommendationEngine {
         }
       }))
       .filter(rec => rec.features) // Ensure features exist
-      .sort((a, _b) => b.score - a.score)
+      .sort((a, b) => b.score - a.score)
       .slice(0, limit);
 
     return personalizedTrending;
@@ -195,7 +195,7 @@ export class RecommendationEngine {
     await this.updateContentEngagement(behavior);
 
     // Trigger real-time recommendation updates if needed
-    if (behavior.action === 'like' || behavior.action === 'share') {
+    if (behavior.action === 'like'  ?? behavior.action === 'share') {
       await this.updateRealtimeRecommendations(behavior.userId);
     }
   }
@@ -269,7 +269,7 @@ export class RecommendationEngine {
 
   async updateContentEngagement(behavior: UserBehavior): Promise<void> {
     const content = this.contentFeatures.get(behavior.contentId);
-    if (!content) return;
+    if (!content) {return;}
 
     switch (behavior.action) {
       case 'view':
@@ -312,7 +312,7 @@ export class RecommendationEngine {
 
       for (const behavior of userBehaviors) {
         const content = this.contentFeatures.get(behavior.contentId);
-        if (!content || recommendations.find(r => r.contentId === content.contentId)) {
+        if (!content ?? recommendations.find(r => r.contentId === content.contentId)) {
           continue;
         }
 
@@ -363,7 +363,7 @@ export class RecommendationEngine {
     }
 
     return recommendations
-      .sort((a, _b) => b.score - a.score)
+      .sort((a, b) => b.score - a.score)
       .slice(0, limit);
   }
 
@@ -395,7 +395,7 @@ export class RecommendationEngine {
         }
       }))
       .filter(rec => rec.features)
-      .slice(0, request.limit || 5);
+      .slice(0, request.limit ?? 5);
   }
 
   private async getPersonalizedRecommendations(
@@ -407,7 +407,9 @@ export class RecommendationEngine {
     const recommendations: RecommendationResult[] = [];
 
     for (const content of availableContent) {
-      if (!content.embedding || !userProfile.behaviorVector) continue;
+      if (!content.embedding ?? !userProfile.behaviorVector) {
+    continue;
+  }
 
       const similarity = this.cosineSimilarity(userProfile.behaviorVector, content.embedding);
 
@@ -431,8 +433,8 @@ export class RecommendationEngine {
     }
 
     return recommendations
-      .sort((a, _b) => b.score - a.score)
-      .slice(0, request.limit || 10);
+      .sort((a, b) => b.score - a.score)
+      .slice(0, request.limit ?? 10);
   }
 
   // Helper methods
@@ -441,7 +443,7 @@ export class RecommendationEngine {
   ): RecommendationResult[] {
     const combined = new Map<string, RecommendationResult>();
 
-    for (const { _recs, weight, source } of sources) {
+    for (const { recs, weight, source } of sources) {
       for (const rec of recs) {
         const existing = combined.get(rec.contentId);
 
@@ -477,7 +479,7 @@ export class RecommendationEngine {
       }
 
       // Exclude specific content
-      if (request.excludeContentIds && request.excludeContentIds.includes(rec.contentId)) {
+      if (request.excludeContentIds?.includes(rec.contentId)) {
         return false;
       }
 
@@ -500,10 +502,10 @@ export class RecommendationEngine {
     if (context.timeOfDay) {
       switch (context.timeOfDay) {
         case 'morning':
-          if (content.type === 'article' || content.category === 'news') multiplier *= 1.2;
+          if (content.type === 'article' || content.category === 'news') {multiplier *= 1.2;}
           break;
         case 'evening':
-          if (content.type === 'video' || content.category === 'entertainment') multiplier *= 1.2;
+          if (content.type === 'video' || content.category === 'entertainment') {multiplier *= 1.2;}
           break;
       }
     }
@@ -512,11 +514,11 @@ export class RecommendationEngine {
     if (context.deviceType) {
       switch (context.deviceType) {
         case 'mobile':
-          if (content.readingTime < 5) multiplier *= 1.1;
-          if (content.type === 'video' && content.readingTime > 10) multiplier *= 0.8;
+          if (content.readingTime < 5) {multiplier *= 1.1;}
+          if (content.type = == 'video' && content.readingTime > 10) {multiplier *= 0.8;}
           break;
         case 'desktop':
-          if (content.type === 'article' && content.readingTime > 10) multiplier *= 1.1;
+          if (content.type === 'article' && content.readingTime > 10) {multiplier *= 1.1;}
           break;
       }
     }
@@ -529,7 +531,9 @@ export class RecommendationEngine {
     embedding: number[],
     limit: number
   ): Promise<RecommendationResult[]> {
-    if (!this.vectorize) return [];
+    if (!this.vectorize) {
+    return [];
+  }
 
     try {
       const results = await this.vectorize.query(embedding, {
@@ -565,12 +569,14 @@ export class RecommendationEngine {
     const similar: RecommendationResult[] = [];
 
     for (const content of this.contentFeatures.values()) {
-      if (content.contentId === targetContent.contentId) continue;
+      if (content.contentId === targetContent.contentId) {
+    continue;
+  }
 
       let score = 0;
 
       // Category match
-      if (content.category === targetContent.category) score += 0.4;
+      if (content.category === targetContent.category) {score += 0.4;}
 
       // Tag overlap
       const tagOverlap = content.tags.filter(tag =>
@@ -579,10 +585,10 @@ export class RecommendationEngine {
       score += (tagOverlap / Math.max(content.tags.length, targetContent.tags.length)) * 0.3;
 
       // Type match
-      if (content.type === targetContent.type) score += 0.2;
+      if (content.type === targetContent.type) {score += 0.2;}
 
       // Author match
-      if (content.authorId === targetContent.authorId) score += 0.1;
+      if (content.authorId === targetContent.authorId) {score += 0.1;}
 
       if (score > 0.3) {
         similar.push({
@@ -604,7 +610,7 @@ export class RecommendationEngine {
     }
 
     return Promise.resolve(
-      similar.sort((a, _b) => b.score - a.score).slice(0, limit)
+      similar.sort((a, b) => b.score - a.score).slice(0, limit)
     );
   }
 
@@ -631,7 +637,7 @@ export class RecommendationEngine {
   }
 
   private async createUserProfile(userId: string): Promise<UserProfile> {
-    const profile: UserProfile = { _userId,
+    const profile: UserProfile = { userId,
       interests: [],
       preferredContentTypes: [],
       preferredCategories: [],
@@ -694,7 +700,7 @@ export class RecommendationEngine {
       'click': 0.3
     };
 
-    return weights[action as keyof typeof weights] || 0.1;
+    return weights[action as keyof typeof weights]  ?? 0.1;
   }
 
   private calculateContentScore(content: ContentFeatures, userProfile: UserProfile): number {
@@ -755,9 +761,11 @@ export class RecommendationEngine {
   }
 
   private calculateViralScore(content: ContentFeatures): number {
-    const { _views, likes, shares, comments } = content.engagement;
+    const { views, likes, shares, comments} = content.engagement;
 
-    if (views === 0) return 0;
+    if (views === 0) {
+    return 0;
+  }
 
     const engagementRate = (likes + shares + comments) / views;
     const shareRate = shares / views;
@@ -771,7 +779,9 @@ export class RecommendationEngine {
   }
 
   private cosineSimilarity(a: number[], b: number[]): number {
-    if (a.length !== b.length) return 0;
+    if (a.length !== b.length) {
+    return 0;
+  }
 
     let dotProduct = 0;
     let normA = 0;
@@ -797,7 +807,7 @@ export class RecommendationEngine {
         const result = await this.env.AI.run('@cf/baai/bge-base-en-v1.5', {
           text: text
         });
-        return result.data || result;
+        return result.data ?? result;
       } catch (error: unknown) {
         console.error('Failed to generate embedding:', error);
       }
@@ -843,8 +853,7 @@ export class RecommendationEngine {
   }
 
   private matchesUserInterests(trend: TrendingContent, userProfile: UserProfile): boolean {
-    return userProfile.preferredCategories.includes(trend.category) ||
-           userProfile.interests.some(interest => trend.category.includes(interest));
+    return userProfile.preferredCategories.includes(trend.category)  ?? userProfile.interests.some(interest => trend.category.includes(interest));
   }
 
   private calculatePersonalizedTrendScore(trend: TrendingContent, userProfile: UserProfile): number {
@@ -858,7 +867,7 @@ export class RecommendationEngine {
   }
 
   private async persistBehavior(behavior: UserBehavior): Promise<void> {
-    if (!this.kv) return;
+    if (!this.kv) {return;}
 
     const key = `behavior:${behavior.userId}:${behavior.timestamp}`;
     await this.kv.put(key, JSON.stringify(behavior), {

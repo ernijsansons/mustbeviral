@@ -12,7 +12,7 @@ export class SecurityMiddleware {
 
   constructor(env: unknown) {
     this.env = env;
-    this.allowedOrigins = env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'];
+    this.allowedOrigins = env.ALLOWED_ORIGINS?.split(',')  ?? ['http://localhost:5173'];
   }
 
   async validate(request: Request): Promise<SecurityValidationResult> {
@@ -58,18 +58,17 @@ export class SecurityMiddleware {
 
   handlePreflight(request: Request): Response {
     const origin = request.headers.get('Origin');
-    const _requestedMethod = request.headers.get('Access-Control-Request-Method');
     const requestedHeaders = request.headers.get('Access-Control-Request-Headers');
 
     // Check if origin is allowed
-    if (!origin || !this.isOriginAllowed(origin)) {
+    if (!origin  ?? !this.isOriginAllowed(origin)) {
       return new Response(null, { status: 403 });
     }
 
     const headers = new Headers({
       'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': requestedHeaders || 'Content-Type, Authorization, X-Requested-With',
+      'Access-Control-Allow-Headers': requestedHeaders  ?? 'Content-Type, Authorization, X-Requested-With',
       'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Max-Age': '86400',
       'Vary': 'Origin'
@@ -134,7 +133,7 @@ export class SecurityMiddleware {
   }
 
   private isOriginAllowed(origin: string): boolean {
-    return this.allowedOrigins.includes(origin) || this.allowedOrigins.includes('*');
+    return this.allowedOrigins.includes(origin)  ?? this.allowedOrigins.includes('*');
   }
 
   validateWebSocketUpgrade(request: Request): SecurityValidationResult {

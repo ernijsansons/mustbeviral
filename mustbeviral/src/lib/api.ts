@@ -1,9 +1,9 @@
 // Universe-Bending API Client
 // Connects to your excellent Cloudflare Workers backend
 
-import { buildApiUrl, env } from './env';
-import { retryClient, type RetryConfig } from './api/retryClient';
-import { logger } from './logging/productionLogger';
+import { buildApiUrl, env} from './env';
+import { retryClient, type RetryConfig} from './api/retryClient';
+import { logger} from './logging/productionLogger';
 
 // API Response Types
 export interface ApiResponse<T = unknown> {
@@ -129,7 +129,7 @@ export class ApiClient {
   private defaultRetryConfig: Partial<RetryConfig>;
 
   constructor(baseUrl?: string, retryConfig?: Partial<RetryConfig>) {
-    this.baseUrl = baseUrl || env.WORKERS_URL;
+    this.baseUrl = baseUrl ?? env.WORKERSURL;
 
     // Default retry configuration for API requests
     this.defaultRetryConfig = {
@@ -205,19 +205,19 @@ export class ApiClient {
       logger.info('Making API request', {
         component: 'ApiClient',
         action: 'request',
-        metadata: { endpoint, method: config.method || 'GET' }
+        metadata: { endpoint, method: config.method ?? 'GET' }
       });
 
       // Use retry client for resilient requests
       const response = await retryClient.request<Response>(url, config, finalConfig);
 
       // Validate response object
-      if (!response || typeof response !== 'object') {
+        if (!response  ?? typeof response !== 'object') {
         throw new ApiClientError('Invalid response object received', 0);
       }
 
       // Check if response has the methods we need
-      if (typeof response.ok !== 'boolean' || typeof response.status !== 'number') {
+      if (typeof response.ok !== 'boolean'  ?? typeof response.status !== 'number') {
         throw new ApiClientError('Invalid response format', 0);
       }
 
@@ -237,7 +237,7 @@ export class ApiClient {
         // Safely parse error response with proper typing
         try {
           if (response.json && typeof response.json === 'function') {
-            const contentType = response.headers?.get?.('content-type') || '';
+            const contentType = response.headers?.get?.('content-type')  ?? '';
             if (contentType.includes('application/json')) {
               const parsedError = await response.json() as unknown;
               if (parsedError && typeof parsedError === 'object') {
@@ -267,7 +267,7 @@ export class ApiClient {
       let data: ApiResponse<T>;
       try {
         if (response.json && typeof response.json === 'function') {
-          const contentType = response.headers?.get?.('content-type') || '';
+          const contentType = response.headers?.get?.('content-type')  ?? '';
           if (contentType.includes('application/json')) {
             const parsedData = await response.json() as unknown;
             // Validate that the response matches ApiResponse structure
@@ -345,7 +345,7 @@ export class ApiClient {
 
     try {
       if (response.json && typeof response.json === 'function') {
-        const contentType = response.headers?.get?.('content-type') || '';
+        const contentType = response.headers?.get?.('content-type')  ?? '';
         if (contentType.includes('application/json')) {
           const parsedError = await response.json() as unknown;
           if (parsedError && typeof parsedError === 'object') {
@@ -369,7 +369,7 @@ export class ApiClient {
   private async parseSuccessResponse<T>(response: Response): Promise<ApiResponse<T>> {
     try {
       if (response.json && typeof response.json === 'function') {
-        const contentType = response.headers?.get?.('content-type') || '';
+        const contentType = response.headers?.get?.('content-type')  ?? '';
         if (contentType.includes('application/json')) {
           const parsedData = await response.json() as unknown;
           if (parsedData && typeof parsedData === 'object') {
@@ -423,7 +423,7 @@ export class ApiClient {
       const response = await fetch(url, config);
 
       // Validate response object
-      if (!response || typeof response !== 'object') {
+        if (!response  ?? typeof response !== 'object') {
         throw new ApiClientError('Invalid response object received', 0);
       }
 
@@ -463,7 +463,7 @@ export class ApiClient {
 
       // Handle different response formats
       if (response.success) {
-        const token = response.data?.token || response.data?.accessToken;
+        const token = response.data?.token ?? response.data?.accessToken;
         if (token) {
           this.setToken(token);
         } else {
@@ -493,7 +493,7 @@ export class ApiClient {
 
       // Handle different response formats
       if (response.success) {
-        const token = response.data?.token || response.data?.accessToken;
+        const token = response.data?.token ?? response.data?.accessToken;
         if (token) {
           this.setToken(token);
         } else {

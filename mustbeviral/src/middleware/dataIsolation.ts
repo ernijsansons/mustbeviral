@@ -1,8 +1,8 @@
 // Data Isolation Middleware
 // Ensures proper multi-tenant data separation and access control
 
-import { DatabaseService } from '../lib/db';
-import { log } from '../lib/monitoring/logger';
+import { DatabaseService} from '../lib/db';
+import { log} from '../lib/monitoring/logger';
 
 export interface TenantContext {
   organizationId: string;
@@ -35,7 +35,7 @@ export class DataIsolationMiddleware {
 
       // Extract user from authenticated request
       const user = (request as unknown).user;
-      if (!user || !user.id || !user.organizationId) {
+      if (!user  ?? !user.id  ?? !user.organizationId) {
         log.warn('Data isolation skipped - no user context', {
           action: 'data_isolation_skip',
           metadata: { url: request.url }
@@ -79,15 +79,15 @@ export class DataIsolationMiddleware {
     // Get user's organization membership details
     const membershipQuery = `
       SELECT
-        om.organization_id,
+        om.organizationid,
         om.role,
         om.permissions,
-        om.team_id,
-        o.status as org_status,
+        om.teamid,
+        o.status as orgstatus,
         o.plan_type
       FROM organization_members om
-      JOIN organizations o ON om.organization_id = o.id
-      WHERE om.user_id = ? AND om.status = 'active' AND o.status = 'active'
+      JOIN organizations o ON om.organizationid = o.id
+      WHERE om.userid = ? AND om.status = 'active' AND o.status = 'active'
     `;
 
     const membership = await db.prepare(membershipQuery).get(user.id);
@@ -99,11 +99,11 @@ export class DataIsolationMiddleware {
     // Parse permissions from JSON
     let permissions: string[] = [];
     try {
-      permissions = JSON.parse(membership.permissions || '[]');
-    } catch (error: unknown) {
+      permissions = JSON.parse(membership.permissions ?? '[]');
+    } catch (_error: unknown) {
       log.warn('Failed to parse user permissions', {
         action: 'permission_parse_error',
-        metadata: { userId: user.id, organizationId: membership.organization_id }
+        metadata: { userId: user.id, organizationId: membership.organizationid }
       });
     }
 
@@ -115,14 +115,14 @@ export class DataIsolationMiddleware {
     const teamQuery = `
       SELECT DISTINCT team_id
       FROM organization_members
-      WHERE user_id = ? AND organization_id = ? AND team_id IS NOT NULL
+      WHERE userid = ? AND organizationid = ? AND team_id IS NOT NULL
     `;
 
-    const teamMemberships = await db.prepare(teamQuery).all(user.id, membership.organization_id);
-    const teamIds = teamMemberships.map((tm: unknown) => tm.team_id);
+    const teamMemberships = await db.prepare(teamQuery).all(user.id, membership.organizationid);
+    const teamIds = teamMemberships.map((tm: unknown) => tm.teamid);
 
     return {
-      organizationId: membership.organization_id,
+      organizationId: membership.organizationid,
       userId: user.id,
       userRole: membership.role,
       permissions,
@@ -182,7 +182,7 @@ export class DataIsolationMiddleware {
       ]
     };
 
-    return rolePermissionMap[role] || [];
+    return rolePermissionMap[role]  ?? [];
   }
 
   // Check if a route should bypass data isolation
@@ -215,19 +215,19 @@ export class DataIsolationMiddleware {
         `,
         'user': `
           SELECT 1 FROM organization_members
-          WHERE user_id = ? AND organization_id = ? AND status = 'active'
+          WHERE userid = ? AND organizationid = ? AND status = 'active'
         `,
         'team': `
           SELECT 1 FROM teams
-          WHERE id = ? AND organization_id = ?
+          WHERE id = ? AND organizationid = ?
         `,
         'content': `
           SELECT 1 FROM organization_content
-          WHERE content_id = ? AND organization_id = ?
+          WHERE contentid = ? AND organizationid = ?
         `,
         'post': `
           SELECT 1 FROM posts
-          WHERE id = ? AND organization_id = ?
+          WHERE id = ? AND organizationid = ?
         `
       };
 
@@ -235,7 +235,7 @@ export class DataIsolationMiddleware {
       if (!query) {
         log.warn('Unknown resource type for validation', {
           action: 'resource_validation_unknown',
-          metadata: { _resourceType, resourceId }
+          metadata: { resourceType, resourceId }
         });
         return false;
       }
@@ -244,7 +244,7 @@ export class DataIsolationMiddleware {
 
       log.debug('Resource access validation', {
         action: 'resource_validation',
-        metadata: { _resourceType,
+        metadata: { resourceType,
           resourceId,
           organizationId: tenantContext.organizationId,
           hasAccess: !!result
@@ -256,7 +256,7 @@ export class DataIsolationMiddleware {
     } catch (error: unknown) {
       log.error('Resource validation error', {
         action: 'resource_validation_error',
-        metadata: { _resourceType,
+        metadata: { resourceType,
           resourceId,
           error: error instanceof Error ? error.message : 'Unknown error'
         }
@@ -278,7 +278,7 @@ export class DataIsolationMiddleware {
     }
 
     // Check if user is member of the specific team
-    return tenantContext.teamIds?.includes(teamId) || false;
+    return tenantContext.teamIds?.includes(teamId)  ?? false;
   }
 
   // Filter query results based on tenant context
@@ -289,8 +289,8 @@ export class DataIsolationMiddleware {
   ): Promise<{ query: string; params: unknown[] }> {
     // Add organization filter to all queries
     const filteredQuery = query.includes('WHERE')
-      ? `${query} AND organization_id = ?`
-      : `${query} WHERE organization_id = ?`;
+      ? `${query} AND organizationid = ?`
+      : `${query} WHERE organizationid = ?`;
 
     const filteredParams = [...params, tenantContext.organizationId];
 
@@ -318,12 +318,12 @@ export class DataIsolationMiddleware {
       prepare: (query: string) => {
         return {
           get: async (...params: unknown[]) => {
-            const { query: filteredQuery, params: filteredParams } =
+            const { query: filteredQuery, params: filteredParams} =
               await this.applyTenantFilters(query, params, tenantContext);
             return db.prepare(filteredQuery).get(...filteredParams);
           },
           all: async (...params: unknown[]) => {
-            const { query: filteredQuery, params: filteredParams } =
+            const { query: filteredQuery, params: filteredParams} =
               await this.applyTenantFilters(query, params, tenantContext);
             return db.prepare(filteredQuery).all(...filteredParams);
           },
@@ -332,7 +332,9 @@ export class DataIsolationMiddleware {
             const finalQuery = query;
             let finalParams = params;
 
-            if (query.toUpperCase().includes('INSERT INTO') &&
+            if (query.toUpperCase() {
+    .includes('INSERT INTO') &&
+  }
                 !query.includes('organization_id')) {
               // This is a simplified approach - in production you'd want more sophisticated logic
               finalParams = [...params, tenantContext.organizationId];

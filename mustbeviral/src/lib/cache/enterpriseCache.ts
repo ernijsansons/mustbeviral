@@ -12,26 +12,26 @@
  * - Circuit breaker pattern
  */
 
-import { EventEmitter } from 'events'
-import { LRUCache } from 'lru-cache'
+import { EventEmitter} from 'events'
+import { LRUCache} from 'lru-cache'
 import Redis from 'ioredis'
 import crypto from 'crypto'
 
 // Cache tiers
 export enum CacheTier {
-  L1_MEMORY = 'L1_MEMORY',
-  L2_REDIS = 'L2_REDIS',
-  L3_CDN = 'L3_CDN'
+  L1MEMORY = 'L1_MEMORY',
+  L2REDIS = 'L2_REDIS',
+  L3CDN = 'L3_CDN'
 }
 
 // Cache strategies
 export enum CacheStrategy {
-  CACHE_FIRST = 'CACHE_FIRST',           // Try cache first, fallback to source
-  CACHE_ASIDE = 'CACHE_ASIDE',           // Manual cache management
-  WRITE_THROUGH = 'WRITE_THROUGH',       // Write to cache and source simultaneously
-  WRITE_BEHIND = 'WRITE_BEHIND',         // Write to cache first, source later
-  READ_THROUGH = 'READ_THROUGH',         // Auto-populate cache on miss
-  REFRESH_AHEAD = 'REFRESH_AHEAD'        // Proactive cache refresh
+  CACHEFIRST = 'CACHE_FIRST',           // Try cache first, fallback to source
+  CACHEASIDE = 'CACHE_ASIDE',           // Manual cache management
+  WRITETHROUGH = 'WRITE_THROUGH',       // Write to cache and source simultaneously
+  WRITEBEHIND = 'WRITE_BEHIND',         // Write to cache first, source later
+  READTHROUGH = 'READ_THROUGH',         // Auto-populate cache on miss
+  REFRESHAHEAD = 'REFRESH_AHEAD'        // Proactive cache refresh
 }
 
 // Cache configuration
@@ -140,11 +140,8 @@ export class EnterpriseCacheManager extends EventEmitter {
 
     // Initialize L1 Cache (In-Memory)
     this.l1Cache = new LRUCache<string, CacheEntry>({
-      max: config.l1.maxSize,
-      ttl: config.l1.ttl * 1000, // Convert to milliseconds
-      updateAgeOnGet: true,
-      allowStale: false,
-      dispose: (entry, key) => {
+      max: config.l1.maxSize, ttl: config.l1.ttl * 1000, // Convert to milliseconds
+      updateAgeOnGet: true, allowStale: false, dispose: (entry, key) => {
         this.emit('l1-evict', { key, entry })
       }
     })
@@ -154,7 +151,7 @@ export class EnterpriseCacheManager extends EventEmitter {
       host: config.l2.host,
       port: config.l2.port,
       password: config.l2.password,
-      db: config.l2.db || 0,
+      db: config.l2.db ?? 0,
       retryDelayOnFailover: 100,
       maxRetriesPerRequest: 3,
       enableOfflineQueue: false,
@@ -179,7 +176,7 @@ export class EnterpriseCacheManager extends EventEmitter {
     this.performanceMetrics = new Map()
     this.compressionEnabled = config.compression ?? true
     this.encryptionEnabled = config.encryption ?? false
-    this.warmupConfig = config.warmup || { enabled: false, strategies: [], concurrency: 5, timeout: 30000 }
+    this.warmupConfig = config.warmup ?? { enabled: false, strategies: [], concurrency: 5, timeout: 30000 }
 
     // Setup event handlers
     this.setupEventHandlers()
@@ -194,7 +191,7 @@ export class EnterpriseCacheManager extends EventEmitter {
   async get<T = any>(key: string, config?: Partial<CacheConfig>): Promise<T | null> {
     const startTime = Date.now()
     const cacheKey = this.buildCacheKey(key, config?.version)
-    const tiers = config?.tiers || [CacheTier.L1_MEMORY, CacheTier.L2_REDIS]
+    const tiers = config?.tiers ?? [CacheTier.L1MEMORY, CacheTier.L2REDIS]
 
     try {
       // Try each tier in order
@@ -234,9 +231,9 @@ export class EnterpriseCacheManager extends EventEmitter {
   ): Promise<void> {
     const startTime = Date.now()
     const cacheKey = this.buildCacheKey(key, config.version)
-    const tiers = config.tiers || [CacheTier.L1_MEMORY, CacheTier.L2_REDIS]
-    const ttl = config.ttl || 3600
-    const tags = config.tags || []
+    const tiers = config.tiers ?? [CacheTier.L1MEMORY, CacheTier.L2REDIS]
+    const ttl = config.ttl ?? 3600
+    const tags = config.tags ?? []
 
     try {
       // Create cache entry
@@ -244,14 +241,14 @@ export class EnterpriseCacheManager extends EventEmitter {
         data,
         metadata: {
           key: cacheKey,
-          tier: CacheTier.L1_MEMORY, // Will be updated per tier
+          tier: CacheTier.L1MEMORY, // Will be updated per tier
           timestamp: Date.now(),
           ttl,
           hits: 0,
           tags,
-          version: config.version || '1.0.0',
+          version: config.version ?? '1.0.0',
           size: this.calculateSize(data),
-          priority: config.priority || 5
+          priority: config.priority ?? 5
         }
       }
 
@@ -290,7 +287,7 @@ export class EnterpriseCacheManager extends EventEmitter {
 
     // Use distributed lock to prevent cache stampede
     const lockKey = `lock:${key}`
-    const acquired = await this.acquireDistributedLock(lockKey, config.lockTimeout || 10000)
+    const acquired = await this.acquireDistributedLock(lockKey, config.lockTimeout ?? 10000)
     
     if (!acquired) {
       // Wait a bit and try cache again
@@ -320,7 +317,7 @@ export class EnterpriseCacheManager extends EventEmitter {
    * Invalidate cache by key or tags
    */
   async invalidate(keyOrTag: string, options: { byTag?: boolean; tiers?: CacheTier[] } = {}): Promise<void> {
-    const tiers = options.tiers || [CacheTier.L1_MEMORY, CacheTier.L2_REDIS]
+    const tiers = options.tiers ?? [CacheTier.L1MEMORY, CacheTier.L2REDIS]
     
     if (options.byTag) {
       // Invalidate by tag
@@ -350,7 +347,7 @@ export class EnterpriseCacheManager extends EventEmitter {
     const strategies = [...this.warmupConfig.strategies].sort((a, b) => b.priority - a.priority)
     
     // Process strategies with limited concurrency
-    await this.processConcurrently(strategies, this.warmupConfig.concurrency, async (strategy) => {
+    await this.processConcurrently(strategies, _this.warmupConfig.concurrency, async(strategy) => {
       try {
         const data = await Promise.race([
           strategy.loader(),
@@ -379,7 +376,7 @@ export class EnterpriseCacheManager extends EventEmitter {
   getStats(): CacheStats {
     // Update L1 stats
     this.stats.l1.size = this.l1Cache.size
-    this.stats.l1.hitRate = this.stats.l1.hits / (this.stats.l1.hits + this.stats.l1.misses) || 0
+    this.stats.l1.hitRate = this.stats.l1.hits / (this.stats.l1.hits + this.stats.l1.misses)  ?? 0
 
     // Update L2 stats (from Redis INFO)
     this.updateL2Stats()
@@ -388,7 +385,7 @@ export class EnterpriseCacheManager extends EventEmitter {
     this.stats.overall.totalHits = this.stats.l1.hits + this.stats.l2.hits + this.stats.l3.hits
     this.stats.overall.totalMisses = this.stats.l1.misses + this.stats.l2.misses + this.stats.l3.misses
     this.stats.overall.overallHitRate = this.stats.overall.totalHits / 
-      (this.stats.overall.totalHits + this.stats.overall.totalMisses) || 0
+      (this.stats.overall.totalHits + this.stats.overall.totalMisses)  ?? 0
 
     return { ...this.stats }
   }
@@ -396,7 +393,7 @@ export class EnterpriseCacheManager extends EventEmitter {
   /**
    * Clear all caches
    */
-  async clear(tiers: CacheTier[] = [CacheTier.L1_MEMORY, CacheTier.L2_REDIS]): Promise<void> {
+  async clear(tiers: CacheTier[] = [CacheTier.L1MEMORY, CacheTier.L2REDIS]): Promise<void> {
     await Promise.all(tiers.map(tier => this.clearTier(tier)))
     this.emit('cache-clear', { tiers })
   }
@@ -405,35 +402,35 @@ export class EnterpriseCacheManager extends EventEmitter {
 
   private setupEventHandlers(): void {
     // L2 Redis events
-    this.l2Cache.on('error', (error) => {
+    this.l2Cache.on('error', _(error) => {
       this.emit('l2-error', error)
       this.updateCircuitBreaker('l2', error)
     })
 
-    this.l2Cache.on('connect', () => {
+    this.l2Cache.on('connect', _() => {
       this.emit('l2-connect')
       this.resetCircuitBreaker('l2')
     })
 
     // Performance monitoring
-    this.on('cache-set', (event) => {
+    this.on('cache-set', _(event) => {
       this.stats.overall.dataTransfer += event.size
     })
   }
 
   private startBackgroundTasks(): void {
     // Cleanup expired distributed locks
-    setInterval(() => {
+    setInterval_(() => {
       this.cleanupExpiredLocks()
     }, 60000) // Every minute
 
     // Update statistics
-    setInterval(() => {
+    setInterval_(() => {
       this.updateStats()
     }, 10000) // Every 10 seconds
 
     // Memory optimization
-    setInterval(() => {
+    setInterval_(() => {
       if (process.memoryUsage().heapUsed > 100 * 1024 * 1024) { // 100MB
         global.gc?.()
       }
@@ -521,7 +518,7 @@ export class EnterpriseCacheManager extends EventEmitter {
     foundTier: CacheTier, 
     configuredTiers: CacheTier[]
   ): Promise<void> {
-    const tierOrder = [CacheTier.L1_MEMORY, CacheTier.L2_REDIS, CacheTier.L3_CDN]
+    const tierOrder = [CacheTier.L1MEMORY, CacheTier.L2REDIS, CacheTier.L3CDN]
     const foundIndex = tierOrder.indexOf(foundTier)
     
     // Promote to all higher tiers
@@ -588,7 +585,8 @@ export class EnterpriseCacheManager extends EventEmitter {
 
   private isCircuitBreakerOpen(service: string): boolean {
     const breaker = this.circuitBreaker.get(service)
-    if (!breaker) return false
+    if (!breaker) {
+    return false
     
     const now = Date.now()
     const cooldownPeriod = 60000 // 1 minute
@@ -602,7 +600,7 @@ export class EnterpriseCacheManager extends EventEmitter {
   }
 
   private updateCircuitBreaker(service: string, error: any): void {
-    const breaker = this.circuitBreaker.get(service) || { failures: 0, lastFailure: 0, isOpen: false }
+    const breaker = this.circuitBreaker.get(service)  ?? { failures: 0, lastFailure: 0, isOpen: false }
     const now = Date.now()
     
     breaker.failures++
@@ -620,10 +618,12 @@ export class EnterpriseCacheManager extends EventEmitter {
   }
 
   private updatePerformanceMetrics(key: string, duration: number, isError: boolean): void {
-    const metrics = this.performanceMetrics.get(key) || { calls: 0, totalTime: 0, errors: 0 }
+    const metrics = this.performanceMetrics.get(key)  ?? { calls: 0, totalTime: 0, errors: 0 }
     metrics.calls++
     metrics.totalTime += duration
-    if (isError) metrics.errors++
+    if (isError)  {
+    metrics.errors++
+  }
     this.performanceMetrics.set(key, metrics)
   }
 
@@ -717,7 +717,8 @@ export class EnterpriseCacheManager extends EventEmitter {
     processor: (item: T) => Promise<void>
   ): Promise<void> {
     const batches = []
-    for (let i = 0; i < items.length; i += concurrency) {
+    for (let i = 0;
+  } i < items.length; i += concurrency) {
       batches.push(items.slice(i, i + concurrency))
     }
     
@@ -744,13 +745,13 @@ export const enterpriseCache = new EnterpriseCacheManager({
     ttl: 300         // 5 minutes
   },
   l2: {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
-    password: process.env.REDIS_PASSWORD,
-    db: parseInt(process.env.REDIS_DB || '0')
+    host: process.env.REDIS_HOST ?? 'localhost',
+    port: parseInt(process.env.REDIS_PORT ?? '6379'),
+    password: process.env.REDISPASSWORD,
+    db: parseInt(process.env.REDIS_DB ?? '0')
   },
   compression: true,
-  encryption: process.env.NODE_ENV === 'production',
+  encryption: process.env.NODEENV === 'production',
   warmup: {
     enabled: true,
     concurrency: 5,

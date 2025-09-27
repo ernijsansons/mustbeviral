@@ -1,8 +1,8 @@
 // Home Page Component - Premium Viral Marketing Platform
-import { HeroSection } from '../components/HeroSection';
-import { SocialProof } from '../components/SocialProof';
-import { ValueProps } from '../components/ValueProps';
-import { ViralPredictor } from '../components/ViralPredictor';
+import { HeroSection} from '../components/HeroSection';
+import { SocialProof} from '../components/SocialProof';
+import { ValueProps} from '../components/ValueProps';
+import { ViralPredictor} from '../components/ViralPredictor';
 
 export function HomePage() {
   return (

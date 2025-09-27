@@ -122,7 +122,7 @@ export class PerformanceAnalyzer {
 
     const comparisonScore = this.calculateComparisonScore(agentName, platform, metrics);
 
-    const result: BenchmarkResult = { _agentName,
+    const result: BenchmarkResult = { agentName,
       platform,
       testType: testConfig.contentType,
       metrics,
@@ -176,11 +176,11 @@ export class PerformanceAnalyzer {
     );
 
     // Identify quality factors
-    if (assessment.contentRelevance > 85) assessment.qualityFactors.push('High content relevance');
-    if (assessment.platformOptimization > 85) assessment.qualityFactors.push('Excellent platform optimization');
-    if (assessment.viralElements > 80) assessment.qualityFactors.push('Strong viral potential');
-    if (assessment.engagementTriggers > 80) assessment.qualityFactors.push('Effective engagement triggers');
-    if (assessment.algorithmAlignment > 85) assessment.qualityFactors.push('Algorithm-optimized');
+    if (assessment.contentRelevance > 85) {assessment.qualityFactors.push('High content relevance');}
+    if (assessment.platformOptimization > 85) {assessment.qualityFactors.push('Excellent platform optimization');}
+    if (assessment.viralElements > 80) {assessment.qualityFactors.push('Strong viral potential');}
+    if (assessment.engagementTriggers > 80) {assessment.qualityFactors.push('Effective engagement triggers');}
+    if (assessment.algorithmAlignment > 85) {assessment.qualityFactors.push('Algorithm-optimized');}
 
     // Generate improvement suggestions
     if (assessment.contentRelevance < 70) {
@@ -221,12 +221,14 @@ export class PerformanceAnalyzer {
     const cutoffDate = this.getCutoffDate(timeRange);
 
     for (const [key, benchmarks] of this.benchmarkHistory.entries()) {
-      if (!key.startsWith(agentName)) continue;
+      if (!key.startsWith(agentName)) {continue;}
 
       const platform = key.split('-')[1];
       const recentBenchmarks = benchmarks.filter(b => b.timestamp >= cutoffDate);
 
-      if (recentBenchmarks.length === 0) continue;
+      if (recentBenchmarks.length === 0) {
+    continue;
+  }
 
       const avgQuality = this.calculateAverage(recentBenchmarks, 'qualityScore');
       const avgViralPotential = this.calculateAverage(recentBenchmarks, 'viralPotential');
@@ -243,7 +245,7 @@ export class PerformanceAnalyzer {
         (100 - Math.min(avgResponseTime / 10, 100)) * 0.10 // Lower response time = higher score
       );
 
-      results.push({ _platform,
+      results.push({ platform,
         averageQuality: avgQuality,
         averageViralPotential: avgViralPotential,
         averageResponseTime: avgResponseTime,
@@ -253,7 +255,7 @@ export class PerformanceAnalyzer {
       });
     }
 
-    return results.sort((a, _b) => b.rankingScore - a.rankingScore);
+    return results.sort((a, b) => b.rankingScore - a.rankingScore);
   }
 
   /**
@@ -268,9 +270,11 @@ export class PerformanceAnalyzer {
     const key = `${agentName}-${platform}`;
     const trends = this.performanceTrends.get(key);
 
-    if (!trends) return null;
+    if (!trends) {
+    return null;
+  }
 
-    return trends.find(trend => trend.metric === metric && trend.timeRange === timeRange) || null;
+    return trends.find(trend => trend.metric === metric && trend.timeRange === timeRange)  ?? null;
   }
 
   /**
@@ -288,7 +292,7 @@ export class PerformanceAnalyzer {
     implementation: string;
   }> {
     const recommendations = [];
-    const baseline = this.qualityBaselines.get(`${agentName}-${platform}`) || 75;
+    const baseline = this.qualityBaselines.get(`${agentName}-${platform}`)  ?? 75;
 
     // Quality optimization
     if (currentMetrics.qualityScore < baseline * 0.9) {
@@ -345,7 +349,7 @@ export class PerformanceAnalyzer {
       });
     }
 
-    return recommendations.sort((a, _b) => {
+    return recommendations.sort((a, b) => {
       const priorityOrder = { high: 3, medium: 2, low: 1 };
       return priorityOrder[b.priority] - priorityOrder[a.priority];
     });
@@ -368,7 +372,9 @@ export class PerformanceAnalyzer {
     // Aggregate data
     for (const [key, results] of this.benchmarkHistory.entries()) {
       const recentResults = results.filter(r => r.timestamp >= cutoffDate);
-      if (recentResults.length === 0) continue;
+      if (recentResults.length === 0) {
+    continue;
+  }
 
       benchmarks.push(...recentResults);
 
@@ -385,7 +391,7 @@ export class PerformanceAnalyzer {
       };
     }
 
-    return { _summary,
+    return { summary,
       benchmarks,
       trends: Object.fromEntries(this.performanceTrends.entries()),
       alerts: this.performanceAlerts.filter(alert => alert.timestamp >= cutoffDate),
@@ -422,7 +428,7 @@ export class PerformanceAnalyzer {
       instagram: ['aesthetic', 'save', 'share', 'story', 'reel']
     };
 
-    const keywords = relevanceKeywords[platform] || [];
+    const keywords = relevanceKeywords[platform]  ?? [];
     const contentLower = content.toLowerCase();
     const matchCount = keywords.filter(keyword => contentLower.includes(keyword)).length;
 
@@ -452,7 +458,7 @@ export class PerformanceAnalyzer {
       }
     };
 
-    const factors = optimizationFactors[platform] || optimizationFactors.instagram;
+    const factors = optimizationFactors[platform]  ?? optimizationFactors.instagram;
     const score = Object.values(factors).filter(Boolean).length;
     return (score / Object.keys(factors).length) * 100;
   }
@@ -463,7 +469,7 @@ export class PerformanceAnalyzer {
       /you won't believe|wait for it|plot twist/i.test(content),
       /\?/.test(content), // Questions
       /!/.test(content), // Exclamations
-      content.includes('🔥') || content.includes('⚡') || content.includes('🚨'),
+      content.includes('🔥')  ?? content.includes('⚡') || content.includes('🚨'),
       /trend|viral|fyp/i.test(content)
     ];
 
@@ -491,23 +497,23 @@ export class PerformanceAnalyzer {
         content.length > 100 && content.length < 250, // Optimal length
         /\n/.test(content), // Line breaks for readability
         content.includes('@'), // Mentions
-        (content.match(/#/g) || []).length >= 2 // Multiple hashtags
+        (content.match(/#/g)  ?? []).length >= 2 // Multiple hashtags
       ],
       tiktok: [
-        content.includes('#fyp') || content.includes('#foryou'),
+        content.includes('#fyp')  ?? content.includes('#foryou'),
         /\n/.test(content), // Line breaks
         content.length > 50, // Minimum content
         /sound|music|audio/i.test(content) // Audio references
       ],
       instagram: [
-        (content.match(/#/g) || []).length >= 3, // Multiple hashtags
-        content.includes('save') || content.includes('share'),
+        (content.match(/#/g)  ?? []).length >= 3, // Multiple hashtags
+        content.includes('save')  ?? content.includes('share'),
         content.length > 100, // Substantial content
         /story|reel|post/i.test(content) // Format references
       ]
     };
 
-    const factors = alignmentFactors[platform] || alignmentFactors.instagram;
+    const factors = alignmentFactors[platform]  ?? alignmentFactors.instagram;
     const score = factors.filter(Boolean).length;
     return (score / factors.length) * 100;
   }
@@ -528,13 +534,13 @@ export class PerformanceAnalyzer {
   }
 
   private calculateComparisonScore(agentName: string, platform: string, metrics: PerformanceMetrics): number {
-    const baseline = this.qualityBaselines.get(`${agentName}-${platform}`) || 75;
+    const baseline = this.qualityBaselines.get(`${agentName}-${platform}`)  ?? 75;
     return ((metrics.qualityScore / baseline) - 1) * 100;
   }
 
   private storeBenchmarkResult(result: BenchmarkResult): void {
     const key = `${result.agentName}-${result.platform}`;
-    const existing = this.benchmarkHistory.get(key) || [];
+    const existing = this.benchmarkHistory.get(key)  ?? [];
     existing.push(result);
 
     // Keep only the last 100 results
@@ -547,7 +553,7 @@ export class PerformanceAnalyzer {
 
   private updatePerformanceTrends(agentName: string, platform: string, metrics: PerformanceMetrics): void {
     const key = `${agentName}-${platform}`;
-    const trends = this.performanceTrends.get(key) || [];
+    const trends = this.performanceTrends.get(key)  ?? [];
 
     // Update or create trends for each metric
     Object.entries(metrics).forEach(([metric, value]) => {
@@ -628,8 +634,10 @@ export class PerformanceAnalyzer {
   }
 
   private calculateAverage(results: BenchmarkResult[], metric: keyof PerformanceMetrics): number {
-    if (results.length === 0) return 0;
-    const sum = results.reduce((acc, _result) => acc + result.metrics[metric], 0);
+    if (results.length === 0) {
+    return 0;
+  }
+    const sum = results.reduce((acc, result) => acc + result.metrics[metric], 0);
     return sum / results.length;
   }
 

@@ -8,15 +8,14 @@ import { env } from './lib/env';
 import { logger } from './lib/monitoring/logger';
 
 // Enhanced lazy loading with error handling and preloading
-const createLazyComponent = <T extends ComponentType<any>>(
-  importFn: () => Promise<{ [K: string]: T }>,
+const createLazyComponent = <T extends ComponentType<any>>(importFn: () => Promise<{ [K: string]: T }>,
   componentName: string,
   preload = false
 ) => {
-  const LazyComponent = lazy(async () => {
+  const LazyComponent = lazy(async() => {
     try {
       const module = await importFn();
-      const Component = module[componentName] || module.default;
+      const Component = module[componentName]  ?? module.default;
       if (!Component) {
         throw new Error(`Component ${componentName} not found in module`);
       }
@@ -67,41 +66,34 @@ const createLazyComponent = <T extends ComponentType<any>>(
 };
 
 // Optimized lazy-loaded components with preloading for critical routes
-const HomePage = createLazyComponent(
-  () => import('./pages/HomePage'),
+const HomePage = createLazyComponent(() => import('./pages/HomePage'),
   'HomePage',
   true // Preload homepage for faster initial render
 );
 
-const LoginPage = createLazyComponent(
-  () => import('./pages/LoginPage'),
+const LoginPage = createLazyComponent(() => import('./pages/LoginPage'),
   'LoginPage',
   true // Preload login for quick access
 );
 
-const OnboardPage = createLazyComponent(
-  () => import('./pages/OnboardPage'),
+const OnboardPage = createLazyComponent(() => import('./pages/OnboardPage'),
   'OnboardPage'
 );
 
-const Dashboard = createLazyComponent(
-  () => import('./components/Dashboard'),
+const Dashboard = createLazyComponent(() => import('./components/Dashboard'),
   'Dashboard',
   true // Preload dashboard for authenticated users
 );
 
-const ContentPage = createLazyComponent(
-  () => import('./pages/ContentPage'),
+const ContentPage = createLazyComponent(() => import('./pages/ContentPage'),
   'ContentPage'
 );
 
-const MatchesPage = createLazyComponent(
-  () => import('./pages/MatchesPage'),
+const MatchesPage = createLazyComponent(() => import('./pages/MatchesPage'),
   'MatchesPage'
 );
 
-const BuilderTest = createLazyComponent(
-  () => import('./components/builder/BuilderTest'),
+const BuilderTest = createLazyComponent(() => import('./components/builder/BuilderTest'),
   'BuilderTest'
 );
 
@@ -109,8 +101,8 @@ const BuilderTest = createLazyComponent(
 function App() {
   // Initialize performance monitoring with environment-aware configuration
   useEffect(() => {
-    if (env.ENABLE_PERFORMANCE_MONITORING) {
-      initWebVitals('/api/analytics/vitals', env.APP_ENV === 'production')
+    if (env.ENABLEPERFORMANCEMONITORING) {
+      initWebVitals('/api/analytics/vitals', env.APPENV === 'production')
         .catch((error: unknown) => {
           logger.warn('Failed to initialize web vitals', {
             component: 'App',
@@ -158,13 +150,13 @@ function App() {
                   🏠 Refresh Page
                 </button>
               </div>
-              {env.APP_ENV === 'development' && (
+              {env.APPENV === 'development' && (
                 <details className="mt-4 text-left">
                   <summary className="cursor-pointer text-sm text-gray-500 dark:text-gray-400">
                     Error Details (Dev Mode)
                   </summary>
                   <pre className="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded text-xs overflow-auto">
-                    {error?.stack || error?.message || 'Unknown error'}
+                     {error?.stack ?? error?.message ?? 'Unknown error'}
                   </pre>
                 </details>
               )}

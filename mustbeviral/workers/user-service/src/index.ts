@@ -122,7 +122,7 @@ class ApiRouter {
     return true;
   }
 
-  private extractPathParams(path: string): Record<string, string> {
+  private extractPathParams(_path: string): Record<string, string> {
     // Simple parameter extraction - would be more sophisticated in production
     return {};
   }
@@ -210,8 +210,8 @@ class UserApiHandlers {
         email,
         password,
         rememberMe,
-        ipAddress: req.headers.get('CF-Connecting-IP') || undefined,
-        userAgent: req.headers.get('User-Agent') || undefined
+        ipAddress: req.headers.get('CF-Connecting-IP')  ?? undefined,
+        userAgent: req.headers.get('User-Agent')  ?? undefined
       });
 
       if (!result.success) {
@@ -243,7 +243,7 @@ class UserApiHandlers {
   }
 
   async getProfile(req: ApiRequest): Promise<ApiResponse> {
-    const userId = req.params.userId || this.extractUserIdFromToken(req);
+    const userId = req.params.userId  ?? this.extractUserIdFromToken(req);
 
     if (!userId) {
       return {
@@ -339,14 +339,14 @@ class UserApiHandlers {
 
   private extractUserIdFromToken(req: ApiRequest): string | null {
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return null;
     }
 
     // In production, decode JWT token to get user ID
     const token = authHeader.substring(7);
     // Simplified token parsing - would use proper JWT library
-    return token.split('_')[2] || null;
+    return token.split('_')[2]  ?? null;
   }
 }
 
@@ -358,8 +358,8 @@ async function handleHealthCheck(env: UserServiceEnv): Promise<Response> {
     service: 'user-service',
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: env.API_VERSION || '1.0.0',
-    environment: env.SERVICE_NAME || 'development',
+    version: env.API_VERSION  ?? '1.0.0',
+    environment: env.SERVICE_NAME  ?? 'development',
     dependencies: {
       database: 'connected', // Would check actual DB connection
       cache: 'connected',    // Would check KV namespace
@@ -379,12 +379,12 @@ async function handleHealthCheck(env: UserServiceEnv): Promise<Response> {
  * Main Worker Export - Clean Architecture Entry Point
  */
 export default {
-  async fetch(request: Request, env: UserServiceEnv, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: UserServiceEnv, _ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const requestId = crypto.randomUUID();
 
     // Add request ID to context for tracing
-    console.log(`[${requestId}] ${request.method} ${url.pathname}`);
+    console.warn(`[${requestId}] ${request.method} ${url.pathname}`);
 
     try {
       // Handle CORS preflight
@@ -437,7 +437,7 @@ export default {
       // Clear scoped services after request
       serviceRegistry.clearScope();
 
-      console.log(`[${requestId}] Response: ${response.status}`);
+      console.warn(`[${requestId}] Response: ${response.status}`);
 
       return response;
 

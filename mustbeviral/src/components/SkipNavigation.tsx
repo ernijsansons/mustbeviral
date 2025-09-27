@@ -4,7 +4,7 @@
  * Essential for WCAG 2.1 AA compliance
  */
 
-import { cn } from '../lib/utils';
+import { cn} from '../lib/utils';
 
 interface SkipLinkProps {
   href: string;
@@ -12,7 +12,7 @@ interface SkipLinkProps {
   className?: string;
 }
 
-function SkipLink({ href, children, className }: SkipLinkProps) {
+function SkipLink(_{ href, children, className }: SkipLinkProps) {
   return (
     <a
       href={href}
@@ -89,7 +89,7 @@ export function NavigationLandmark({ children, className }: { children: React.Re
 }
 
 // Footer landmark
-export function FooterLandmark({ children, className }: { children: React.ReactNode; className?: string }) {
+export function FooterLandmark(_{ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <footer
       id="footer"

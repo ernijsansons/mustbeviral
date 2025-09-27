@@ -148,7 +148,7 @@ export class AdvancedCache {
       size = this.calculateSize(processedValue);
     }
 
-    const entry: CacheEntry<T> = { _key,
+    const entry: CacheEntry<T> = { key,
       value: processedValue,
       timestamp: Date.now(),
       expiresAt: Date.now() + ttl,
@@ -173,7 +173,9 @@ export class AdvancedCache {
 
   delete(key: string): boolean {
     const entry = this.cache.get(key);
-    if (!entry) return false;
+    if (!entry) {
+    return false;
+  }
 
     this.cache.delete(key);
     this.clearTimer(key);
@@ -231,17 +233,17 @@ export class AdvancedCache {
   }
 
   async mget<T = unknown>(keys: string[]): Promise<(T | null)[]> {
-    return Promise.all(keys.map(key => this.get<T>(key)));
+    return Promise.all(keys.map(key = > this.get<T>(key)));
   }
 
   async mset<T = unknown>(entries: Array<{ key: string; value: T; options?: unknown }>): Promise<void> {
     await Promise.all(
-      entries.map(({ _key, value, options }) => this.set(key, value, options))
+      entries.map(({ key, value, options }) => this.set(key, value, options))
     );
   }
 
   async increment(key: string, amount: number = 1): Promise<number> {
-    const current = await this.get<number>(key) || 0;
+    const current = await this.get<number>(key)  ?? 0;
     const newValue = current + amount;
     await this.set(key, newValue);
     return newValue;
@@ -257,7 +259,9 @@ export class AdvancedCache {
     options?: unknown
   ): Promise<T> {
     const cached = await this.get<T>(key);
-    if (cached !== null) return cached;
+    if (cached !== null) {
+    return cached;
+  }
 
     const value = await factory();
     await this.set(key, value, options);
@@ -271,7 +275,9 @@ export class AdvancedCache {
   getKeys(pattern?: string | RegExp): string[] {
     const keys = Array.from(this.cache.keys());
 
-    if (!pattern) return keys;
+    if (!pattern) {
+    return keys;
+  }
 
     const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
     return keys.filter(key => regex.test(key));
@@ -287,7 +293,7 @@ export class AdvancedCache {
   }
 
   exportData(): Array<{ key: string; value: unknown; metadata: CacheMetadata }> {
-    return Array.from(this.cache.entries()).map(([key, entry]) => ({ _key,
+    return Array.from(this.cache.entries()).map(([key, entry]) => ({ key,
       value: entry.value,
       metadata: entry.metadata
     }));
@@ -311,7 +317,7 @@ export class AdvancedCache {
   }
 
   private evictIfNecessary(newEntrySize: number): void {
-    if (!this.needsEviction(newEntrySize)) return;
+    if (!this.needsEviction(newEntrySize)) {return;}
 
     const entries = Array.from(this.cache.entries());
     const entriesToEvict = this.selectEntriesForEviction(entries, newEntrySize);
@@ -341,7 +347,9 @@ export class AdvancedCache {
       toEvict.push(entry);
       freedSpace += entry[1].size;
 
-      if (freedSpace >= requiredSpace) break;
+      if (freedSpace >= requiredSpace) {
+    break;
+  }
     }
 
     return toEvict;
@@ -352,13 +360,13 @@ export class AdvancedCache {
   ): [string, CacheEntry][] {
     switch (this.config.evictionPolicy) {
       case 'lru':
-        return entries.sort((a, _b) => a[1].lastAccessed - b[1].lastAccessed);
+        return entries.sort((a, b) => a[1].lastAccessed - b[1].lastAccessed);
       case 'lfu':
-        return entries.sort((a, _b) => a[1].accessCount - b[1].accessCount);
+        return entries.sort((a, b) => a[1].accessCount - b[1].accessCount);
       case 'ttl':
-        return entries.sort((a, _b) => a[1].expiresAt - b[1].expiresAt);
+        return entries.sort((a, b) => a[1].expiresAt - b[1].expiresAt);
       case 'fifo':
-        return entries.sort((a, _b) => a[1].timestamp - b[1].timestamp);
+        return entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
       default:
         return entries;
     }
@@ -384,7 +392,7 @@ export class AdvancedCache {
 
   private updateMemoryUsage(): void {
     this.stats.memoryUsage = Array.from(this.cache.values())
-      .reduce((total, _entry) => total + entry.size, 0);
+      .reduce((total, entry) => total + entry.size, 0);
     this.stats.entryCount = this.cache.size;
   }
 
@@ -431,27 +439,26 @@ export class AdvancedCache {
   }
 
   private startCleanupTimer(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.cleanup();
     }, 60000); // Clean up every minute
   }
 
   private startStatsCalculation(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.calculateStats();
     }, 10000); // Update stats every 10 seconds
   }
 
   private startDiskSync(): void {
-    if (!this.config.persistToDisk) return;
+    if (!this.config.persistToDisk) {return;}
 
-    setInterval(() => {
+    setInterval_(() => {
       this.saveToDisk();
     }, this.config.syncInterval);
   }
 
   private cleanup(): void {
-    const now = Date.now();
     const expiredKeys: string[] = [];
 
     for (const [key, entry] of this.cache.entries()) {
@@ -469,7 +476,7 @@ export class AdvancedCache {
 
     const allAccessTimes = Array.from(this.accessTimes.values()).flat();
     this.stats.avgAccessTime = allAccessTimes.length > 0
-      ? allAccessTimes.reduce((sum, _time) => sum + time, 0) / allAccessTimes.length
+      ? allAccessTimes.reduce((sum, time) => sum + time, 0) / allAccessTimes.length
       : 0;
 
     this.updateMemoryUsage();
@@ -537,7 +544,7 @@ export class DistributedCache extends AdvancedCache {
 
     for (const nodeId of nodes) {
       const node = this.nodes.get(nodeId);
-      if (node && node.delete(key)) {
+      if (node?.delete(key)) {
         deleted = true;
       }
     }

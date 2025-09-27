@@ -1,7 +1,7 @@
 // Enhanced Universe-Bending Button Component with Micro-interactions
 import React, { forwardRef, useState, useCallback, useRef, useEffect } from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '../../lib/utils';
+import { cva, type VariantProps} from 'class-variance-authority';
+import { cn} from '../../lib/utils';
 
 const buttonVariants = cva(
   // Enhanced base styles with micro-interactions
@@ -73,29 +73,8 @@ export interface ButtonProps
   badge?: string | number;
 }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className,
-    variant,
-    size,
-    animation,
-    asChild = false,
-    loading = false,
-    leftIcon,
-    rightIcon,
-    children,
-    disabled,
-    hapticFeedback = false,
-    rippleEffect = false,
-    loadingText,
-    successState = false,
-    errorState = false,
-    tooltip,
-    badge,
-    onClick,
-    onMouseDown,
-    onKeyDown,
-    ...props
-  }, ref) => {
+  const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ className, variant, size, animation, asChild = false, loading = false, leftIcon, rightIcon, children, disabled, hapticFeedback = false, rippleEffect = false, loadingText, successState = false, errorState = false, tooltip, badge, onClick, onMouseDown, onKeyDown, ...props
+    }, ref) => {
     const [isPressed, setIsPressed] = useState(false);
     const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -103,7 +82,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const rippleId = useRef(0);
 
     // Haptic feedback simulation
-    const simulateHapticFeedback = useCallback(() => {
+    const simulateHapticFeedback = useCallback_(() => {
       if (hapticFeedback && 'vibrate' in navigator) {
         navigator.vibrate(10); // 10ms vibration
       }
@@ -111,7 +90,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     // Ripple effect handler
     const handleRipple = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-      if (!rippleEffect || disabled || loading) return;
+        if (!rippleEffect  ?? disabled  ?? loading) {return;}
 
       const button = event.currentTarget;
       const rect = button.getBoundingClientRect();
@@ -129,7 +108,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     // Enhanced click handler
     const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-      if (disabled || loading) return;
+      if (disabled ?? loading) {return;}
 
       simulateHapticFeedback();
       handleRipple(event);
@@ -151,7 +130,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     // Enhanced key down handler for accessibility
     const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLButtonElement>) => {
-      if (event.key === ' ' || event.key === 'Enter') {
+      if (event.key === ' '  ?? event.key === 'Enter') {
         setIsPressed(true);
         simulateHapticFeedback();
       }
@@ -185,8 +164,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             isPressed && isInteractive && 'scale-95 transition-transform duration-75',
             className
           )}
-          ref={ref || buttonRef}
-          disabled={disabled || loading}
+          ref={ref ?? buttonRef}
+          disabled={disabled ?? loading}
           onClick={handleClick}
           onMouseDown={handleMouseDown}
           onKeyDown={handleKeyDown}
@@ -230,7 +209,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           {/* Content wrapper with enhanced states */}
           <div className={cn(
             'flex items-center gap-2 transition-opacity duration-200',
-            (loading || showSuccess) && 'opacity-0'
+            (loading ?? showSuccess) && 'opacity-0'
           )}>
             {leftIcon && (
               <span className={cn(

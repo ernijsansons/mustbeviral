@@ -126,7 +126,7 @@ export class QualityAssurance {
       thresholds
     );
 
-    const assessment: ContentAssessment = { _content,
+    const assessment: ContentAssessment = { content,
       platform,
       contentType,
       metrics,
@@ -165,7 +165,7 @@ export class QualityAssurance {
     const remainingIssues: QualityIssue[] = [];
 
     // Sort issues by severity and auto-fixability
-    const sortedIssues = assessment.validation.issues.sort((a, _b) => {
+    const sortedIssues = assessment.validation.issues.sort((a, b) => {
       const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
       if (severityOrder[a.severity] !== severityOrder[b.severity]) {
         return severityOrder[b.severity] - severityOrder[a.severity];
@@ -195,7 +195,7 @@ export class QualityAssurance {
 
       // Find and apply the appropriate fix
       const rule = this.qualityRules.find(r => r.id === issue.type);
-      if (rule && rule.autoFixFunction) {
+      if (rule?.autoFixFunction) {
         try {
           const fixedContent = rule.autoFixFunction(improvedContent, {
             platform: assessment.platform,
@@ -205,7 +205,7 @@ export class QualityAssurance {
 
           if (fixedContent !== improvedContent) {
             improvedContent = fixedContent;
-            appliedFixes.push(`${issue.type}: ${issue.suggestion || 'Auto-fixed'}`);
+            appliedFixes.push(`${issue.type}: ${issue.suggestion ?? 'Auto-fixed'}`);
             fixesApplied++;
           } else {
             remainingIssues.push(issue);
@@ -231,7 +231,7 @@ export class QualityAssurance {
 
     console.log(`[QualityAssurance] Content improved: ${improvementScore.toFixed(1)} point improvement`);
 
-    return { _improvedContent,
+    return { improvedContent,
       improvementScore,
       appliedFixes,
       remainingIssues
@@ -254,13 +254,13 @@ export class QualityAssurance {
 
     // Apply relevant quality rules
     const relevantRules = this.qualityRules.filter(rule =>
-      (rule.platform === 'all' || rule.platform === platform) &&
-      (rule.contentType === 'all' || rule.contentType === contentType)
+      (rule.platform === 'all'  ?? rule.platform === platform) &&
+      (rule.contentType = == 'all'  ?? rule.contentType === contentType)
     );
 
     for (const rule of relevantRules) {
       try {
-        const result = rule.validationFunction(content, { _platform, contentType, ...metadata });
+        const result = rule.validationFunction(content, { platform, contentType, ...metadata });
 
         if (!result.passed) {
           issues.push(...result.issues);
@@ -278,7 +278,7 @@ export class QualityAssurance {
     const confidence = Math.min(relevantRules.length / 10, 1) * 100; // More rules = higher confidence
 
     return {
-      passed: issues.filter(i => i.severity === 'critical' || i.severity === 'high').length === 0,
+      passed: issues.filter(i => i.severity === 'critical'  ?? i.severity === 'high').length === 0,
       score: finalScore,
       issues,
       suggestions: [...new Set(suggestions)], // Remove duplicates
@@ -294,7 +294,7 @@ export class QualityAssurance {
     timeframe: 'hour' | 'day' | 'week' | 'month'
   ): QualityTrend[] {
     const key = `${platform}-${timeframe}`;
-    return this.qualityTrends.get(key) || [];
+    return this.qualityTrends.get(key)  ?? [];
   }
 
   /**
@@ -375,7 +375,7 @@ export class QualityAssurance {
     // Calculate summary statistics
     const totalAssessments = allAssessments.length;
     const averageScore = totalAssessments > 0 ?
-      allAssessments.reduce((sum, _a) => sum + a.metrics.overallScore, 0) / totalAssessments : 0;
+      allAssessments.reduce((sum, a) => sum + a.metrics.overallScore, 0) / totalAssessments : 0;
     const passRate = totalAssessments > 0 ?
       (allAssessments.filter(a => a.passedThreshold).length / totalAssessments) * 100 : 0;
 
@@ -383,13 +383,13 @@ export class QualityAssurance {
     const issueFrequency = new Map<string, number>();
     allAssessments.forEach(assessment => {
       assessment.validation.issues.forEach(issue => {
-        issueFrequency.set(issue.type, (issueFrequency.get(issue.type) || 0) + 1);
+        issueFrequency.set(issue.type, (issueFrequency.get(issue.type)  ?? 0) + 1);
       });
     });
 
     const topIssues = Array.from(issueFrequency.entries())
-      .map(([type, frequency]) => ({ _type, frequency }))
-      .sort((a, _b) => b.frequency - a.frequency)
+      .map(([type, frequency]) => ({ type, frequency }))
+      .sort((a, b) => b.frequency - a.frequency)
       .slice(0, 10);
 
     // Rule performance analysis
@@ -403,7 +403,7 @@ export class QualityAssurance {
       assessments: allAssessments,
       trends: Object.fromEntries(this.qualityTrends.entries()),
       rulePerformance,
-      summary: { _totalAssessments,
+      summary: { totalAssessments,
         averageScore,
         passRate,
         topIssues
@@ -458,7 +458,7 @@ export class QualityAssurance {
       authenticity * 0.05
     );
 
-    return { _overallScore,
+    return { overallScore,
       contentRelevance,
       platformOptimization,
       viralPotential,
@@ -532,7 +532,7 @@ export class QualityAssurance {
       });
     }
 
-    return recommendations.sort((a, _b) => {
+    return recommendations.sort((a, b) => {
       const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
       return priorityOrder[b.priority] - priorityOrder[a.priority];
     });
@@ -541,17 +541,10 @@ export class QualityAssurance {
   private initializeQualityRules(): void {
     // Platform optimization rules
     this.qualityRules.push({
-      id: 'twitter-hashtags',
-      name: 'Twitter Hashtag Optimization',
-      description: 'Ensures appropriate hashtag usage for Twitter',
-      platform: 'twitter',
-      contentType: 'all',
-      severity: 'medium',
-      weight: 0.8,
-      validationFunction: (content: string) => {
-        const hashtagCount = (content.match(/#\w+/g) || []).length;
+      id: 'twitter-hashtags', name: 'Twitter Hashtag Optimization', description: 'Ensures appropriate hashtag usage for Twitter', platform: 'twitter', contentType: 'all', severity: 'medium', weight: 0.8, validationFunction: (content: string) => {
+        const hashtagCount = (content.match(/#\w+/g)  ?? []).length;
         const passed = hashtagCount >= 1 && hashtagCount <= 5;
-        return { _passed,
+        return { passed,
           score: passed ? 100 : Math.max(0, 100 - Math.abs(hashtagCount - 2) * 20),
           issues: passed ? [] : [{
             type: 'platform',
@@ -566,7 +559,7 @@ export class QualityAssurance {
       },
       autoFixFunction: (content: string) => {
         // Simple auto-fix: add a generic hashtag if none present
-        if (!(content.match(/#\w+/g) || []).length) {
+        if (!(content.match(/#\w+/g)  ?? []).length) {
           return content + ' #trending';
         }
         return content;
@@ -581,14 +574,7 @@ export class QualityAssurance {
 
   private addGrammarRules(): void {
     this.qualityRules.push({
-      id: 'grammar-basic',
-      name: 'Basic Grammar Check',
-      description: 'Checks for basic grammar and spelling errors',
-      platform: 'all',
-      contentType: 'all',
-      severity: 'high',
-      weight: 1.0,
-      validationFunction: (content: string) => {
+      id: 'grammar-basic', name: 'Basic Grammar Check', description: 'Checks for basic grammar and spelling errors', platform: 'all', contentType: 'all', severity: 'high', weight: 1.0, validationFunction: (content: string) => {
         const issues: QualityIssue[] = [];
 
         // Simple grammar checks
@@ -617,14 +603,7 @@ export class QualityAssurance {
 
   private addBrandSafetyRules(): void {
     this.qualityRules.push({
-      id: 'brand-safety',
-      name: 'Brand Safety Check',
-      description: 'Ensures content is brand-safe and appropriate',
-      platform: 'all',
-      contentType: 'all',
-      severity: 'critical',
-      weight: 1.5,
-      validationFunction: (content: string) => {
+      id: 'brand-safety', name: 'Brand Safety Check', description: 'Ensures content is brand-safe and appropriate', platform: 'all', contentType: 'all', severity: 'critical', weight: 1.5, validationFunction: (content: string) => {
         const riskWords = ['controversial', 'scandal', 'outrage', 'hate', 'violence'];
         const foundRiskWords = riskWords.filter(word =>
           content.toLowerCase().includes(word.toLowerCase())
@@ -651,14 +630,7 @@ export class QualityAssurance {
 
   private addEngagementRules(): void {
     this.qualityRules.push({
-      id: 'engagement-triggers',
-      name: 'Engagement Trigger Analysis',
-      description: 'Checks for elements that drive engagement',
-      platform: 'all',
-      contentType: 'all',
-      severity: 'medium',
-      weight: 0.9,
-      validationFunction: (content: string) => {
+      id: 'engagement-triggers', name: 'Engagement Trigger Analysis', description: 'Checks for elements that drive engagement', platform: 'all', contentType: 'all', severity: 'medium', weight: 0.9, validationFunction: (content: string) => {
         const engagementElements = [
           /\?/.test(content), // Questions
           /!/.test(content), // Exclamations
@@ -702,7 +674,7 @@ export class QualityAssurance {
       instagram: ['aesthetic', 'save', 'story', 'reel']
     };
 
-    const keywords = platformKeywords[platform] || [];
+    const keywords = platformKeywords[platform]  ?? [];
     const relevantCount = keywords.filter(keyword =>
       content.toLowerCase().includes(keyword)
     ).length;
@@ -719,18 +691,18 @@ export class QualityAssurance {
         /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]/u.test(content)
       ],
       tiktok: [
-        content.includes('#fyp') || content.includes('#foryou'),
+        content.includes('#fyp')  ?? content.includes('#foryou'),
         /[\u{1F600}-\u{1F64F}]/u.test(content),
         content.length <= 2200
       ],
       instagram: [
-        (content.match(/#/g) || []).length >= 3,
+        (content.match(/#/g)  ?? []).length >= 3,
         /save|share/i.test(content),
         /[\u{1F600}-\u{1F64F}]/u.test(content)
       ]
     };
 
-    const platformChecks = checks[platform] || checks.instagram;
+    const platformChecks = checks[platform]  ?? checks.instagram;
     const passedChecks = platformChecks.filter(Boolean).length;
     return (passedChecks / platformChecks.length) * 100;
   }
@@ -831,12 +803,12 @@ export class QualityAssurance {
   }
 
   private getThresholds(platform: string, contentType: string): QualityThresholds {
-    return this.platformThresholds.get(platform) || this.platformThresholds.get('default')!;
+    return this.platformThresholds.get(platform)  ?? this.platformThresholds.get('default')!;
   }
 
   private storeAssessment(platform: string, contentType: string, assessment: ContentAssessment): void {
     const key = `${platform}-${contentType}`;
-    const existing = this.assessmentHistory.get(key) || [];
+    const existing = this.assessmentHistory.get(key)  ?? [];
     existing.push(assessment);
 
     // Keep only the last 100 assessments
@@ -850,7 +822,7 @@ export class QualityAssurance {
   private updateQualityTrends(platform: string, contentType: string, score: number): void {
     // Simplified trend tracking
     const key = `${platform}-day`;
-    const trends = this.qualityTrends.get(key) || [];
+    const trends = this.qualityTrends.get(key)  ?? [];
 
     // Add new data point or update existing trend
     // Implementation would track actual trends over time

@@ -2,10 +2,10 @@
 // Provides React Query context with development tools
 
 import React from 'react';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { queryClient } from '../lib/query-client';
-import { env } from '../lib/env';
+import { QueryClientProvider} from '@tanstack/react-query';
+import { ReactQueryDevtools} from '@tanstack/react-query-devtools';
+import { queryClient} from '../lib/query-client';
+import { env} from '../lib/env';
 
 interface QueryProviderProps {
   children: React.ReactNode;
@@ -17,7 +17,7 @@ export function QueryProvider({ children }: QueryProviderProps) {
       {children}
 
       {/* Show React Query Devtools in development */}
-      {env.APP_ENV === 'development' && (
+      {env.APPENV === 'development' && (
         <ReactQueryDevtools
           initialIsOpen={false}
           position="bottom-right"
@@ -51,7 +51,7 @@ export class QueryErrorBoundary extends React.Component<
     console.error('Query Error Boundary caught an error:', error, errorInfo);
 
     // In production, send to error reporting service
-    if (env.APP_ENV === 'production') {
+    if (env.APPENV === 'production') {
       // Example: sendErrorToService(error, errorInfo);
     }
   }
@@ -91,7 +91,7 @@ export class QueryErrorBoundary extends React.Component<
               </button>
             </div>
 
-            {env.APP_ENV === 'development' && (
+            {env.APPENV === 'development' && (
               <details className="mt-4 text-left">
                 <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
                   Error Details

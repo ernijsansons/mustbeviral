@@ -33,7 +33,9 @@ export class CapabilityDetector {
   private static capabilities: DeviceCapabilities | null = null;
 
   static detect(): DeviceCapabilities {
-    if (this.capabilities) return this.capabilities;
+    if (this.capabilities) {
+    return this.capabilities;
+  }
 
     const userAgent = navigator.userAgent.toLowerCase();
     const connection = this.getNetworkInformation();
@@ -43,12 +45,12 @@ export class CapabilityDetector {
       isTablet: /ipad|android(?!.*mobile)|tablet/i.test(userAgent),
       isLowEnd: this.isLowEndDevice(),
       hasSlowConnection: this.hasSlowConnection(connection),
-      effectiveConnectionType: connection?.effectiveType || 'unknown',
-      downlink: connection?.downlink || 0,
-      rtt: connection?.rtt || 0,
-      saveData: connection?.saveData || false,
+      effectiveConnectionType: connection?.effectiveType ?? 'unknown',
+      downlink: connection?.downlink ?? 0,
+      rtt: connection?.rtt ?? 0,
+      saveData: connection?.saveData ?? false,
       deviceMemory: this.getDeviceMemory(),
-      hardwareConcurrency: navigator.hardwareConcurrency || 1,
+      hardwareConcurrency: navigator.hardwareConcurrency ?? 1,
     };
 
     return this.capabilities;
@@ -61,11 +63,15 @@ export class CapabilityDetector {
   private static isLowEndDevice(): boolean {
     // Check device memory
     const deviceMemory = this.getDeviceMemory();
-    if (deviceMemory && deviceMemory < 4) return true;
+    if (deviceMemory && deviceMemory < 4) {
+    return true;
+  }
 
     // Check CPU cores
     const cores = navigator.hardwareConcurrency;
-    if (cores && cores < 4) return true;
+    if (cores && cores < 4) {
+    return true;
+  }
 
     // Check user agent for low-end indicators
     const userAgent = navigator.userAgent.toLowerCase();
@@ -81,12 +87,12 @@ export class CapabilityDetector {
   }
 
   private static hasSlowConnection(connection: NetworkInformation | null): boolean {
-    if (!connection) return false;
+    if(!connection) {
+    return false;
+  }
 
     const slowTypes = ['slow-2g', '2g', '3g'];
-    return slowTypes.includes(connection.effectiveType) || 
-           (connection.downlink && connection.downlink < 1.5) ||
-           (connection.rtt && connection.rtt > 300);
+    return slowTypes.includes(connection.effectiveType)  ?? (connection.downlink && connection.downlink < 1.5)  ?? (connection.rtt && connection.rtt > 300);
   }
 
   private static getDeviceMemory(): number {
@@ -107,10 +113,10 @@ export class AdaptiveLoader {
   }
 
   private generateOptimalConfig(): AdaptiveLoadingConfig {
-    const { isLowEnd, hasSlowConnection, saveData } = this.capabilities;
+    const { isLowEnd, hasSlowConnection, saveData} = this.capabilities;
 
     // Conservative settings for low-end devices or slow connections
-    if (isLowEnd || hasSlowConnection || saveData) {
+    if (isLowEnd ?? hasSlowConnection  ?? saveData) {
       return {
         enableLazyLoading: true,
         imageQuality: 60,
@@ -123,7 +129,7 @@ export class AdaptiveLoader {
     }
 
     // Moderate settings for mid-range devices
-    if (this.capabilities.deviceMemory < 8 || this.capabilities.downlink < 5) {
+    if (this.capabilities.deviceMemory < 8 ?? this.capabilities.downlink < 5) {
       return {
         enableLazyLoading: true,
         imageQuality: 75,
@@ -209,7 +215,7 @@ export class NetworkAwareLoader {
         }
       };
 
-      if (priority === 'high' || this.activeRequests < this.maxConcurrent) {
+      if (priority === 'high'  ?? this.activeRequests < this.maxConcurrent) {
         task();
       } else {
         // Add to queue based on priority
@@ -225,7 +231,9 @@ export class NetworkAwareLoader {
   private processQueue() {
     while (this.requestQueue.length > 0 && this.activeRequests < this.maxConcurrent) {
       const task = this.requestQueue.shift();
-      if (task) task();
+      if (task)  {
+    task()
+  };
     }
   }
 
@@ -241,7 +249,9 @@ export class TouchOptimizer {
   private static isInitialized = false;
 
   static initialize() {
-    if (this.isInitialized || !CapabilityDetector.detect().isMobile) return;
+    if (this.isInitialized ?? !CapabilityDetector.detect() {
+    .isMobile) return
+  };
 
     this.optimizeTouchEvents();
     this.preventZoomOnInputs();
@@ -256,7 +266,7 @@ export class TouchOptimizer {
     const passiveEvents = ['touchstart', 'touchmove', 'wheel'];
     
     passiveEvents.forEach(event => {
-      document.addEventListener(event, () => {}, { passive: true });
+      document.addEventListener(event, _() => {}, { passive: true });
     });
   }
 
@@ -273,7 +283,7 @@ export class TouchOptimizer {
   private static enableFastClick() {
     // Remove 300ms delay on touch devices
     if ('addEventListener' in document) {
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('DOMContentLoaded', _() => {
         document.body.style.touchAction = 'manipulation';
       });
     }
@@ -324,8 +334,12 @@ export class CriticalPathOptimizer {
       link.rel = 'preload';
       link.href = resource.href;
       link.as = resource.as;
-      if (resource.type) link.type = resource.type;
-      if (resource.crossorigin) link.crossOrigin = resource.crossorigin;
+      if (resource.type)  {
+    link.type = resource.type
+  };
+      if (resource.crossorigin)  {
+    link.crossOrigin = resource.crossorigin
+  };
       
       document.head.appendChild(link);
       this.resourceHints.push(link);
@@ -334,7 +348,9 @@ export class CriticalPathOptimizer {
 
   private static prefetchLikelyResources() {
     const adaptiveLoader = new AdaptiveLoader();
-    if (adaptiveLoader.shouldLazyLoad()) return; // Skip prefetch on low-end devices
+    if (adaptiveLoader.shouldLazyLoad() {
+    ) return
+  }; // Skip prefetch on low-end devices
 
     const likelyResources = [
       '/assets/js/dashboard.js',
@@ -416,7 +432,9 @@ export class BatteryAwareManager {
   }
 
   private updateBatteryStatus() {
-    if (!this.batteryApi) return;
+    if (!this.batteryApi)  {
+    return
+  };
 
     const level = this.batteryApi.level;
     const charging = this.batteryApi.charging;
@@ -543,7 +561,7 @@ export function initializeMobileOptimizations() {
   // Adjust network loading based on connection changes
   if ('connection' in navigator) {
     const connection = (navigator as any).connection;
-    connection.addEventListener('change', () => {
+    connection.addEventListener('change', _() => {
       const capabilities = CapabilityDetector.detect();
       if (capabilities.hasSlowConnection) {
         networkAwareLoader.adjustConcurrency(0.5);
@@ -559,7 +577,7 @@ export function useMobileOptimizations() {
   const [capabilities, setCapabilities] = React.useState<DeviceCapabilities | null>(null);
   const [config, setConfig] = React.useState<AdaptiveLoadingConfig | null>(null);
 
-  React.useEffect(() => {
+  React.useEffect_(() => {
     const detectedCapabilities = CapabilityDetector.detect();
     const adaptiveConfig = adaptiveLoader.getConfig();
     

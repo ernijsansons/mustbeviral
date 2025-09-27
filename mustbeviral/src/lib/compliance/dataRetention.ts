@@ -3,8 +3,8 @@
  * Automated data retention policies with compliance and audit features
  */
 
-import { CloudflareEnv } from '../cloudflare';
-import { SecurityAuditLogger } from '../audit/securityLogger';
+import { CloudflareEnv} from '../cloudflare';
+import { SecurityAuditLogger} from '../audit/securityLogger';
 
 export interface RetentionPolicy {
   id: string;
@@ -168,7 +168,9 @@ export class DataRetentionManager {
     const jobs: RetentionJob[] = [];
 
     for (const policy of this.policies.values()) {
-      if (!policy.active) continue;
+      if (!policy.active) {
+    continue;
+  }
 
       for (const dataType of policy.dataTypes) {
         const job = await this.createRetentionJob(policy, dataType);
@@ -209,13 +211,13 @@ export class DataRetentionManager {
 
       switch (job.action) {
         case 'archive':
-          ({ _recordsProcessed, recordsAffected } = await this.archiveData(job, policy, dryRun));
+          ({ recordsProcessed, recordsAffected } = await this.archiveData(job, policy, dryRun));
           break;
         case 'delete':
-          ({ _recordsProcessed, recordsAffected } = await this.deleteData(job, policy, dryRun));
+          ({ recordsProcessed, recordsAffected } = await this.deleteData(job, policy, dryRun));
           break;
         case 'anonymize':
-          ({ _recordsProcessed, recordsAffected } = await this.anonymizeData(job, policy, dryRun));
+          ({ recordsProcessed, recordsAffected } = await this.anonymizeData(job, policy, dryRun));
           break;
       }
 
@@ -321,11 +323,11 @@ export class DataRetentionManager {
 
     const summary = {
       policiesExecuted: new Set(completedJobs.map(j => j.policyId)).size,
-      recordsProcessed: completedJobs.reduce((sum, _j) => sum + j.recordsProcessed, 0),
-      recordsDeleted: completedJobs.filter(j => j.action === 'delete').reduce((sum, _j) => sum + j.recordsAffected, 0),
-      recordsArchived: completedJobs.filter(j => j.action === 'archive').reduce((sum, _j) => sum + j.recordsAffected, 0),
-      recordsAnonymized: completedJobs.filter(j => j.action === 'anonymize').reduce((sum, _j) => sum + j.recordsAffected, 0),
-      storageFreed: completedJobs.reduce((sum, _j) => sum + (j.recordsAffected * 1024), 0) // Estimate
+      recordsProcessed: completedJobs.reduce((sum, j) => sum + j.recordsProcessed, 0),
+      recordsDeleted: completedJobs.filter(j => j.action === 'delete').reduce((sum, j) => sum + j.recordsAffected, 0),
+      recordsArchived: completedJobs.filter(j => j.action === 'archive').reduce((sum, j) => sum + j.recordsAffected, 0),
+      recordsAnonymized: completedJobs.filter(j => j.action === 'anonymize').reduce((sum, j) => sum + j.recordsAffected, 0),
+      storageFreed: completedJobs.reduce((sum, j) => sum + (j.recordsAffected * 1024), 0) // Estimate
     };
 
     const byDataType: Record<string, unknown> = {};
@@ -358,7 +360,7 @@ export class DataRetentionManager {
 
     const errors = failedJobs.map(job => ({
       jobId: job.id,
-      error: job.error || 'Unknown error',
+      error: job.error ?? 'Unknown error',
       recordsAffected: job.recordsProcessed
     }));
 
@@ -366,11 +368,11 @@ export class DataRetentionManager {
       gdprDeletions: completedJobs.filter(j =>
         j.action === 'delete' &&
         this.policies.get(j.policyId)?.compliance.some(c => c.regulation === 'GDPR')
-      ).reduce((sum, _j) => sum + j.recordsAffected, 0),
+      ).reduce((sum, j) => sum + j.recordsAffected, 0),
       ccpaDeletions: completedJobs.filter(j =>
         j.action === 'delete' &&
         this.policies.get(j.policyId)?.compliance.some(c => c.regulation === 'CCPA')
-      ).reduce((sum, _j) => sum + j.recordsAffected, 0),
+      ).reduce((sum, j) => sum + j.recordsAffected, 0),
       legalHolds: 0, // Would query legal holds
       exceptions: 0  // Would query exceptions
     };
@@ -398,7 +400,7 @@ export class DataRetentionManager {
     // Find all data types that contain user data
     const dataTypesAffected = Array.from(this.dataCategories.keys()).filter(type => {
       const category = this.dataCategories.get(type);
-      return category && category.personalData;
+      return category?.personalData;
     });
 
     // Create immediate deletion job
@@ -438,7 +440,7 @@ export class DataRetentionManager {
 
     console.log(`LOG: RETENTION-USER-DELETION-1 - User data deletion requested: ${userId} (${requestType})`);
 
-    return { _jobId,
+    return { jobId,
       dataTypesAffected,
       estimatedRecords: 0, // Would calculate actual count
       scheduledFor: job.scheduledFor
@@ -459,7 +461,7 @@ export class DataRetentionManager {
         triggers: [
           {
             type: 'time_based',
-            condition: 'created_at < DATE_SUB(NOW(), INTERVAL 365 DAY)',
+            condition: 'created_at < DATESUB(NOW(), INTERVAL 365 DAY)',
             value: 365,
             description: 'Delete logs older than 1 year'
           }
@@ -467,7 +469,7 @@ export class DataRetentionManager {
         exceptions: [
           {
             type: 'legal_hold',
-            condition: 'legal_hold_active = true',
+            condition: 'legalholdactive = true',
             description: 'Preserve data under legal hold'
           }
         ],
@@ -492,7 +494,7 @@ export class DataRetentionManager {
         triggers: [
           {
             type: 'user_action',
-            condition: 'user_deleted_account = true',
+            condition: 'userdeletedaccount = true',
             value: true,
             description: 'Delete content when user deletes account'
           }
@@ -500,7 +502,7 @@ export class DataRetentionManager {
         exceptions: [
           {
             type: 'active_case',
-            condition: 'under_review = true',
+            condition: 'underreview = true',
             description: 'Preserve content under moderation review'
           }
         ],
@@ -524,7 +526,7 @@ export class DataRetentionManager {
         triggers: [
           {
             type: 'time_based',
-            condition: 'created_at < DATE_SUB(NOW(), INTERVAL 7 YEAR)',
+            condition: 'created_at < DATESUB(NOW(), INTERVAL 7 YEAR)',
             value: 2555,
             description: 'Delete security logs older than 7 years'
           }
@@ -532,7 +534,7 @@ export class DataRetentionManager {
         exceptions: [
           {
             type: 'regulatory_review',
-            condition: 'under_investigation = true',
+            condition: 'underinvestigation = true',
             description: 'Preserve logs under regulatory investigation'
           }
         ],
@@ -551,7 +553,7 @@ export class DataRetentionManager {
 
     for (const policyData of defaultPolicies) {
       const policy: RetentionPolicy = {
-        id: `default_${policyData.name.toLowerCase().replace(/s+/g, '_')}`,
+        id: `default_${policyData.name.toLowerCase().replace(/s+/g, '')}`,
         createdAt: new Date(),
         updatedAt: new Date(),
         ...policyData
@@ -642,9 +644,9 @@ export class DataRetentionManager {
   private async storePolicyInDB(policy: RetentionPolicy): Promise<void> {
     try {
       await this.env.DB.prepare(`
-        INSERT OR REPLACE INTO retention_policies (
-          id, name, description, data_types, retention_period, archive_period,
-          deletion_method, triggers, exceptions, compliance, active, created_at, updated_at
+        INSERT OR REPLACE INTO retentionpolicies(
+          id, name, description, datatypes, retentionperiod, archiveperiod,
+          deletionmethod, triggers, exceptions, compliance, active, createdat, updatedat
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
         policy.id,
@@ -652,7 +654,7 @@ export class DataRetentionManager {
         policy.description,
         JSON.stringify(policy.dataTypes),
         policy.retentionPeriod,
-        policy.archivePeriod || null,
+        policy.archivePeriod ?? null,
         policy.deletionMethod,
         JSON.stringify(policy.triggers),
         JSON.stringify(policy.exceptions),
@@ -715,9 +717,8 @@ export class DataRetentionManager {
     // This would implement actual database queries based on data type
     // For now, return mock data
 
-    const cutoffDate = new Date(Date.now() - policy.retentionPeriod * 24 * 60 * 60 * 1000);
 
-    return { _dataType,
+    return { dataType,
       eligibleRecords: 0, // Would query actual count
       oldestRecord: new Date(),
       estimatedSize: 0,
@@ -792,7 +793,7 @@ export class DataRetentionManager {
    * Start job processor
    */
   private startJobProcessor(): void {
-    this.executionTimer = setInterval(async () => {
+    this.executionTimer = setInterval(async() => {
       const pendingJobs = this.jobQueue.filter(job =>
         job.status === 'pending' &&
         job.scheduledFor <= new Date()

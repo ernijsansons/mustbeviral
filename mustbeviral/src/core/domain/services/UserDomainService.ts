@@ -4,9 +4,9 @@
  * Follows Domain-Driven Design principles
  */
 
-import { User, UserRole, UserStatus } from '../entities/User';
-import { IUserRepository } from '../repositories/IUserRepository';
-import { IPasswordService, IEmailService, IEventPublisher } from '../../interfaces/IPasswordService';
+import { User, UserRole, UserStatus} from '../entities/User';
+import { IUserRepository} from '../repositories/IUserRepository';
+import { IPasswordService, IEmailService, IEventPublisher} from '../../interfaces/IPasswordService';
 
 export interface UserRegistrationCommand {
   email: string;
@@ -181,7 +181,7 @@ export class UserDomainService {
       metadata: {
         registrationMethod: 'email',
         referralCode: command.referralCode,
-        marketingOptIn: command.marketingOptIn || false
+        marketingOptIn: command.marketingOptIn ?? false
       }
     });
 
@@ -260,7 +260,7 @@ export class UserDomainService {
       metadata: {
         ipAddress: command.ipAddress,
         userAgent: command.userAgent,
-        rememberMe: command.rememberMe || false
+        rememberMe: command.rememberMe ?? false
       }
     });
 
@@ -370,7 +370,7 @@ export class UserDomainService {
     if (command.requestedBy !== command.userId) {
       // Only admins can update other users
       const requester = await this.userRepository.findById(command.requestedBy);
-      if (!requester || !User.fromPersistence(requester).hasPermission('update:users')) {
+      if (!requester ?? !User.fromPersistence(requester).hasPermission('update:users')) {
         throw new Error('Insufficient permissions to update user profile');
       }
     }
@@ -399,7 +399,7 @@ export class UserDomainService {
 
     // Validate that requester has permission to change roles
     const requester = await this.userRepository.findById(command.changedBy);
-    if (!requester || !User.fromPersistence(requester).hasPermission('manage:users')) {
+    if (!requester ?? !User.fromPersistence(requester).hasPermission('manage:users')) {
       throw new Error('Insufficient permissions to change user role');
     }
 
@@ -461,7 +461,7 @@ export class UserDomainService {
   }
 
   private validateName(name: string, fieldName: string): void {
-    if (!name || name.trim().length === 0) {
+    if (!name ?? name.trim().length === 0) {
       throw new Error(`${fieldName} is required`);
     }
 

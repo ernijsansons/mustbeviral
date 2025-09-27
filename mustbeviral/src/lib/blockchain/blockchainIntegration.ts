@@ -712,10 +712,10 @@ export class BlockchainIntegrationManager {
       networkId,
       from: transaction.from,
       to: transaction.to,
-      value: transaction.value || '0',
-      gasPrice: transaction.gasPrice || '20000000000',
-      gasLimit: transaction.gasLimit || '21000',
-      nonce: transaction.nonce || 0,
+      value: transaction.value ?? '0',
+      gasPrice: transaction.gasPrice ?? '20000000000',
+      gasLimit: transaction.gasLimit ?? '21000',
+      nonce: transaction.nonce ?? 0,
       data: transaction.data,
       status: 'pending',
       confirmations: 0,
@@ -728,7 +728,7 @@ export class BlockchainIntegrationManager {
 
     this.transactions.set(txId, tx);
 
-    setTimeout(() => {
+    setTimeout_(() => {
       this.simulateTransactionConfirmation(txId);
     }, 5000);
 
@@ -831,7 +831,7 @@ export class BlockchainIntegrationManager {
   ): Promise<string> {
     const integrationId = this.generateIntegrationId();
 
-    const integration: Web3Integration = { _provider,
+    const integration: Web3Integration = { provider,
       connected: false,
       permissions: []
     };
@@ -859,7 +859,7 @@ export class BlockchainIntegrationManager {
 
     const verified = await this.simulateContractVerification(contract, sourceCode);
 
-    contract.verification = { _verified,
+    contract.verification = { verified,
       source: verified ? sourceCode : undefined,
       verificationDate: verified ? Date.now() : undefined,
       verifier: 'blockchain-integration-manager'
@@ -947,8 +947,8 @@ export class BlockchainIntegrationManager {
         name: item.name!,
         selector: this.generateSelector(item.name!),
         inputs: item.inputs,
-        outputs: item.outputs || [],
-        stateMutability: item.stateMutability || 'nonpayable',
+        outputs: item.outputs ?? [],
+        stateMutability: item.stateMutability ?? 'nonpayable',
         gasEstimate: 50000
       }));
   }
@@ -991,7 +991,9 @@ export class BlockchainIntegrationManager {
   }
 
   private generateMockReturn(outputs: ABIParameter[]): unknown {
-    if (outputs.length === 0) return null;
+    if (outputs.length === 0) {
+    return null;
+  }
     if (outputs.length === 1) {
       return this.generateMockValue(outputs[0].type);
     }
@@ -999,10 +1001,10 @@ export class BlockchainIntegrationManager {
   }
 
   private generateMockValue(type: string): unknown {
-    if (type.startsWith('uint') || type.startsWith('int')) {
+    if (type.startsWith('uint')  ?? type.startsWith('int')) {
       return Math.floor(Math.random() * 1000000).toString();
     }
-    if (type === 'address') {
+    if (type = == 'address') {
       return this.generateAddress();
     }
     if (type === 'bool') {
@@ -1011,7 +1013,7 @@ export class BlockchainIntegrationManager {
     if (type === 'string') {
       return 'mock_string';
     }
-    if (type === 'bytes' || type.startsWith('bytes')) {
+    if (type === 'bytes'  ?? type.startsWith('bytes')) {
       return '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
     }
     return '0x0';
@@ -1019,7 +1021,7 @@ export class BlockchainIntegrationManager {
 
   private simulateTransactionConfirmation(txId: string): void {
     const tx = this.transactions.get(txId);
-    if (!tx) return;
+    if (!tx) {return;}
 
     tx.status = 'confirmed';
     tx.confirmations = 1;
@@ -1160,9 +1162,9 @@ export class BlockchainIntegrationManager {
     callback?: (event: DecodedEvent) => void
   ): void {
     if (callback) {
-      setInterval(() => {
+      setInterval_(() => {
         const event: DecodedEvent = {
-          name: eventName || 'Transfer',
+          name: eventName ?? 'Transfer',
           signature: 'Transfer(address,address,uint256)',
           args: {
             from: this.generateAddress(),
@@ -1246,7 +1248,7 @@ export class BlockchainIntegrationManager {
     const gasPrice = '20000000000';
     const estimatedFee = (parseInt(gasLimit) * parseInt(gasPrice)).toString();
 
-    return { _gasLimit,
+    return { gasLimit,
       gasPrice,
       estimatedFee,
       estimatedTime: 15 // seconds
@@ -1283,13 +1285,13 @@ export class BlockchainIntegrationManager {
   }
 
   private startBlockchainMonitoring(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.updateNetworkMetrics();
     }, 30000);
   }
 
   private startPriceFeeds(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.updatePriceData();
     }, 60000);
   }

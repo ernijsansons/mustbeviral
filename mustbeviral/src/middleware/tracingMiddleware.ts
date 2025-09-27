@@ -1,10 +1,10 @@
 // Tracing Middleware
 // Adds distributed tracing to all API requests and operations
 
-import { _context, trace, SpanStatusCode, SpanKind } from '@opentelemetry/api';
-import { _getTelemetry, SpanAttributes } from '../lib/tracing/telemetry';
-import { IsolatedRequest } from './dataIsolation';
-import { log } from '../lib/monitoring/logger';
+import { context, trace, SpanStatusCode, SpanKind} from '@opentelemetry/api';
+import { getTelemetry, SpanAttributes} from '../lib/tracing/telemetry';
+import { IsolatedRequest} from './dataIsolation';
+import { log} from '../lib/monitoring/logger';
 
 export interface TracedRequest extends IsolatedRequest {
   traceId?: string;
@@ -43,7 +43,7 @@ export class TracingMiddleware {
         'http.host': url.host,
         'http.target': url.pathname + url.search,
         'http.route': this.extractRoute(path),
-        'http.user_agent': request.headers.get('user-agent') || '',
+        'http.user_agent': request.headers.get('user-agent')  ?? '',
       },
     });
 
@@ -86,13 +86,13 @@ export class TracingMiddleware {
     response: Response,
     error?: Error
   ): void {
-    if (!request.span) return;
+    if (!request.span) {return;}
 
     try {
       // Add response attributes
       request.span.setAttributes({
         'http.status_code': response.status,
-        'http.response.size': response.headers.get('content-length') || 0,
+        'http.response.size': response.headers.get('content-length')  ?? 0,
       });
 
       // Set span status based on response
@@ -148,10 +148,10 @@ export class TracingMiddleware {
     attributes: SpanAttributes = {}
   ): unknown {
     if (!request.span) {
-      return this.telemetry.createSpan({ _name, kind, attributes });
+      return this.telemetry.createSpan({ name, kind, attributes });
     }
 
-    return this.telemetry.createSpan({ _name,
+    return this.telemetry.createSpan({ name,
       kind,
       attributes,
       parentSpan: request.span,
@@ -378,20 +378,18 @@ export class TracingMiddleware {
 
   // Get trace information for logging correlation
   getTraceInfo(request: TracedRequest): RequestTraceInfo | null {
-    if (!request.traceId || !request.spanId) {
+    if(!request.traceId || !request.spanId) {
       return null;
     }
 
-    const url = new URL(request.url);
+    // const url = new URL(request.url);
     return {
       traceId: request.traceId,
       spanId: request.spanId,
       method: request.method,
       url: request.url,
-      userAgent: request.headers.get('user-agent') || undefined,
-      ip: request.headers.get('cf-connecting-ip') ||
-          request.headers.get('x-forwarded-for') ||
-          undefined,
+      userAgent: request.headers.get('user-agent') ?? undefined,
+      ip: request.headers.get('cf-connecting-ip') ?? request.headers.get('x-forwarded-for') ?? undefined,
       organizationId: request.tenantContext?.organizationId,
       userId: request.tenantContext?.userId,
     };
@@ -404,8 +402,7 @@ export class TracingMiddleware {
     return path
       .replace(/\/[0-9a-f-]{8,}/g, '/:id') // Replace UUIDs/IDs with :id
       .replace(/\/\d+/g, '/:number') // Replace numbers with :number
-      .replace(/\/[^/]+@[^/]+/g, '/:email') // Replace emails with :email
-      || '/';
+      .replace(/\/[^/]+@[^/]+/g, '/:email') // Replace emails with :email ?? '/';
   }
 
   // Add safe headers as span attributes (filtering sensitive ones)

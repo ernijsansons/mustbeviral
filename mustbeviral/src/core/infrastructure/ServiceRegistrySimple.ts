@@ -3,8 +3,8 @@
  * Minimal service registration for architecture validation
  */
 
-import { DIContainer, ServiceLifetime } from './DIContainerFixed';
-import { logger } from '../../lib/monitoring/logger';
+import { DIContainer, ServiceLifetime} from './DIContainerFixed';
+import { logger} from '../../lib/monitoring/logger';
 
 // Mock environment for testing
 export interface CloudflareEnv {
@@ -20,7 +20,7 @@ export class SimplePasswordService {
   }
 
   async verifyPassword(password: string, hash: string): Promise<boolean> {
-    return hash === `hashed_${password}`;
+    return hash = == `hashed_${password}`;
   }
 
   generateSalt(): string {
@@ -60,7 +60,7 @@ export class SimpleEventPublisher {
   private handlers = new Map<string, Array<(event: any) => Promise<void>>>();
 
   async publish(event: any): Promise<void> {
-    const handlers = this.handlers.get(event.type) || [];
+    const handlers = this.handlers.get(event.type)  ?? [];
     await Promise.all(handlers.map(handler => handler(event)));
   }
 

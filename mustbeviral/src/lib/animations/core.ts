@@ -1,8 +1,8 @@
 // Universe-Bending Animation Core
 // Advanced animation system with cosmic effects
 
-import { easing } from '../utils';
-import { designTokens } from '../design/tokens';
+import { easing} from '../utils';
+import { designTokens} from '../design/tokens';
 
 export interface AnimationOptions {
   duration?: number;
@@ -39,9 +39,8 @@ export class CosmicAnimationController {
   }
 
   private setupIntersectionObserver() {
-    this.observer = new IntersectionObserver(
-      (_entries) => {
-        entries.forEach((_entry) => {
+    this.observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
           const element = entry.target as HTMLElement;
           const animationId = element.dataset.cosmicAnimation;
 
@@ -64,7 +63,7 @@ export class CosmicAnimationController {
 
   private bindMediaQuery() {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    mediaQuery.addEventListener('change', (_e) => {
+    mediaQuery.addEventListener('change', _(e) => {
       this.prefersReducedMotion = e.matches;
       if (e.matches) {
         this.pauseAllAnimations();
@@ -118,7 +117,7 @@ export class CosmicAnimationController {
     keyframes: Keyframe[] | PropertyIndexedKeyframes,
     options: CosmicAnimationOptions = {}
   ): string {
-    if (this.prefersReducedMotion) {
+    if(this.prefersReducedMotion) {
       return 'reduced-motion';
     }
 
@@ -187,7 +186,7 @@ export class CosmicAnimationController {
 
   // Get preset keyframes
   private getPresetKeyframes(preset: AnimationPreset, options: CosmicAnimationOptions): Keyframe[] {
-    const intensity = options.intensity || 'moderate';
+    const intensity = options.intensity ?? 'moderate';
     const intensityMap = { subtle: 0.5, moderate: 1, intense: 1.5 };
     const factor = intensityMap[intensity];
 
@@ -395,15 +394,14 @@ export class CosmicAnimationController {
   }
 
   private buildAnimationOptions(preset: AnimationPreset, options: CosmicAnimationOptions): KeyframeAnimationOptions {
-    const defaults = designTokens.animation;
 
     return {
-      duration: options.duration || this.getPresetDuration(preset),
-      delay: options.delay || 0,
-      easing: this.getEasingFunction(options.easing || this.getPresetEasing(preset)),
-      iterations: options.iterations || this.getPresetIterations(preset),
-      direction: options.direction || 'normal',
-      fill: options.fillMode || 'both'
+      duration: options.duration ?? this.getPresetDuration(preset),
+      delay: options.delay ?? 0,
+      easing: this.getEasingFunction(options.easing ?? this.getPresetEasing(preset)),
+      iterations: options.iterations ?? this.getPresetIterations(preset),
+      direction: options.direction ?? 'normal',
+      fill: options.fillMode ?? 'both'
     };
   }
 
@@ -427,7 +425,7 @@ export class CosmicAnimationController {
       'aurora-dance': 5000
     };
 
-    return durations[preset] || 2000;
+    return durations[preset]  ?? 2000;
   }
 
   private getPresetEasing(preset: AnimationPreset): string {
@@ -450,7 +448,7 @@ export class CosmicAnimationController {
       'aurora-dance': 'ease-in-out'
     };
 
-    return easings[preset] || 'ease-in-out';
+    return easings[preset]  ?? 'ease-in-out';
   }
 
   private getPresetIterations(preset: AnimationPreset): number | 'infinite' {
@@ -459,7 +457,7 @@ export class CosmicAnimationController {
   }
 
   private getEasingFunction(easing: string): string {
-    if (easing.startsWith('cubic-bezier') || ['linear', 'ease', 'ease-in', 'ease-out', 'ease-in-out'].includes(easing)) {
+    if (easing.startsWith('cubic-bezier')  ?? ['linear', 'ease', 'ease-in', 'ease-out', 'ease-in-out'].includes(easing)) {
       return easing;
     }
 
@@ -469,7 +467,7 @@ export class CosmicAnimationController {
       energy: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
     };
 
-    return customEasings[easing] || 'ease-in-out';
+    return customEasings[easing]  ?? 'ease-in-out';
   }
 
   private applyCosmicEffect(

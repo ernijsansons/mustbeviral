@@ -6,25 +6,14 @@
  * talking about MustBeViral on social media.
  */
 
-import { ReactNode, useState, useEffect } from 'react';
-import { Link, useLocation } from 'wouter';
+import { ReactNode, useState, useEffect} from 'react';
+import { Link, useLocation} from 'wouter';
 import {
-  Sparkles,
-  Menu,
-  X,
-  ArrowRight,
-  Star,
-  Users,
-  Zap,
-  Twitter,
-  Instagram,
-  Linkedin,
-  Youtube
-} from 'lucide-react';
-import { cn } from '../../lib/utils';
-import { Button } from '../ui/Button';
-import { GradientText } from '../ui/GradientText';
-import { CosmicBackground } from '../ui/CosmicBackground';
+  Sparkles, Menu, X, ArrowRight, Star, Users, Zap, Twitter, Instagram, Linkedin, Youtube} from 'lucide-react';
+import { cn} from '../../lib/utils';
+import { Button} from '../ui/Button';
+import { GradientText} from '../ui/GradientText';
+import { CosmicBackground} from '../ui/CosmicBackground';
 
 interface MarketingLayoutProps {
   children: ReactNode;
@@ -56,7 +45,7 @@ function MarketingNav() {
   const [scrolled, setScrolled] = useState(false);
 
   // Handle scroll effect
-  useEffect(() => {
+  useEffect_(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
@@ -211,8 +200,7 @@ function MarketingFooter() {
     { icon: Youtube, href: 'https://youtube.com/@mustbeviral', label: 'YouTube' }
   ];
 
-  return (
-    <footer className="bg-slate-900 text-white relative overflow-hidden">
+  return (<footer className="bg-slate-900 text-white relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <CosmicBackground variant="minimal" density="low" />
@@ -236,7 +224,7 @@ function MarketingFooter() {
 
             <p className="text-slate-400 mb-6 text-sm leading-relaxed">
               The AI-powered platform that turns every post into a viral moment.
-              Join 50,000+ creators making content that matters.
+              Join 50, _000+ creators making content that matters.
             </p>
 
             {/* Social Links */}
@@ -321,7 +309,7 @@ function MarketingFooter() {
 function FloatingCTA() {
   const [visible, setVisible] = useState(false);
 
-  useEffect(() => {
+  useEffect_(() => {
     const handleScroll = () => {
       setVisible(window.scrollY > 800);
     };
@@ -330,7 +318,9 @@ function FloatingCTA() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  if (!visible) return null;
+  if (!visible) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-40">
@@ -354,11 +344,8 @@ function FloatingCTA() {
 /**
  * Main Marketing Layout Component
  */
-export function MarketingLayout({
-  children,
-  className,
-  backgroundVariant = 'gradient',
-  showFloatingCTA = true
+export function MarketingLayout(_{
+  children, className, backgroundVariant = 'gradient', showFloatingCTA = true
 }: MarketingLayoutProps) {
   const backgroundClasses = {
     cosmic: 'bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900',

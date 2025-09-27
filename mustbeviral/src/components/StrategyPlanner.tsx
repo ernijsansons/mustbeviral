@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Target, Lightbulb, TrendingUp, DollarSign, Clock, CheckCircle, AlertCircle, Users } from 'lucide-react';
+import { Target, Lightbulb, TrendingUp, DollarSign, Clock, CheckCircle, AlertCircle, Users} from 'lucide-react';
 
 interface StrategyTemplate {
   id: string;
@@ -52,7 +52,6 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
     loadTemplates();
   }, []);
 
-  const loadTemplates = async () => {
     console.log('LOG: COMPONENT-STRATEGY-3 - Loading strategy templates');
     
     try {
@@ -73,8 +72,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
     setStrategyRequest(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleChannelToggle = (channel: string) => {
-    const currentChannels = strategyRequest.existing_channels || [];
+    const currentChannels = strategyRequest.existing_channels ?? [];
     const updatedChannels = currentChannels.includes(channel)
       ? currentChannels.filter(c => c !== channel)
       : [...currentChannels, channel];
@@ -205,7 +203,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
               </label>
               <input
                 type="text"
-                value={strategyRequest.brand_name || ''}
+                value={strategyRequest.brand_name ?? ''}
                 onChange={(e) => handleInputChange('brand_name', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="Enter your brand name"
@@ -217,7 +215,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
                 Industry
               </label>
               <select
-                value={strategyRequest.industry || ''}
+                value={strategyRequest.industry ?? ''}
                 onChange={(e) => handleInputChange('industry', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
@@ -238,7 +236,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
             </label>
             <input
               type="text"
-              value={strategyRequest.target_audience || ''}
+              value={strategyRequest.target_audience ?? ''}
               onChange={(e) => handleInputChange('target_audience', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="e.g., Young professionals aged 25-35"
@@ -248,8 +246,8 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
           <div className="flex justify-end">
             <button
               onClick={nextStep}
-              disabled={!strategyRequest.brand_name || !strategyRequest.industry}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!strategyRequest.brand_name  ?? !strategyRequest.industry}
+              className = "px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>
@@ -276,7 +274,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
                 <div
                   key={goal.id}
                   className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
-                    strategyRequest.primary_goal === goal.id
+                    strategyRequest.primarygoal === goal.id
                       ? 'border-indigo-500 bg-indigo-50'
                       : 'border-gray-200 hover:border-indigo-300'
                   }`}
@@ -306,7 +304,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
                   key={budget.id}
                   onClick={() => handleInputChange('budget_range', budget.range)}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    strategyRequest.budget_range === budget.range
+                    strategyRequest.budgetrange === budget.range
                       ? getBudgetColor(budget.range)
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
@@ -326,7 +324,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
             </button>
             <button
               onClick={nextStep}
-              disabled={!strategyRequest.primary_goal || !strategyRequest.budget_range}
+                disabled={!strategyRequest.primary_goal  ?? !strategyRequest.budgetrange}
               className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
             >
               Analyze
@@ -353,7 +351,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
                     <CheckCircle className="w-5 h-5 text-green-600" />
                     <h4 className="font-medium text-green-900">Feasibility</h4>
                   </div>
-                  <p className="text-2xl font-bold text-green-600">{analysis.feasibility_score}%</p>
+                  <p className="text-2xl font-bold text-green-600">{analysis.feasibilityscore}%</p>
                 </div>
                 
                 <div className="bg-blue-50 p-4 rounded-lg">
@@ -361,7 +359,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
                     <Clock className="w-5 h-5 text-blue-600" />
                     <h4 className="font-medium text-blue-900">Timeline</h4>
                   </div>
-                  <p className="text-lg font-semibold text-blue-600">{analysis.estimated_timeline}</p>
+                  <p className="text-lg font-semibold text-blue-600">{analysis.estimatedtimeline}</p>
                 </div>
                 
                 <div className="bg-purple-50 p-4 rounded-lg">
@@ -400,7 +398,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
             </button>
             <button
               onClick={generateStrategy}
-              disabled={loading || !analysis}
+              disabled={loading ?? !analysis}
               className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
             >
               Generate Strategy
@@ -417,7 +415,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
           <div className="grid md:grid-cols-3 gap-4 mb-6">
             <div className="bg-indigo-50 p-4 rounded-lg">
               <h4 className="font-medium text-indigo-900 mb-1">Success Probability</h4>
-              <p className="text-2xl font-bold text-indigo-600">{generatedStrategy.success_probability}%</p>
+              <p className="text-2xl font-bold text-indigo-600">{generatedStrategy.successprobability}%</p>
             </div>
             
             <div className="bg-green-50 p-4 rounded-lg">
@@ -444,10 +442,10 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
                     </div>
                     <div className="flex-1">
                       <h5 className="font-medium text-gray-900 mb-1">{step.title}</h5>
-                      <p className="text-sm text-gray-600 mb-2">{step.personalized_content}</p>
+                      <p className="text-sm text-gray-600 mb-2">{step.personalizedcontent}</p>
                       <div className="flex items-center text-xs text-gray-500">
                         <Clock className="w-3 h-3 mr-1" />
-                        {step.estimated_duration}
+                        {step.estimatedduration}
                       </div>
                     </div>
                   </div>

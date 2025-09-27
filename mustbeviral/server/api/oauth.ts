@@ -273,7 +273,7 @@ router.get('/twitter/callback', async (req, res) => {
     const profileData = await profileResponse.json();
     const profile = profileData.data;
     
-    if (!profile || !profile.username) {
+    if (!profile?.username) {
       console.error('LOG: OAUTH-TWITTER-CALLBACK-ERROR-3 - No profile data');
       return res.redirect('/onboard?error=oauth_failed');
     }

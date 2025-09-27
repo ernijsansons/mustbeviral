@@ -58,7 +58,7 @@ export class RevenueService {
     console.log('LOG: REVENUE-RECORD-1 - Recording commission for user:', userId, 'Amount:', campaignAmount);
     
     try {
-      const commissionRate = customRate || this.defaultCommissionRate;
+      const commissionRate = customRate ?? this.defaultCommissionRate;
       const commissionAmount = campaignAmount * commissionRate;
       
       const transaction: CommissionTransaction = {
@@ -92,21 +92,21 @@ export class RevenueService {
       // In production, this would query commission_transactions table
       const transactions = await this.getUserTransactions(userId);
       
-      const totalEarned = transactions.reduce((sum, t) => sum + t.commission_amount, 0);
+      const totalEarned = transactions.reduce((sum, t) => sum + t.commissionamount, 0);
       const pendingAmount = transactions
         .filter(t => t.status === 'pending')
-        .reduce((sum, t) => sum + t.commission_amount, 0);
+        .reduce((sum, t) => sum + t.commissionamount, 0);
       const completedAmount = transactions
         .filter(t => t.status === 'completed')
-        .reduce((sum, t) => sum + t.commission_amount, 0);
+        .reduce((sum, t) => sum + t.commissionamount, 0);
       
       const avgRate = transactions.length > 0 
-        ? transactions.reduce((sum, t) => sum + t.commission_rate, 0) / transactions.length
+        ? transactions.reduce((sum, t) => sum + t.commissionrate, 0) / transactions.length
         : this.defaultCommissionRate;
 
       const lastPayout = transactions
         .filter(t => t.status === 'completed')
-        .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0];
+        .sort((a, b) => new Date(b.updatedat).getTime() - new Date(a.updatedat).getTime())[0];
 
       const overview: EarningsOverview = {
         user_id: userId,
@@ -115,7 +115,7 @@ export class RevenueService {
         completed_amount: completedAmount,
         total_transactions: transactions.length,
         avg_commission_rate: avgRate,
-        last_payout: lastPayout?.updated_at || null,
+        last_payout: lastPayout?.updated_at ?? null,
         next_payout_eligible: pendingAmount >= this.minimumPayoutAmount
       };
 
@@ -131,7 +131,7 @@ export class RevenueService {
     console.log('LOG: REVENUE-METRICS-1 - Getting revenue metrics');
     
     try {
-      // Mock data for now (in production, would aggregate from commission_transactions)
+      // Mock data for now (in production, would aggregate from commissiontransactions)
       const mockMetrics: RevenueMetrics = {
         total_revenue: 125000,
         total_commissions_paid: 18750,
@@ -163,9 +163,9 @@ export class RevenueService {
       const transaction = await this.getTransaction(transactionId);
       if (transaction) {
         transaction.status = status;
-        transaction.updated_at = new Date().toISOString();
+        transaction.updatedat = new Date().toISOString();
         if (stripeTransferId) {
-          transaction.stripe_transfer_id = stripeTransferId;
+          transaction.stripetransferid = stripeTransferId;
         }
         
         await this.saveTransaction(transaction);
@@ -178,7 +178,7 @@ export class RevenueService {
   }
 
   calculateCommission(amount: number, rate?: number): number {
-    const commissionRate = rate || this.defaultCommissionRate;
+    const commissionRate = rate ?? this.defaultCommissionRate;
     return amount * commissionRate;
   }
 
@@ -240,7 +240,7 @@ export class RevenueService {
       // In production, this would use DatabaseService to insert/update commission_transactions
       // For now, store in memory for demo
       if (typeof global !== 'undefined') {
-        global.commissionTransactions = global.commissionTransactions || new Map();
+        global.commissionTransactions = global.commissionTransactions ?? new Map();
         global.commissionTransactions.set(transaction.id, transaction);
       }
       

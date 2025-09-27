@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../../lib/utils';
+import { motion, AnimatePresence} from 'framer-motion';
+import { cn} from '../../lib/utils';
 
 interface DraftEditorProps {
   initialContent?: string;
@@ -25,11 +25,8 @@ interface ToolbarButton {
   pulse?: boolean;
 }
 
-export function DraftEditor({
-  initialContent = '',
-  onSave,
-  onPublish,
-  className
+export function DraftEditor(_{
+  initialContent = '', onSave, onPublish, className
 }: DraftEditorProps) {
   const [content, setContent] = useState(initialContent);
   const [activeTools, setActiveTools] = useState<Set<string>>(new Set());
@@ -66,29 +63,28 @@ export function DraftEditor({
     { text: "Add personal story for authenticity 💖", score: '+18' }
   ];
 
-  useEffect(() => {
+  useEffect_(() => {
     analyzeContent(content);
   }, [content]);
 
-  const analyzeContent = (text: string) => {
     const words = text.trim().split(/\s+/).filter(w => w.length > 0);
     const wordCount = words.length;
     const readingTime = Math.ceil(wordCount / 200);
 
-    const hashtags = text.match(/#\w+/g) || [];
-    const mentions = text.match(/@\w+/g) || [];
+    const hashtags = text.match(/#\w+/g)  ?? [];
+    const mentions = text.match(/@\w+/g)  ?? [];
 
     // Calculate viral score based on various factors
     let score = 50; // Base score
-    if (hashtags.length > 0) score += Math.min(hashtags.length * 5, 20);
-    if (mentions.length > 0) score += Math.min(mentions.length * 3, 15);
-    if (text.includes('?')) score += 5; // Questions engage
-    if (text.includes('!')) score += 3; // Excitement
-    if (wordCount > 50 && wordCount < 150) score += 10; // Optimal length
+    if (hashtags.length > 0) {score += Math.min(hashtags.length * 5, 20);}
+    if (mentions.length > 0) {score += Math.min(mentions.length * 3, 15);}
+    if (text.includes('?')) {score += 5;} // Questions engage
+    if (text.includes('!')) {score += 3;} // Excitement
+    if (wordCount > 50 && wordCount < 150) {score += 10;} // Optimal length
 
     // Check for emoji usage
-    const emojiCount = (text.match(/[\u{1F600}-\u{1F6FF}]/gu) || []).length;
-    if (emojiCount > 0) score += Math.min(emojiCount * 2, 10);
+    const emojiCount = (text.match(/[\u{1F600}-\u{1F6FF}]/gu)  ?? []).length;
+    if (emojiCount > 0) {score += Math.min(emojiCount * 2, 10);}
 
     setViralScore(Math.min(score, 100));
     setMetadata({

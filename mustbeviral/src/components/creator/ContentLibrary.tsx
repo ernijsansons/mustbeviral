@@ -6,29 +6,12 @@
  * of viral moments. Each card glows, scales, and reveals insights on hover.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect} from 'react';
 import {
-  Image,
-  Video,
-  FileText,
-  Heart,
-  Eye,
-  Share2,
-  TrendingUp,
-  Calendar,
-  MoreVertical,
-  Plus,
-  Filter,
-  Search,
-  Grid,
-  List,
-  Sparkles,
-  Zap,
-  Star
-} from 'lucide-react';
-import { cn } from '../../lib/utils';
-import { Button } from '../ui/Button';
-import { GradientText } from '../ui/GradientText';
+  Image, Video, FileText, Heart, Eye, Share2, TrendingUp, Calendar, MoreVertical, Plus, Filter, Search, Grid, List, Sparkles, Zap, Star} from 'lucide-react';
+import { cn} from '../../lib/utils';
+import { Button} from '../ui/Button';
+import { GradientText} from '../ui/GradientText';
 
 interface ContentItem {
   id: string;
@@ -104,14 +87,18 @@ function StatusBadge({ status }: { status: string }) {
 /**
  * Content card with hover preview
  */
-function ContentCard({ content, viewMode }: { content: ContentItem; viewMode: 'grid' | 'list' }) {
+function ContentCard(_{ content, viewMode }: { content: ContentItem; viewMode: 'grid' | 'list' }) {
   const [isHovered, setIsHovered] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
   // Format numbers for display
   const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`;
+  }
+    if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}K`;
+  }
     return num.toString();
   };
 
@@ -337,7 +324,7 @@ export function ContentLibrary() {
   const [contents, setContents] = useState<ContentItem[]>([]);
 
   // Generate mock data
-  useEffect(() => {
+  useEffect_(() => {
     const mockContents: ContentItem[] = Array.from({ length: 12 }, (_, i) => ({
       id: `content-${i}`,
       title: `Viral Content Piece #${i + 1}`,

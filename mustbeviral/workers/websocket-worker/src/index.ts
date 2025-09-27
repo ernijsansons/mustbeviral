@@ -45,9 +45,8 @@ export default {
     const rateLimit = new RateLimitMiddleware(env);
 
     // Start request tracking
-    const requestId = crypto.randomUUID();
     const startTime = Date.now();
-    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const clientIP = request.headers.get('CF-Connecting-IP')  ?? 'unknown';
 
     logger.info('WebSocket request received', { _requestId,
       method: request.method,
@@ -84,28 +83,28 @@ export default {
       router.get('/metrics', () => metrics.export());
 
       // WebSocket connection routes
-      router.get('/ws/room/:roomId', async (req, _params) => {
+      router.get('/ws/room/:roomId', async (req, params) => {
         return this.handleRoomConnection(req, params.roomId, env, logger);
       });
 
-      router.get('/ws/collaborate/:contentId', async (req, _params) => {
+      router.get('/ws/collaborate/:contentId', async (req, params) => {
         return this.handleCollaborationConnection(req, params.contentId, env, logger);
       });
 
-      router.get('/ws/notifications/:userId', async (req, _params) => {
+      router.get('/ws/notifications/:userId', async (req, params) => {
         return this.handleNotificationConnection(req, params.userId, env, logger, auth);
       });
 
       // Room management routes
-      router.get('/api/rooms/:roomId/info', async (req, _params) => {
+      router.get('/api/rooms/:roomId/info', async (req, params) => {
         return this.getRoomInfo(params.roomId, env);
       });
 
-      router.post('/api/rooms/:roomId/message', async (req, _params) => {
+      router.post('/api/rooms/:roomId/message', async (req, params) => {
         return this.sendRoomMessage(req, params.roomId, env);
       });
 
-      router.post('/api/rooms/:roomId/kick', async (req, _params) => {
+      router.post('/api/rooms/:roomId/kick', async (req, params) => {
         return this.kickUserFromRoom(req, params.roomId, env);
       });
 
@@ -206,7 +205,7 @@ export default {
     try {
       // Authenticate user for notifications
       const authResult = await auth.authenticate(request);
-      if (!authResult.valid || authResult.user.id !== userId) {
+      if (!authResult.valid  ?? authResult.user.id !== userId) {
         return new Response('Unauthorized', { status: 401 });
       }
 

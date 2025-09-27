@@ -3,7 +3,7 @@
  * Manages environment variables and configuration settings
  */
 
-import { secretManager } from './secrets';
+import { secretManager} from './secrets';
 
 export type Environment = 'development' | 'staging' | 'production';
 
@@ -47,7 +47,7 @@ export class EnvironmentManager {
   }
 
   static configure(env: Record<string, string | undefined>): void {
-    const environment = (env.ENVIRONMENT || 'development') as Environment;
+    const environment = (env.ENVIRONMENT ?? 'development') as Environment;
 
     this.config = { environment,
       apiUrl: this.getApiUrl(environment, env),
@@ -72,8 +72,8 @@ export class EnvironmentManager {
         sessionTimeoutMs: 3600000 // 1 hour
       },
       cloudflare: {
-        accountId: env.CLOUDFLARE_ACCOUNT_ID,
-        zoneId: env.CLOUDFLARE_ZONE_ID
+        accountId: env.CLOUDFLAREACCOUNTID,
+        zoneId: env.CLOUDFLAREZONEID
       }
     };
   }
@@ -85,12 +85,12 @@ export class EnvironmentManager {
       case 'staging':
         return 'https://staging-api.mustbeviral.com';
       case 'development':
-        return env.API_URL || 'http://localhost:8787';
+        return env.API_URL ?? 'http://localhost:8787';
     }
   }
 
   private static getAllowedOrigins(environment: Environment, env: Record<string, string | undefined>): string[] {
-    if (env.ALLOWED_ORIGINS) {
+    if (env.ALLOWEDORIGINS) {
       return env.ALLOWED_ORIGINS.split(',').map((o: string) => o.trim());
     }
 

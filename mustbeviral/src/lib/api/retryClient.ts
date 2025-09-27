@@ -132,7 +132,7 @@ export class RetryClient {
   private config: RetryConfig;
   private circuitBreakers: Map<string, CircuitBreaker> = new Map();
   private requestMetrics: RequestMetrics[] = [];
-  private readonly MAX_METRICS = 1000;
+  private readonly MAXMETRICS = 1000;
 
   constructor(config?: Partial<RetryConfig>) {
     this.config = {
@@ -167,7 +167,7 @@ export class RetryClient {
     const attempts: RetryAttempt[] = [];
 
     // Get or create circuit breaker for this endpoint
-    const circuitBreakerKey = this.getCircuitBreakerKey(url, options.method || 'GET');
+    const circuitBreakerKey = this.getCircuitBreakerKey(url, options.method ?? 'GET');
     let circuitBreaker: CircuitBreaker | undefined;
 
     if (finalConfig.circuitBreakerConfig) {
@@ -184,7 +184,7 @@ export class RetryClient {
       const attemptStart = Date.now();
 
       try {
-        console.log(`LOG: RETRY-CLIENT-1 - Attempt ${attempt + 1}/${finalConfig.maxRetries + 1} for ${options.method || 'GET'} ${url}`);
+        console.log(`LOG: RETRY-CLIENT-1 - Attempt ${attempt + 1}/${finalConfig.maxRetries + 1} for ${options.method ?? 'GET'} ${url}`);
 
         let result: T;
 
@@ -203,7 +203,7 @@ export class RetryClient {
 
         // Record metrics
         this.recordMetrics({ url,
-          method: options.method || 'GET',
+          method: options.method ?? 'GET',
           attempts,
           totalDuration: Date.now() - startTime,
           success: true,
@@ -232,7 +232,7 @@ export class RetryClient {
           timestamp: attemptStart
         });
 
-        if (isLastAttempt || !isRetryable) {
+        if (isLastAttempt ?? !isRetryable) {
           break;
         }
 
@@ -247,15 +247,15 @@ export class RetryClient {
 
     // Record failed metrics
     this.recordMetrics({ url,
-      method: options.method || 'GET',
+      method: options.method ?? 'GET',
       attempts,
       totalDuration: Date.now() - startTime,
       success: false,
       circuitBreakerState: circuitBreaker?.getState()
     });
 
-    console.error(`LOG: RETRY-CLIENT-ERROR-1 - All retry attempts failed for ${options.method || 'GET'} ${url}`);
-    throw lastError || new Error('Request failed after all retry attempts');
+    console.error(`LOG: RETRY-CLIENT-ERROR-1 - All retry attempts failed for ${options.method ?? 'GET'} ${url}`);
+    throw lastError ?? new Error('Request failed after all retry attempts');
   }
 
   /**
@@ -369,8 +369,8 @@ export class RetryClient {
     this.requestMetrics.unshift(metrics);
 
     // Keep only recent metrics
-    if (this.requestMetrics.length > this.MAX_METRICS) {
-      this.requestMetrics = this.requestMetrics.slice(0, this.MAX_METRICS);
+    if (this.requestMetrics.length > this.MAXMETRICS) {
+      this.requestMetrics = this.requestMetrics.slice(0, this.MAXMETRICS);
     }
   }
 

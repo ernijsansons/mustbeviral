@@ -4,9 +4,9 @@
  * Fortune 50-grade database optimization patterns
  */
 
-import { sql } from 'drizzle-orm';
+import { sql} from 'drizzle-orm';
 import type { SQLWrapper } from 'drizzle-orm';
-import { logger } from '../monitoring/logger';
+import { logger} from '../monitoring/logger';
 import type {
   DatabaseEntity,
   UserEntity,
@@ -51,8 +51,8 @@ export class DataLoader<K, V> implements BatchLoader<K, V> {
       cache?: boolean;
     } = {}
   ) {
-    this.maxBatchSize = options.maxBatchSize || 100;
-    this.batchWindow = options.batchWindow || 10; // milliseconds
+    this.maxBatchSize = options.maxBatchSize ?? 100;
+    this.batchWindow = options.batchWindow ?? 10; // milliseconds
     this.cacheEnabled = options.cache !== false;
   }
 
@@ -128,7 +128,7 @@ export class DataLoader<K, V> implements BatchLoader<K, V> {
     this.batch.clear();
     this.batchScheduled = false;
 
-    if (currentBatch.size === 0) return;
+    if (currentBatch.size === 0) {return;}
 
     const keys = Array.from(currentBatch.keys());
 
@@ -247,7 +247,7 @@ export class QueryOptimizer {
         relations.forEach((relation, index) => {
           const relationData = relationResults[index];
           if (relationData) {
-            userData[relation] = relationData[user.id] || [];
+            userData[relation] = relationData[user.id]  ?? [];
           }
         });
         return userData;
@@ -265,7 +265,9 @@ export class QueryOptimizer {
 
     // Check cache
     const cached = this.getFromCache(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+    return cached;
+  }
 
     // Batch query for all posts
     const posts = await db
@@ -316,7 +318,7 @@ export class QueryOptimizer {
         totalViews: sql`SUM(views)`,
         totalLikes: sql`SUM(likes)`,
         totalShares: sql`SUM(shares)`,
-        avgEngagement: sql`AVG(engagement_rate)`,
+        avgEngagement: sql`AVG(engagementrate)`,
       })
       .from(analyticsTable)
       .where(sql`user_id IN (${sql.join(userIds, sql`, `)})`)
@@ -335,12 +337,14 @@ export class QueryOptimizer {
     query: SQLWrapper,
     options: QueryOptions = {}
   ): Promise<any[]> {
-    const cacheKey = options.cacheKey || this.generateCacheKey(query);
+    const cacheKey = options.cacheKey ?? this.generateCacheKey(query);
 
     // Check cache
     if (options.enableCache) {
       const cached = this.getFromCache(cacheKey);
-      if (cached) return cached;
+      if (cached) {
+    return cached;
+  }
     }
 
     // Execute query with batching if needed
@@ -348,7 +352,7 @@ export class QueryOptimizer {
 
     // Cache the result
     if (options.enableCache) {
-      this.setCache(cacheKey, result, options.cacheTTL || 60000);
+      this.setCache(cacheKey, result, options.cacheTTL ?? 60000);
     }
 
     return result;
@@ -385,7 +389,7 @@ export class QueryOptimizer {
    * Preload and warm up cache for common queries
    */
   async warmUpCache(queries: Array<{ key: string; query: () => Promise<any> }>) {
-    const warmUpPromises = queries.map(async ({ key, query }) => {
+    const warmUpPromises = queries.map(async({ key, query }) => {
       try {
         const result = await query();
         this.setCache(key, result, 3600000); // 1 hour
@@ -412,7 +416,9 @@ export class QueryOptimizer {
   private getFromCache(key: string): any | null {
     const cached = this.queryCache.get(key);
 
-    if (!cached) return null;
+    if (!cached) {
+    return null;
+  }
 
     if (cached.expiry < Date.now()) {
       this.queryCache.delete(key);
@@ -491,9 +497,7 @@ export const queryOptimizer = new QueryOptimizer();
 
 // Example usage helpers
 export const createUserLoader = () => {
-  return queryOptimizer.createLoader(
-    'users',
-    async (userIds: string[]) => {
+  return queryOptimizer.createLoader('users', async (userIds: string[]) => {
       // Your actual database query here
       return db
         .select()
@@ -505,9 +509,7 @@ export const createUserLoader = () => {
 };
 
 export const createPostLoader = () => {
-  return queryOptimizer.createLoader(
-    'posts',
-    async (postIds: string[]) => {
+  return queryOptimizer.createLoader('posts', async (postIds: string[]) => {
       return db
         .select()
         .from(posts)

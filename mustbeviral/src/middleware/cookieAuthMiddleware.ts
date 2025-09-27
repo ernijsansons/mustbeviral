@@ -3,7 +3,7 @@
  * Handles secure cookie-based authentication for all protected routes
  */
 
-import { SecureCookieAuth } from '../lib/auth/secureCookieAuth';
+import { SecureCookieAuth} from '../lib/auth/secureCookieAuth';
 import type { Context, Next } from 'hono';
 
 export interface AuthenticatedContext extends Context {
@@ -22,7 +22,7 @@ export async function cookieAuthMiddleware(c: AuthenticatedContext, next: Next) 
   try {
     // Extract cookies from request
     const cookieHeader = c.req.header('Cookie');
-    const { accessToken, refreshToken, csrfToken } = SecureCookieAuth.extractTokenFromCookies(cookieHeader);
+    const { accessToken, refreshToken, csrfToken} = SecureCookieAuth.extractTokenFromCookies(cookieHeader);
 
     // Check CSRF token for state-changing requests
     if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(c.req.method)) {
@@ -59,7 +59,7 @@ export async function cookieAuthMiddleware(c: AuthenticatedContext, next: Next) 
         const isProduction = c.env?.ENVIRONMENT === 'production';
         const cookieOptions = SecureCookieAuth.getCookieOptions(isProduction);
 
-        headers.append('Set-Cookie', `auth_token=${refreshResult.accessToken}; ${Object.entries(cookieOptions).map(([k, v]) => `${k}=${v}`).join('; ')}`);
+        headers.append('Set-Cookie', `authtoken=${refreshResult.accessToken}; ${Object.entries(cookieOptions).map(([k, v]) => `${k}=${v}`).join('; ')}`);
         c.header('Set-Cookie', headers.get('Set-Cookie')!);
 
         // Verify the new token to get user info
@@ -69,9 +69,9 @@ export async function cookieAuthMiddleware(c: AuthenticatedContext, next: Next) 
           // Fetch user details from database if needed
           user = {
             userId: payload.userId,
-            email: payload.email || '',
-            username: payload.username || '',
-            role: payload.role || 'user'
+            email: payload.email ?? '',
+            username: payload.username ?? '',
+            role: payload.role ?? 'user'
           };
         }
       }
@@ -94,7 +94,7 @@ export async function cookieAuthMiddleware(c: AuthenticatedContext, next: Next) 
  */
 export async function requireAuth(c: AuthenticatedContext, next: Next) {
   // Run cookie auth middleware first
-  await cookieAuthMiddleware(c, async () => {
+  await cookieAuthMiddleware(c, async() => {
     // Check if user is authenticated
     if (!c.user) {
       return c.json({ error: 'Authentication required' }, 401);
@@ -109,8 +109,8 @@ export async function requireAuth(c: AuthenticatedContext, next: Next) {
  */
 export function requireRole(...allowedRoles: string[]) {
   return async (c: AuthenticatedContext, next: Next) => {
-    await requireAuth(c, async () => {
-      if (!c.user || !allowedRoles.includes(c.user.role)) {
+    await requireAuth(c, async() => {
+      if (!c.user  ?? !allowedRoles.includes(c.user.role)) {
         return c.json({ error: 'Insufficient permissions' }, 403);
       }
 

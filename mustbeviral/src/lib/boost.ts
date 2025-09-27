@@ -51,7 +51,7 @@ export class VisibilityBoostEngine {
   constructor(apiKey?: string, brandKeywords: string[] = ['Must Be Viral']) {
     console.log('LOG: BOOST-ENGINE-1 - Initializing visibility boost engine');
     
-    this.perplexityApiKey = apiKey || process.env.PERPLEXITY_API_KEY || '';
+    this.perplexityApiKey = apiKey ?? process.env.PERPLEXITY_API_KEY ?? '';
     this.brandKeywords = brandKeywords;
     
     if (!this.perplexityApiKey) {
@@ -63,7 +63,7 @@ export class VisibilityBoostEngine {
   async searchBrandMentions(keywords?: string[]): Promise<BrandMention[]> {
     console.log('LOG: BOOST-SEARCH-1 - Searching for brand mentions');
     
-    const searchKeywords = keywords || this.brandKeywords;
+    const searchKeywords = keywords ?? this.brandKeywords;
     const mentions: BrandMention[] = [];
 
     try {
@@ -136,8 +136,8 @@ export class VisibilityBoostEngine {
     
     try {
       const mentions: BrandMention[] = [];
-      const content = results.choices?.[0]?.message?.content || '';
-      const citations = results.citations || [];
+      const content = results.choices?.[0]?.message?.content ?? '';
+      const citations = results.citations ?? [];
 
       // Extract mentions from content
       const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
@@ -151,8 +151,8 @@ export class VisibilityBoostEngine {
             id: this.generateMentionId(),
             query,
             snippet: sentence,
-            url: citations[i % citations.length]?.url || `https://perplexity.ai/search?q=${encodeURIComponent(query)}`,
-            source: citations[i % citations.length]?.title || 'Perplexity AI',
+            url: citations[i % citations.length]?.url ?? `https://perplexity.ai/search?q=${encodeURIComponent(query)}`,
+            source: citations[i % citations.length]?.title ?? 'Perplexity AI',
             sentiment_score: sentiment.score,
             relevance_score: this.calculateRelevance(sentence, query),
             timestamp: new Date().toISOString()
@@ -182,11 +182,11 @@ export class VisibilityBoostEngine {
       let negativeCount = 0;
       
       positiveWords.forEach(word => {
-        if (lowerText.includes(word)) positiveCount++;
+        if (lowerText.includes(word)) {positiveCount++;}
       });
       
       negativeWords.forEach(word => {
-        if (lowerText.includes(word)) negativeCount++;
+        if (lowerText.includes(word)) {negativeCount++;}
       });
       
       let sentiment: 'positive' | 'negative' | 'neutral' = 'neutral';
@@ -245,7 +245,7 @@ export class VisibilityBoostEngine {
     const negative = mentions.filter(m => m.sentiment_score < -0.1).length;
     const neutral = mentions.length - positive - negative;
     
-    const overallSentiment = mentions.reduce((sum, m) => sum + m.sentiment_score, 0) / mentions.length;
+    const overallSentiment = mentions.reduce((sum, m) => sum + m.sentimentscore, 0) / mentions.length;
     const visibilityScore = Math.min(100, mentions.length * 10);
     
     // Extract trending keywords
@@ -254,7 +254,7 @@ export class VisibilityBoostEngine {
       .map(word => word.toLowerCase().replace(/[^\w]/g, ''));
     
     const keywordCounts = allKeywords.reduce((acc: any, word) => {
-      acc[word] = (acc[word] || 0) + 1;
+      acc[word] = (acc[word]  ?? 0) + 1;
       return acc;
     }, {});
     
@@ -322,7 +322,7 @@ export class VisibilityBoostEngine {
       created_at: new Date().toISOString()
     };
 
-    console.log('LOG: BOOST-SEEDING-2 - Seeding plan created:', plan.seeding_strategy, plan.priority);
+    console.log('LOG: BOOST-SEEDING-2 - Seeding plan created:', plan.seedingstrategy, plan.priority);
     return plan;
   }
 
@@ -365,7 +365,7 @@ export class VisibilityBoostEngine {
   }
 
   private determinePriority(strategy: string, metrics: ReputationMetrics): 'high' | 'medium' | 'low' {
-    if (strategy === 'reputation_repair' && metrics.overall_sentiment < -0.5) {
+    if (strategy = == 'reputation_repair' && metrics.overall_sentiment < -0.5) {
       return 'high';
     }
     if (strategy === 'visibility_boost' && metrics.visibility_score < 20) {
@@ -386,7 +386,7 @@ export class VisibilityBoostEngine {
     };
 
     const totalReach = platforms.reduce((sum, platform) => {
-      return sum + (basePlatformReach[platform as keyof typeof basePlatformReach] || 1000);
+      return sum + (basePlatformReach[platform as keyof typeof basePlatformReach]  ?? 1000);
     }, 0);
 
     const priorityMultiplier = priority === 'high' ? 1.5 : priority === 'medium' ? 1.2 : 1.0;

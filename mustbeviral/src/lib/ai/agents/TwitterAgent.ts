@@ -4,20 +4,8 @@
  * Maximum reasoning capabilities for Twitter content generation and optimization
  */
 
-import { PlatformMetrics,
-  AlgorithmFactors,
-  ViralMechanics,
-  ContentSpecification,
-  ContentOptimization,
-  ContentGenerationRequest,
-  BatchGenerationRequest,
-  AdvancedAnalysis,
-  ReasoningChain,
-  TrendAnalysis,
-  CompetitorInsights,
-  PlatformAgentConfig
-} from './IPlatformAgent';
-import { ALGORITHM_DATABASE } from './AlgorithmData';
+import { PlatformMetrics, AlgorithmFactors, ViralMechanics, ContentSpecification, ContentOptimization, ContentGenerationRequest, BatchGenerationRequest, AdvancedAnalysis, ReasoningChain, TrendAnalysis, CompetitorInsights, PlatformAgentConfig} from './IPlatformAgent';
+import { ALGORITHMDATABASE} from './AlgorithmData';
 
 export class TwitterAgent implements IPlatformAgent {
   readonly platformName = 'Twitter';
@@ -90,8 +78,7 @@ export class TwitterAgent implements IPlatformAgent {
   }
 
   getContentSpecifications(contentType: string): ContentSpecification {
-    const specs = this.algorithmData.contentSpecifications.formats[contentType] ||
-                  this.algorithmData.contentSpecifications.formats.tweet;
+    const specs = this.algorithmData.contentSpecifications.formats[contentType]  ?? this.algorithmData.contentSpecifications.formats.tweet;
 
     return {
       format: contentType,
@@ -105,7 +92,7 @@ export class TwitterAgent implements IPlatformAgent {
     };
   }
 
-  async generateContent(_request: ContentGenerationRequest): Promise<{
+  async generateContent(request: ContentGenerationRequest): Promise<{
     content: string;
     optimization: ContentOptimization;
     analysis: AdvancedAnalysis;
@@ -117,7 +104,7 @@ export class TwitterAgent implements IPlatformAgent {
     };
   }> {
     const startTime = Date.now();
-    const maxTokens = request.maxTokens || this.maxTokenOutput;
+    const maxTokens = request.maxTokens ?? this.maxTokenOutput;
 
     // Advanced reasoning chain for Twitter optimization
     const reasoningChain = await this.buildReasoningChain(request);
@@ -136,7 +123,7 @@ export class TwitterAgent implements IPlatformAgent {
     const optimization = await this.optimizeForAlgorithm(content);
     const analysis = await this.analyzeContent(content);
 
-    return { _content,
+    return { content,
       optimization,
       analysis,
       metadata: {
@@ -160,7 +147,7 @@ export class TwitterAgent implements IPlatformAgent {
     const batchSize = 3;
     for (let i = 0; i < request.requests.length; i += batchSize) {
       const batch = request.requests.slice(i, i + batchSize);
-      const batchPromises = batch.map(async (_req) => {
+      const batchPromises = batch.map(async(req) => {
         const generated = await this.generateContent(req);
 
         let platformVariations: Record<string, string> = {};
@@ -188,7 +175,7 @@ export class TwitterAgent implements IPlatformAgent {
     return results;
   }
 
-  async analyzeContent(_content: string): Promise<AdvancedAnalysis> {
+  async analyzeContent(content: string): Promise<AdvancedAnalysis> {
     const reasoningChain = await this.analyzeContentReasoning(content);
 
     // Calculate platform-specific scores
@@ -200,7 +187,7 @@ export class TwitterAgent implements IPlatformAgent {
       (algorithmAlignment + viralPrediction + engagementForecast) / 3
     );
 
-    return { _platformScore,
+    return { platformScore,
       algorithmAlignment,
       viralPrediction,
       engagementForecast,
@@ -291,7 +278,7 @@ export class TwitterAgent implements IPlatformAgent {
       }
     ];
 
-    return { _currentTrends,
+    return { currentTrends,
       emergingTopics: ['#AIEthics', '#FutureOfWork', '#ClimateAction'],
       decliningTrends: ['#Cryptocurrency', '#NFTs'],
       seasonalPatterns: ['#NewYearGoals', '#TechPredictions2024'],
@@ -299,7 +286,7 @@ export class TwitterAgent implements IPlatformAgent {
     };
   }
 
-  async getCompetitorInsights(_topic: string): Promise<CompetitorInsights> {
+  async getCompetitorInsights(topic: string): Promise<CompetitorInsights> {
     // Simulate competitor analysis
     return {
       topPerformers: [
@@ -343,7 +330,7 @@ export class TwitterAgent implements IPlatformAgent {
       conversionRate: analysis.platformScore * 0.15
     };
 
-    return { _predictedMetrics,
+    return { predictedMetrics,
       confidence: analysis.platformScore / 100,
       timeframe: '24 hours',
       factors: ['algorithm_alignment', 'viral_triggers', 'timing_optimization', 'hashtag_strategy']
@@ -392,7 +379,7 @@ export class TwitterAgent implements IPlatformAgent {
       });
     }
 
-    return { _optimizedContent,
+    return { optimizedContent,
       changes,
       emergencyFixes
     };
@@ -423,7 +410,7 @@ export class TwitterAgent implements IPlatformAgent {
     const twitterHashtags = await this.generateOptimalHashtags(content);
     adaptedContent += ` ${twitterHashtags.slice(0, 3).join(' ')}`;
 
-    return { _adaptedContent,
+    return { adaptedContent,
       adaptationStrategy,
       retainedElements: ['core_message', 'key_insights'],
       modifiedElements: ['length', 'formatting', 'hashtags'],
@@ -493,7 +480,7 @@ export class TwitterAgent implements IPlatformAgent {
     // Create Twitter thread distribution strategy
     const distributionStrategy = await this.createDistributionStrategy(fullContent);
 
-    return { _fullContent,
+    return { fullContent,
       sections,
       executiveSummary,
       keyTakeaways,
@@ -549,7 +536,7 @@ export class TwitterAgent implements IPlatformAgent {
   }> {
     const fallbackContent = await this.generateFallbackContent(request);
 
-    return { _fallbackContent,
+    return { fallbackContent,
       errorAnalysis: `Generation failed: ${error.message}`,
       retryStrategy: 'reduce_token_count_and_retry',
       preventionMeasures: [
@@ -609,7 +596,7 @@ export class TwitterAgent implements IPlatformAgent {
 
   private async buildAdvancedPrompt(request: ContentGenerationRequest, reasoningChain: ReasoningChain[]): Promise<string> {
     const viralTriggers = Object.keys(this.algorithmData.viralMechanics.triggers)
-      .sort((a, _b) => this.algorithmData.viralMechanics.triggers[b] - this.algorithmData.viralMechanics.triggers[a])
+      .sort((a, b) => this.algorithmData.viralMechanics.triggers[b] - this.algorithmData.viralMechanics.triggers[a])
       .slice(0, 3);
 
     return `You are the world's most advanced Twitter content specialist with deep algorithmic knowledge.
@@ -634,7 +621,7 @@ CONTENT SPECIFICATIONS:
 - Include engagement hook within first 50 characters
 
 REASONING CHAIN INSIGHTS:
-${reasoningChain.map((step, _i) => `${i + 1}. ${step.reasoning} (Confidence: ${step.confidence * 100}%)`).join('n')}
+${reasoningChain.map((step, i) => `${i + 1}. ${step.reasoning} (Confidence: ${step.confidence * 100}%)`).join('n')}
 
 ADVANCED OPTIMIZATION REQUIREMENTS:
 1. Create immediate emotional impact in opening words
@@ -666,10 +653,18 @@ Content:`;
   }
 
   private extractContent(result: unknown): string {
-    if (typeof result === 'string') return result.trim();
-    if (result.response) return result.response.trim();
-    if (result.content) return result.content.trim();
-    if (result.text) return result.text.trim();
+    if (typeof result === 'string') {
+    return result.trim();
+  }
+    if (result.response) {
+    return result.response.trim();
+  }
+    if (result.content) {
+    return result.content.trim();
+  }
+    if (result.text) {
+    return result.text.trim();
+  }
     return String(result).trim();
   }
 
@@ -677,9 +672,9 @@ Content:`;
     let score = 50;
 
     // Engagement velocity indicators
-    if (content.includes('?')) score += 15;
-    if (content.toLowerCase().includes('what do you think')) score += 10;
-    if (content.toLowerCase().includes('reply')) score += 12;
+    if (content.includes('?')) {score += 15;}
+    if (content.toLowerCase().includes('what do you think')) {score += 10;}
+    if (content.toLowerCase().includes('reply')) {score += 12;}
 
     // Viral trigger analysis
     const viralTriggers = this.algorithmData.viralMechanics.triggers;
@@ -690,7 +685,7 @@ Content:`;
     }
 
     // Length optimization
-    if (content.length >= 100 && content.length <= 250) score += 10;
+    if (content.length >= 100 && content.length <= 250) {score += 10;}
 
     return Math.min(score, 100);
   }
@@ -706,9 +701,9 @@ Content:`;
     score += emotionalCount * 8;
 
     // Shareability factors
-    if (content.includes('RT if') || content.includes('Share if')) score += 15;
-    if (content.includes('@')) score += 10; // Mentions increase visibility
-    if (content.match(/#w+/g)?.length >= 1) score += 12; // Hashtag usage
+    if (content.includes('RT if')  ?? content.includes('Share if')) {score += 15;}
+    if (content.includes('@')) {score += 10;} // Mentions increase visibility
+    if (content.match(/#w+/g)?.length >= 1) {score += 12;} // Hashtag usage
 
     // Controversy or curiosity
     const controversialWords = ['why', 'truth', 'secret', 'exposed', 'revealed'];
@@ -724,7 +719,7 @@ Content:`;
     let score = 45;
 
     // Question engagement
-    const questionCount = (content.match(/\?/g) || []).length;
+    const questionCount = (content.match(/\?/g)  ?? []).length;
     score += questionCount * 8;
 
     // Call to action
@@ -735,7 +730,7 @@ Content:`;
     score += ctaCount * 6;
 
     // Personal connection
-    if (content.toLowerCase().includes('you') || content.toLowerCase().includes('your')) {
+    if (content.toLowerCase().includes('you')  ?? content.toLowerCase().includes('your')) {
       score += 10;
     }
 
@@ -758,8 +753,8 @@ Content:`;
       suggestions.push('Expand content slightly for better algorithm performance (100-250 chars optimal)');
     }
 
-    const hashtagCount = (content.match(/#w+/g) || []).length;
-    if (hashtagCount === 0) {
+    const hashtagCount = (content.match(/#w+/g)  ?? []).length;
+    if (hashtagCount = == 0) {
       suggestions.push('Add 1-2 relevant hashtags for discoverability');
     } else if (hashtagCount > 3) {
       suggestions.push('Reduce hashtags to 2-3 for optimal performance');
@@ -779,7 +774,7 @@ Content:`;
       risks.push('Content exceeds Twitter character limit');
     }
 
-    if ((content.match(/#w+/g) || []).length > 5) {
+    if ((content.match(/#w+/g)  ?? []).length > 5) {
       risks.push('Too many hashtags may be flagged as spam');
     }
 
@@ -815,7 +810,7 @@ Content:`;
 
   private extractOptimalMentions(content: string): string[] {
     // Extract and optimize mentions
-    const mentions = content.match(/@w+/g) || [];
+    const mentions = content.match(/@w+/g)  ?? [];
     return mentions.slice(0, 2); // Limit to 2 mentions for optimal performance
   }
 
@@ -866,24 +861,24 @@ Content:`;
       thread_format: ['🧵', 'thread', '1/']
     };
 
-    const keywords = triggerMappings[trigger] || [trigger];
-    return keywords.some(keyword => content.toLowerCase().includes(keyword.toLowerCase()));
+    const keywords = triggerMappings[trigger]  ?? [trigger];
+    return keywords.some(keyword = > content.toLowerCase().includes(keyword.toLowerCase()));
   }
 
   private predictEngagementSignals(content: string): number {
     let score = 0;
 
     // Predict likes
-    if (content.match(/[\u{1F600}-\u{1F64F}]/gu)) score += 5; // Emojis increase likes
+    if (content.match(/[\u{1F600}-\u{1F64F}]/gu)) {score += 5;} // Emojis increase likes
 
     // Predict retweets
-    if (content.includes('RT if') || content.includes('Share if')) score += 8;
+    if (content.includes('RT if')  ?? content.includes('Share if')) {score += 8;}
 
     // Predict replies
-    if (content.includes('?')) score += 10;
+    if (content.includes('?')) {score += 10;}
 
     // Predict clicks
-    if (content.includes('http') || content.includes('link')) score += 6;
+    if (content.includes('http')  ?? content.includes('link')) {score += 6;}
 
     return score;
   }
@@ -956,14 +951,14 @@ Content:`;
       if ((currentTweet + sentence).length <= maxTweetLength) {
         currentTweet += sentence + '. ';
       } else {
-        if (currentTweet) tweets.push(currentTweet.trim());
+        if (currentTweet) {tweets.push(currentTweet.trim());}
         currentTweet = sentence + '. ';
       }
     }
 
-    if (currentTweet) tweets.push(currentTweet.trim());
+    if (currentTweet) {tweets.push(currentTweet.trim());}
 
-    return tweets.map((tweet, _index) => `${index + 1}/${tweets.length} ${tweet}`).join('\n\n');
+    return tweets.map((tweet, index) => `${index + 1}/${tweets.length} ${tweet}`).join('\n\n');
   }
 
   private async generateEngagementHook(content: string): Promise<string> {
@@ -997,7 +992,7 @@ Content:`;
           riskLevel: 2
         };
       default:
-        return { _content,
+        return { content,
           hypothesis: 'Control variation',
           expectedOutcome: 'Baseline performance',
           riskLevel: 1

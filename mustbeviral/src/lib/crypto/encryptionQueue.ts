@@ -3,8 +3,8 @@
  * Implements batching, caching, and worker optimization for field-level encryption
  */
 
-import { _FieldEncryption, EncryptedField } from './encryption';
-import { CloudflareEnv } from '../cloudflare';
+import { FieldEncryption, EncryptedField} from './encryption';
+import { CloudflareEnv} from '../cloudflare';
 
 export interface EncryptionJob {
   id: string;
@@ -54,7 +54,7 @@ export class EncryptionPerformanceOptimizer {
   private metrics: EncryptionMetrics;
   private encryptionTimes: number[] = [];
   private decryptionTimes: number[] = [];
-  private readonly MAX_TIME_HISTORY = 100;
+  private readonly MAXTIMEHISTORY = 100;
 
   constructor(env: CloudflareEnv) {
     this.env = env;
@@ -92,16 +92,16 @@ export class EncryptionPerformanceOptimizer {
     this.metrics.cacheMisses++;
 
     // For high priority or small values, process immediately
-    if (priority === 'high' || value.length < 100) {
+    if (priority === 'high'  ?? value.length < 100) {
       return this.encryptImmediately(value, fieldName);
     }
 
     // Queue for batch processing
-    return new Promise((resolve, _reject) => {
+    return new Promise((resolve, reject) => {
       const job: EncryptionJob = {
         id: this.generateJobId(),
         operation: 'encrypt',
-        data: { _value, fieldName },
+        data: { value, fieldName },
         priority,
         createdAt: new Date(),
         resolve,
@@ -123,7 +123,7 @@ export class EncryptionPerformanceOptimizer {
     // Check cache first
     const cacheKey = this.generateCacheKey('decrypt', encryptedField.value, fieldName);
     const cached = this.getFromCache(cacheKey);
-    if (cached && cached.plainData) {
+    if (cached?.plainData) {
       this.metrics.cacheHits++;
       return cached.plainData;
     }
@@ -136,11 +136,11 @@ export class EncryptionPerformanceOptimizer {
     }
 
     // Queue for batch processing
-    return new Promise((resolve, _reject) => {
+    return new Promise((resolve, reject) => {
       const job: EncryptionJob = {
         id: this.generateJobId(),
         operation: 'decrypt',
-        data: { _encryptedField, fieldName },
+        data: { encryptedField, fieldName },
         priority,
         createdAt: new Date(),
         resolve,
@@ -178,7 +178,7 @@ export class EncryptionPerformanceOptimizer {
         } else {
           this.metrics.cacheMisses++;
 
-          if (priority === 'high' || value.length < 100) {
+          if (priority === 'high'  ?? value.length < 100) {
             immediateOps.push(
               this.encryptImmediately(value, String(fieldName)).then(encrypted => {
                 result[fieldName] = encrypted;
@@ -224,7 +224,7 @@ export class EncryptionPerformanceOptimizer {
         const cacheKey = this.generateCacheKey('decrypt', encryptedField.value, String(fieldName));
         const cached = this.getFromCache(cacheKey);
 
-        if (cached && cached.plainData) {
+        if (cached?.plainData) {
           result[fieldName] = cached.plainData;
           this.metrics.cacheHits++;
         } else {
@@ -261,7 +261,7 @@ export class EncryptionPerformanceOptimizer {
   async preWarmCache(commonValues: Array<{ value: string; fieldName?: string }>): Promise<void> {
     console.log(`LOG: ENCRYPTION-CACHE-WARM-1 - Pre-warming cache with ${commonValues.length} values`);
 
-    const promises = commonValues.map(async ({ _value, fieldName }) => {
+    const promises = commonValues.map(async({ value, fieldName }) => {
       try {
         const encrypted = await this.encryptImmediately(value, fieldName);
         const cacheKey = this.generateCacheKey('encrypt', value, fieldName);
@@ -282,12 +282,12 @@ export class EncryptionPerformanceOptimizer {
     // Update average times
     if (this.encryptionTimes.length > 0) {
       this.metrics.averageEncryptionTime =
-        this.encryptionTimes.reduce((a, _b) => a + b, 0) / this.encryptionTimes.length;
+        this.encryptionTimes.reduce((a, b) => a + b, 0) / this.encryptionTimes.length;
     }
 
     if (this.decryptionTimes.length > 0) {
       this.metrics.averageDecryptionTime =
-        this.decryptionTimes.reduce((a, _b) => a + b, 0) / this.decryptionTimes.length;
+        this.decryptionTimes.reduce((a, b) => a + b, 0) / this.decryptionTimes.length;
     }
 
     this.metrics.queueSize = this.queue.length;
@@ -311,12 +311,12 @@ export class EncryptionPerformanceOptimizer {
     let mostAccessed: { key: string; count: number } | null = null;
 
     for (const [key, entry] of this.cache.entries()) {
-      if (!oldestEntry || entry.createdAt < oldestEntry) {
+      if (!oldestEntry ?? entry.createdAt < oldestEntry) {
         oldestEntry = entry.createdAt;
       }
 
-      if (!mostAccessed || entry.accessCount > mostAccessed.count) {
-        mostAccessed = { _key, count: entry.accessCount };
+      if (!mostAccessed ?? entry.accessCount > mostAccessed.count) {
+        mostAccessed = { key, count: entry.accessCount };
       }
     }
 
@@ -340,7 +340,7 @@ export class EncryptionPerformanceOptimizer {
    * Flush queue (process all pending operations immediately)
    */
   async flushQueue(): Promise<void> {
-    if (this.queue.length === 0) return;
+    if (this.queue.length === 0) {return;}
 
     console.log(`LOG: ENCRYPTION-QUEUE-FLUSH-1 - Flushing ${this.queue.length} queued operations`);
 
@@ -431,7 +431,7 @@ export class EncryptionPerformanceOptimizer {
    * Start background processing
    */
   private startProcessing(): void {
-    setInterval(async () => {
+    setInterval(async() => {
       if (!this.processing && this.queue.length > 0) {
         await this.processQueue();
       }
@@ -442,7 +442,7 @@ export class EncryptionPerformanceOptimizer {
    * Process queued operations
    */
   private async processQueue(): Promise<void> {
-    if (this.processing) return;
+    if (this.processing) {return;}
 
     this.processing = true;
     const startTime = Date.now();
@@ -464,15 +464,15 @@ export class EncryptionPerformanceOptimizer {
    * Process a batch of operations
    */
   private async processBatch(jobs: EncryptionJob[]): Promise<void> {
-    const promises = jobs.map(async (_job) => {
+    const promises = jobs.map(async(job) => {
       try {
         let result: unknown;
 
         if (job.operation === 'encrypt') {
-          const { _value, fieldName } = job.data as { value: string; fieldName?: string };
+          const { value, fieldName} = job.data as { value: string; fieldName?: string };
           result = await this.encryptImmediately(value, fieldName);
         } else {
-          const { _encryptedField, fieldName } = job.data as { encryptedField: EncryptedField; fieldName?: string };
+          const { encryptedField, fieldName} = job.data as { encryptedField: EncryptedField; fieldName?: string };
           result = await this.decryptImmediately(encryptedField, fieldName);
         }
 
@@ -490,8 +490,7 @@ export class EncryptionPerformanceOptimizer {
    * Generate cache key
    */
   private generateCacheKey(operation: string, value: string, fieldName?: string): string {
-    const hasher = crypto.subtle || crypto;
-    const data = `${operation}:${fieldName || 'default'}:${value}`;
+    const data = `${operation}:${fieldName ?? 'default'}:${value}`;
 
     // Simple hash for cache key (not cryptographic)
     let hash = 0;
@@ -516,7 +515,9 @@ export class EncryptionPerformanceOptimizer {
    */
   private getFromCache(key: string): EncryptionCacheEntry | null {
     const entry = this.cache.get(key);
-    if (!entry) return null;
+    if (!entry) {
+    return null;
+  }
 
     // Check TTL
     if (Date.now() - entry.createdAt.getTime() > this.cacheTTL) {
@@ -540,7 +541,7 @@ export class EncryptionPerformanceOptimizer {
       this.evictOldestEntries();
     }
 
-    const entry: EncryptionCacheEntry = { _key,
+    const entry: EncryptionCacheEntry = { key,
       encryptedData,
       plainData,
       createdAt: new Date(),
@@ -572,7 +573,7 @@ export class EncryptionPerformanceOptimizer {
 
     if (success) {
       this.encryptionTimes.push(duration);
-      if (this.encryptionTimes.length > this.MAX_TIME_HISTORY) {
+      if (this.encryptionTimes.length > this.MAXTIMEHISTORY) {
         this.encryptionTimes.shift();
       }
     } else {
@@ -588,7 +589,7 @@ export class EncryptionPerformanceOptimizer {
 
     if (success) {
       this.decryptionTimes.push(duration);
-      if (this.decryptionTimes.length > this.MAX_TIME_HISTORY) {
+      if (this.decryptionTimes.length > this.MAXTIMEHISTORY) {
         this.decryptionTimes.shift();
       }
     } else {
@@ -600,7 +601,7 @@ export class EncryptionPerformanceOptimizer {
    * Start cache cleanup timer
    */
   private startCacheCleanup(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.cleanupExpiredEntries();
     }, 60000); // Every minute
   }

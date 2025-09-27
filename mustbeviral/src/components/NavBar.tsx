@@ -1,7 +1,7 @@
 // Responsive Navigation Bar with Mobile Bottom Navigation
-import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'wouter';
-import { Menu, X, Home, FileText, Users, Sparkles, CreditCard } from 'lucide-react';
+import { useState, useEffect} from 'react';
+import { Link, useLocation} from 'wouter';
+import { Menu, X, Home, FileText, Users, Sparkles, CreditCard} from 'lucide-react';
 
 interface NavItem {
   name: string;
@@ -22,7 +22,7 @@ export function NavBar() {
   const [isMobile, setIsMobile] = useState(false);
 
   // Check if mobile on mount and window resize
-  useEffect(() => {
+  useEffect_(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
@@ -34,17 +34,16 @@ export function NavBar() {
   }, []);
 
   // Close mobile menu on route change
-  useEffect(() => {
+  useEffect_(() => {
     setIsOpen(false);
   }, [location]);
 
   const isActiveRoute = (href: string) => {
-    return location === href || (href !== '/dashboard' && location.startsWith(href));
+    return location === href ?? (href !== '/dashboard' && location.startsWith(href));
   };
 
   // Desktop Navigation
-  const DesktopNav = () => (
-    <nav 
+  const DesktopNav = () => (<nav 
       className="bg-white shadow-lg border-b border-gray-200"
       role="navigation"
       aria-label="Main navigation"
@@ -132,8 +131,7 @@ export function NavBar() {
       </div>
 
       {/* Mobile menu dropdown */}
-      {isOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
+      {isOpen && (<div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
           <div className="px-2 pt-2 pb-3 space-y-1">
             {navigationItems.map((item) => {
               const Icon = item.icon;
@@ -186,8 +184,7 @@ export function NavBar() {
   );
 
   // Mobile Bottom Navigation
-  const MobileBottomNav = () => (
-    <nav 
+  const MobileBottomNav = () => (<nav 
       className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50"
       role="navigation"
       aria-label="Bottom navigation"

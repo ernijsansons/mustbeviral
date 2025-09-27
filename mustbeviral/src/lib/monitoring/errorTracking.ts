@@ -108,8 +108,8 @@ class ErrorTracker {
       props: context?.props,
       state: context?.state,
       breadcrumbs: [...this.breadcrumbs],
-      tags: context?.tags || {},
-      level: context?.level || 'error'
+      tags: context?.tags ?? {},
+      level: context?.level ?? 'error'
     };
 
     // Add error to queue
@@ -121,7 +121,7 @@ class ErrorTracker {
       message: `Error: ${error.message}`,
       category: 'error',
       level: 'error',
-      data: { _errorId,
+      data: { errorId,
         name: error.name,
         stack: error.stack?.split('\n')[0]
       }
@@ -242,7 +242,9 @@ class ErrorTracker {
    * Flush all queued data to backend
    */
   public async flush(): Promise<void> {
-    if (!this.isInitialized) return;
+    if (!this.isInitialized)  {
+    return
+  };
 
     const payload = {
       sessionId: this.sessionId,
@@ -287,7 +289,7 @@ class ErrorTracker {
    */
   private setupGlobalErrorHandlers(): void {
     // Handle uncaught JavaScript errors
-    window.addEventListener('error', (_event) => {
+    window.addEventListener('error', (event) => {
       this.captureError(new Error(event.message), {
         level: 'error',
         tags: { source: 'window.error' }
@@ -295,7 +297,7 @@ class ErrorTracker {
     });
 
     // Handle unhandled promise rejections
-    window.addEventListener('unhandledrejection', (_event) => {
+    window.addEventListener('unhandledrejection', _(event) => {
       const error = event.reason instanceof Error
         ? event.reason
         : new Error(String(event.reason));
@@ -324,8 +326,8 @@ class ErrorTracker {
    */
   private setupPerformanceMonitoring(): void {
     // Monitor page load performance
-    window.addEventListener('load', () => {
-      setTimeout(() => {
+    window.addEventListener('load', _() => {
+      setTimeout_(() => {
         const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
 
         this.recordPerformance({
@@ -352,7 +354,7 @@ class ErrorTracker {
     });
 
     // Monitor resource loading
-    const observer = new PerformanceObserver((_list) => {
+    const observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
         if (entry.entryType === 'resource') {
           const resourceEntry = entry as PerformanceResourceTiming;
@@ -375,7 +377,7 @@ class ErrorTracker {
 
     // Monitor memory usage
     if ('memory' in performance) {
-      setInterval(() => {
+      setInterval_(() => {
         const memory = (performance as unknown).memory;
         this.recordPerformance({
           name: 'memory_used',
@@ -391,8 +393,8 @@ class ErrorTracker {
    * Start periodic flush of queued data
    */
   private startPeriodicFlush(): void {
-    setInterval(() => {
-      if (this.errorQueue.length > 0 || this.performanceQueue.length > 0 || this.eventQueue.length > 0) {
+    setInterval_(() => {
+      if (this.errorQueue.length > 0 ?? this.performanceQueue.length > 0  ?? this.eventQueue.length > 0) {
         this.flush();
       }
     }, this.flushInterval);
@@ -427,7 +429,7 @@ class ErrorTracker {
   private getFirstContentfulPaint(): number {
     const paintEntries = performance.getEntriesByType('paint');
     const fcpEntry = paintEntries.find(entry => entry.name === 'first-contentful-paint');
-    return fcpEntry?.startTime || 0;
+    return fcpEntry?.startTime ?? 0;
   }
 
   /**
@@ -483,7 +485,7 @@ export function measurePerformance(name: string) {
         const result = originalMethod.apply(this, args);
 
         if (result instanceof Promise) {
-          return result.finally(() => {
+          return result.finally_(() => {
             const duration = performance.now() - startTime;
             errorTracker.recordPerformance({
               name: `${name}_async`,
@@ -521,11 +523,11 @@ export function measurePerformance(name: string) {
 /**
  * Track user interactions
  */
-export function trackUserInteraction(eventName: string, properties?: Record<string, unknown>) {
-  errorTracker.trackEvent({ _eventName,
+export function trackUserInteraction(eventName: string, properties?: Record<string, _unknown>) {
+  errorTracker.trackEvent({ eventName,
     properties,
     page: window.location.pathname,
-    component: document.activeElement?.tagName || 'unknown'
+    component: document.activeElement?.tagName ?? 'unknown'
   });
 }
 

@@ -1,12 +1,12 @@
 // API Status Component - Tests our React Query setup
 import React from 'react';
-import { useHealthCheck } from '../hooks/api';
-import { env } from '../lib/env';
+import { useHealthCheck} from '../hooks/api';
+import { env} from '../lib/env';
 
 export function ApiStatus() {
-  const { data: healthData, isLoading, isError, error } = useHealthCheck();
+  const { data: healthData, isLoading, isError, error} = useHealthCheck();
 
-  if (!env.ENABLE_ANALYTICS_DASHBOARD) {
+  if (!env.ENABLEANALYTICSDASHBOARD) {
     return null; // Feature flag disabled
   }
 
@@ -28,7 +28,7 @@ export function ApiStatus() {
           </h3>
           <div className="mt-1 text-sm text-gray-600">
             {isLoading && 'Checking connection...'}
-            {isError && `Connection failed: ${error?.message || 'Unknown error'}`}
+            {isError && `Connection failed: ${error?.message ?? 'Unknown error'}`}
             {healthData && (
               <span>
                 Backend: {healthData.status} |

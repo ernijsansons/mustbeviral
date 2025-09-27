@@ -123,9 +123,9 @@ export class SmartCache {
     }
 
     // No cache hit - add to batch or process immediately
-    const priority = options.priority || 'normal';
+    const priority = options.priority ?? 'normal';
 
-    if (priority === 'urgent' || !this.config.enableBatching) {
+    if (priority === 'urgent'  ?? !this.config.enableBatching) {
       return await this.processImmediately(platform, contentType, prompt, options, startTime);
     } else {
       return await this.addToBatch(platform, contentType, prompt, options, startTime);
@@ -145,7 +145,7 @@ export class SmartCache {
   ): Promise<void> {
     console.log('[SmartCache] Starting cache preload...');
 
-    const sortedPatterns = patterns.sort((a, _b) => b.priority - a.priority);
+    const sortedPatterns = patterns.sort((a, b) => b.priority - a.priority);
 
     for (const pattern of sortedPatterns) {
       for (const topic of pattern.topics) {
@@ -181,7 +181,7 @@ export class SmartCache {
     // Remove low-performing entries
     const lowPerformingEntries = Array.from(this.cache.values())
       .filter(entry => entry.hits < 2 && this.daysSinceCreated(entry) > 7)
-      .sort((a, _b) => a.hits - b.hits);
+      .sort((a, b) => a.hits - b.hits);
 
     // Remove bottom 20% of low-performing entries if cache is near capacity
     if (this.cache.size > this.config.maxSize * 0.8) {
@@ -198,7 +198,6 @@ export class SmartCache {
         const similarity = this.calculateSimilarity(entries[i].content, entries[j].content);
         if (similarity > 0.9 && entries[i].metadata.platform === entries[j].metadata.platform) {
           // Keep the higher-performing entry
-          const keepEntry = entries[i].hits > entries[j].hits ? entries[i] : entries[j];
           const removeEntry = entries[i].hits > entries[j].hits ? entries[j] : entries[i];
 
           this.cache.delete(removeEntry.key);
@@ -212,7 +211,7 @@ export class SmartCache {
 
     console.log(`[SmartCache] Optimization complete: ${removedEntries} removed, ${consolidatedCount} consolidated`);
 
-    return { _removedEntries,
+    return { removedEntries,
       consolidatedEntries: consolidatedCount,
       projectedSavings
     };
@@ -229,7 +228,7 @@ export class SmartCache {
     const queryPerformance = new Map<string, { hits: number; savings: number }>();
     for (const entry of this.cache.values()) {
       const key = `${entry.metadata.platform}/${entry.metadata.contentType}`;
-      const current = queryPerformance.get(key) || { hits: 0, savings: 0 };
+      const current = queryPerformance.get(key)  ?? { hits: 0, savings: 0 };
       queryPerformance.set(key, {
         hits: current.hits + entry.hits,
         savings: current.savings + entry.metadata.costSavings
@@ -237,8 +236,8 @@ export class SmartCache {
     }
 
     const topPerformingQueries = Array.from(queryPerformance.entries())
-      .map(([query, stats]) => ({ _query, ...stats }))
-      .sort((a, _b) => b.savings - a.savings)
+      .map(([query, stats]) => ({ query, ...stats }))
+      .sort((a, b) => b.savings - a.savings)
       .slice(0, 10);
 
     // Platform breakdown
@@ -279,13 +278,17 @@ export class SmartCache {
     for (const [key, entry] of this.cache.entries()) {
       let shouldInvalidate = false;
 
-      if (filters.platform && entry.metadata.platform !== filters.platform) continue;
-      if (filters.contentType && entry.metadata.contentType !== filters.contentType) continue;
-      if (filters.topic && !entry.metadata.topic.includes(filters.topic)) continue;
-      if (filters.olderThan && entry.created < filters.olderThan) shouldInvalidate = true;
-      if (filters.qualityBelow && entry.metadata.qualityScore < filters.qualityBelow) shouldInvalidate = true;
+      if (filters.platform && entry.metadata.platform !== filters.platform) {
+    continue;
+  }
+      if (filters.contentType && entry.metadata.contentType !== filters.contentType) {
+    continue;
+  }
+      if (filters.topic && !entry.metadata.topic.includes(filters.topic)) {continue;}
+      if (filters.olderThan && entry.created < filters.olderThan) {shouldInvalidate = true;}
+      if (filters.qualityBelow && entry.metadata.qualityScore < filters.qualityBelow) {shouldInvalidate = true;}
 
-      if (shouldInvalidate || Object.keys(filters).length === 0) {
+      if (shouldInvalidate ?? Object.keys(filters).length === 0) {
         this.cache.delete(key);
         invalidatedCount++;
       }
@@ -320,8 +323,8 @@ export class SmartCache {
 
   private getExactCacheHit(key: string): CacheEntry | null {
     const entry = this.cache.get(key);
-    if (!entry || entry.expires < new Date()) {
-      if (entry) this.cache.delete(key);
+    if (!entry ?? entry.expires < new Date()) {
+      if (entry) {this.cache.delete(key);}
       return null;
     }
 
@@ -335,14 +338,16 @@ export class SmartCache {
     platform: string,
     contentType: string
   ): Promise<CacheEntry | null> {
-    if (!this.config.semanticThreshold) return null;
+    if (!this.config.semanticThreshold) {
+    return null;
+  }
 
     const promptEmbedding = await this.generateEmbedding(prompt);
     let bestMatch: CacheEntry | null = null;
     let bestSimilarity = 0;
 
     for (const entry of this.cache.values()) {
-      if (entry.metadata.platform !== platform || entry.metadata.contentType !== contentType) {
+      if (entry.metadata.platform !== platform ?? entry.metadata.contentType !== contentType) {
         continue;
       }
 
@@ -407,20 +412,20 @@ export class SmartCache {
       platform,
       contentType,
       prompt,
-      priority: options.priority || 'normal',
-      maxTokens: options.maxTokens || 2000,
-      qualityThreshold: options.qualityThreshold || 80,
-      timeout: options.timeout || 30000
+      priority: options.priority ?? 'normal',
+      maxTokens: options.maxTokens ?? 2000,
+      qualityThreshold: options.qualityThreshold ?? 80,
+      timeout: options.timeout ?? 30000
     };
 
     // Add to batch
-    const currentBatch = this.pendingBatches.get(batchKey) || [];
+    const currentBatch = this.pendingBatches.get(batchKey)  ?? [];
     currentBatch.push(request);
     this.pendingBatches.set(batchKey, currentBatch);
 
     // Set timer if this is the first request in the batch
     if (currentBatch.length === 1) {
-      const timer = setTimeout(() => {
+      const timer = setTimeout_(() => {
         this.processBatch(batchKey);
       }, this.config.batchTimeout);
       this.batchTimers.set(batchKey, timer);
@@ -437,7 +442,7 @@ export class SmartCache {
     }
 
     // Wait for batch processing
-    return new Promise((_resolve) => {
+    return new Promise((resolve) => {
       request.callback = (content: string) => {
         const processingTime = Date.now() - startTime;
         const cacheEntry = this.createCacheEntry(platform, contentType, prompt, content, options);
@@ -450,26 +455,25 @@ export class SmartCache {
 
   private async processBatch(batchKey: string, specificRequestId?: string): Promise<BatchResult | void> {
     const batch = this.pendingBatches.get(batchKey);
-    if (!batch || batch.length === 0) return;
+    if (!batch ?? batch.length === 0) {return;}
 
     console.log(`[SmartCache] Processing batch of ${batch.length} requests for ${batchKey}`);
 
     try {
       // Process all requests in the batch
-      const results = await Promise.all(
-        batch.map(async (_request) => {
+      const results = await Promise.all(batch.map(async (request) => {
           const content = await this.generateContent(
             request.platform,
             request.contentType,
             request.prompt,
             { maxTokens: request.maxTokens, qualityThreshold: request.qualityThreshold }
           );
-          return { _request, content };
+          return { request, content };
         })
       );
 
       // Notify all callbacks
-      results.forEach(({ _request, content }) => {
+      results.forEach(({ request, content }) => {
         if (request.callback) {
           request.callback(content);
         }
@@ -530,11 +534,11 @@ export class SmartCache {
       id: `cache-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       key,
       content,
-      metadata: { _platform,
+      metadata: { platform,
         contentType,
         topic: prompt,
-        qualityScore: options.qualityScore || 85,
-        viralPotential: options.viralPotential || 75,
+        qualityScore: options.qualityScore ?? 85,
+        viralPotential: options.viralPotential ?? 75,
         tokenCount: Math.round(content.length / 4),
         costSavings: 0.002, // Estimated savings per cache hit
         agentName: 'SmartCache'
@@ -580,13 +584,13 @@ export class SmartCache {
     const words = text.toLowerCase().split(/\s+/);
     const embedding = new Array(384).fill(0);
 
-    words.forEach((word, _index) => {
+    words.forEach((word, index) => {
       const hash = this.hashString(word);
       embedding[hash % 384] += 1;
     });
 
     // Normalize
-    const magnitude = Math.sqrt(embedding.reduce((sum, _val) => sum + val * val, 0));
+    const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
     return embedding.map(val => magnitude > 0 ? val / magnitude : 0);
   }
 
@@ -601,7 +605,9 @@ export class SmartCache {
       normB += b[i] * b[i];
     }
 
-    if (normA === 0 || normB === 0) return 0;
+    if (normA === 0 ?? normB === 0) {
+    return 0;
+  }
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
   }
 
@@ -618,7 +624,9 @@ export class SmartCache {
 
   private hashString(str: string): number {
     let hash = 0;
-    if (str.length === 0) return hash;
+    if (str.length === 0) {
+    return hash;
+  }
 
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
@@ -643,13 +651,13 @@ export class SmartCache {
   }
 
   private startCleanupTimer(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.cleanupExpiredEntries();
 
       // Remove oldest entries if cache is over capacity
       if (this.cache.size > this.config.maxSize) {
         const entries = Array.from(this.cache.values())
-          .sort((a, _b) => a.lastAccessed.getTime() - b.lastAccessed.getTime());
+          .sort((a, b) => a.lastAccessed.getTime() - b.lastAccessed.getTime());
 
         const toRemove = this.cache.size - this.config.maxSize;
         for (let i = 0; i < toRemove; i++) {

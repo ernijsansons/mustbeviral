@@ -1,6 +1,6 @@
 // Main Dashboard Component with Performance Optimizations
-import { useState, useMemo, lazy, Suspense, useCallback } from 'react';
-import { LayoutDashboard, FileText, Users, TrendingUp, Settings } from 'lucide-react';
+import { useState, useMemo, lazy, Suspense, useCallback} from 'react';
+import { LayoutDashboard, FileText, Users, TrendingUp, Settings} from 'lucide-react';
 // Lazy load dashboard components for better performance
 const Analytics = lazy(() => import('./Analytics').then(module => ({ default: module.Analytics })));
 const MetricsDash = lazy(() => import('./MetricsDash').then(module => ({ default: module.MetricsDash })));
@@ -12,7 +12,7 @@ const EarningsDashboard = lazy(() => import('./EarningsDashboard').then(module =
 const TabLoadingState = () => (
   <div className="flex items-center justify-center min-h-[400px]" role="status" aria-live="polite">
     <div className="text-center">
-      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite]" role="presentation"></div>
+      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent motion-reduce:animate-[spin_1.5slinearinfinite]" role="presentation"></div>
       <p className="mt-4 text-gray-600">Loading dashboard content...</p>
     </div>
   </div>
@@ -29,7 +29,7 @@ export function Dashboard() {
     { id: 'earnings', name: 'Earnings', icon: Settings },
   ];
 
-  const renderActiveTab = useCallback(() => {
+  const renderActiveTab = useCallback_(() => {
     const TabContent = () => {
       switch (activeTab) {
         case 'analytics':
@@ -113,8 +113,7 @@ export function Dashboard() {
     );
   }, [activeTab]);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
+  return (<div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="border-b border-gray-200">

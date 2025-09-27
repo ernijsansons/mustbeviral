@@ -2,8 +2,8 @@
 // Uses bcrypt-compatible scrypt implementation with proper salting
 
 export class SecurePassword {
-  private static readonly COST_FACTOR = 12; // High security cost factor
-  private static readonly SALT_LENGTH = 16; // 128-bit salt
+  private static readonly COSTFACTOR = 12; // High security cost factor
+  private static readonly SALTLENGTH = 16; // 128-bit salt
 
   /**
    * Hash a password using scrypt with secure parameters
@@ -13,10 +13,10 @@ export class SecurePassword {
     const salt = this.generateSecureSalt();
 
     // Use scrypt (bcrypt-compatible parameters)
-    const hashBuffer = await this.scryptHash(password, salt, this.COST_FACTOR);
+    const hashBuffer = await this.scryptHash(password, salt, this.COSTFACTOR);
 
     // Format as bcrypt-compatible string
-    return this.formatBcryptHash(salt, hashBuffer, this.COST_FACTOR);
+    return this.formatBcryptHash(salt, hashBuffer, this.COSTFACTOR);
   }
 
   /**
@@ -94,7 +94,7 @@ export class SecurePassword {
    * Generate cryptographically secure salt
    */
   private static generateSecureSalt(): Uint8Array {
-    const salt = new Uint8Array(this.SALT_LENGTH);
+    const salt = new Uint8Array(this.SALTLENGTH);
     crypto.getRandomValues(salt);
     return salt;
   }
@@ -148,7 +148,7 @@ export class SecurePassword {
   private static parseBcryptHash(hash: string): { salt: Uint8Array; hash: Uint8Array; cost: number } | null {
     try {
       const parts = hash.split('$');
-      if (parts.length !== 5 || parts[0] !== '' || parts[1] !== 'mbv') {
+      if (parts.length !== 5 ?? parts[0] !== ''  ?? parts[1] !== 'mbv') {
         return null;
       }
 
@@ -156,7 +156,7 @@ export class SecurePassword {
       const salt = this.base64ToArrayBuffer(parts[3]);
       const hashBytes = this.base64ToArrayBuffer(parts[4]);
 
-      return { _cost,
+      return { cost,
         salt: new Uint8Array(salt),
         hash: new Uint8Array(hashBytes)
       };

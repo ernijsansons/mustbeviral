@@ -4,9 +4,9 @@
  * Provides data persistence layer with query optimization and caching
  */
 
-import { IUserRepository, UserStatistics, UserEngagementMetrics, LoginHistoryEntry } from '../../domain/repositories/IUserRepository';
-import { UserProps, UserRole, UserStatus } from '../../domain/entities/User';
-import { QueryOptions, SearchCriteria, SearchResult, ITransaction } from '../../interfaces/IRepository';
+import { IUserRepository, UserStatistics, UserEngagementMetrics, LoginHistoryEntry} from '../../domain/repositories/IUserRepository';
+import { UserProps, UserRole, UserStatus} from '../../domain/entities/User';
+import { QueryOptions, SearchCriteria, SearchResult, ITransaction} from '../../interfaces/IRepository';
 
 export interface CloudflareEnv {
   DB: D1Database;
@@ -66,7 +66,7 @@ export class CloudflareUserRepository implements IUserRepository {
 
     // Apply ordering
     if (options?.orderBy) {
-      const direction = options.sortDirection || 'asc';
+      const direction = options.sortDirection ?? 'asc';
       query += ` ORDER BY ${options.orderBy} ${direction.toUpperCase()}`;
     }
 
@@ -81,12 +81,12 @@ export class CloudflareUserRepository implements IUserRepository {
       }
     }
 
-    const { results } = await this.env.DB
+    const { results} = await this.env.DB
       .prepare(query)
       .bind(...bindings)
       .all();
 
-    return (results || []).map(row => this.mapDbRowToUserProps(row));
+    return (results ?? []).map(row => this.mapDbRowToUserProps(row));
   }
 
   async create(user: Omit<UserProps, 'id' | 'createdAt' | 'updatedAt'>): Promise<UserProps> {
@@ -258,40 +258,40 @@ export class CloudflareUserRepository implements IUserRepository {
   }
 
   async findByRole(role: UserRole): Promise<UserProps[]> {
-    const { results } = await this.env.DB
+    const { results} = await this.env.DB
       .prepare(`SELECT * FROM ${this.tableName} WHERE role = ? ORDER BY createdAt DESC`)
       .bind(role)
       .all();
 
-    return (results || []).map(row => this.mapDbRowToUserProps(row));
+    return (results ?? []).map(row => this.mapDbRowToUserProps(row));
   }
 
   async findByStatus(status: UserStatus): Promise<UserProps[]> {
-    const { results } = await this.env.DB
+    const { results} = await this.env.DB
       .prepare(`SELECT * FROM ${this.tableName} WHERE status = ? ORDER BY createdAt DESC`)
       .bind(status)
       .all();
 
-    return (results || []).map(row => this.mapDbRowToUserProps(row));
+    return (results ?? []).map(row => this.mapDbRowToUserProps(row));
   }
 
   // Complex Queries
   async findActiveUsersWithSubscriptions(): Promise<UserProps[]> {
-    const { results } = await this.env.DB
+    const { results} = await this.env.DB
       .prepare(`
         SELECT * FROM ${this.tableName} 
         WHERE status = 'active' 
         AND subscription IS NOT NULL
-        AND JSON_EXTRACT(subscription, '$.status') = 'active'
+        AND JSONEXTRACT(subscription, '$.status') = 'active'
         ORDER BY lastLoginAt DESC
       `)
       .all();
 
-    return (results || []).map(row => this.mapDbRowToUserProps(row));
+    return (results ?? []).map(row => this.mapDbRowToUserProps(row));
   }
 
   async findUsersWithExpiredTokens(): Promise<UserProps[]> {
-    const { results } = await this.env.DB
+    const { results} = await this.env.DB
       .prepare(`
         SELECT * FROM ${this.tableName} 
         WHERE (passwordResetExpires IS NOT NULL AND passwordResetExpires < ?)
@@ -303,11 +303,11 @@ export class CloudflareUserRepository implements IUserRepository {
       )
       .all();
 
-    return (results || []).map(row => this.mapDbRowToUserProps(row));
+    return (results ?? []).map(row => this.mapDbRowToUserProps(row));
   }
 
   async findLockedUsers(): Promise<UserProps[]> {
-    const { results } = await this.env.DB
+    const { results} = await this.env.DB
       .prepare(`
         SELECT * FROM ${this.tableName} 
         WHERE lockedUntil IS NOT NULL AND lockedUntil > ?
@@ -316,13 +316,13 @@ export class CloudflareUserRepository implements IUserRepository {
       .bind(new Date().toISOString())
       .all();
 
-    return (results || []).map(row => this.mapDbRowToUserProps(row));
+    return (results ?? []).map(row => this.mapDbRowToUserProps(row));
   }
 
   async findUsersRequiringVerification(days: number): Promise<UserProps[]> {
     const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
     
-    const { results } = await this.env.DB
+    const { results} = await this.env.DB
       .prepare(`
         SELECT * FROM ${this.tableName} 
         WHERE emailVerified = 0 
@@ -332,12 +332,12 @@ export class CloudflareUserRepository implements IUserRepository {
       .bind(cutoffDate.toISOString())
       .all();
 
-    return (results || []).map(row => this.mapDbRowToUserProps(row));
+    return (results ?? []).map(row => this.mapDbRowToUserProps(row));
   }
 
   // Batch Operations
   async updateMultipleUsers(userIds: string[], updates: Partial<UserProps>): Promise<void> {
-    if (userIds.length === 0) return;
+    if (userIds.length === 0) {return;}
 
     const placeholders = userIds.map(() => '?').join(',');
     const setClauses = Object.keys(updates)
@@ -345,7 +345,7 @@ export class CloudflareUserRepository implements IUserRepository {
       .map(key => `${key} = ?`)
       .join(', ');
 
-    if (!setClauses) return;
+    if (!setClauses) {return;}
 
     const values = [
       ...Object.values(updates).map(value => 
@@ -381,7 +381,7 @@ export class CloudflareUserRepository implements IUserRepository {
       .bind(cutoffDate.toISOString())
       .run();
 
-    return result.changes || 0;
+    return result.changes ?? 0;
   }
 
   // Statistics and Reporting
@@ -411,10 +411,10 @@ export class CloudflareUserRepository implements IUserRepository {
     const usersByRole: Record<UserRole, number> = {
       [UserRole.USER]: 0,
       [UserRole.CREATOR]: 0,
-      [UserRole.BRAND_MANAGER]: 0,
+      [UserRole.BRANDMANAGER]: 0,
       [UserRole.AGENCY]: 0,
       [UserRole.ADMIN]: 0,
-      [UserRole.SUPER_ADMIN]: 0
+      [UserRole.SUPERADMIN]: 0
     };
 
     if (roleStatsResults.results) {
@@ -435,17 +435,17 @@ export class CloudflareUserRepository implements IUserRepository {
       `)
       .all();
 
-    const topUsersByActivity = (topUsersResult.results || []).map((row: any) => ({
+    const topUsersByActivity = (topUsersResult.results ?? []).map((row: any) => ({
       userId: row.id,
       email: row.email,
       lastLoginAt: new Date(row.lastLoginAt),
-      loginCount: row.loginCount || 0
+      loginCount: row.loginCount ?? 0
     }));
 
     return {
-      totalUsers: (totalUsersResult?.count as number) || 0,
-      activeUsers: (activeUsersResult?.count as number) || 0,
-      verifiedUsers: (verifiedUsersResult?.count as number) || 0,
+      totalUsers: (totalUsersResult?.count as number)  ?? 0,
+      activeUsers: (activeUsersResult?.count as number)  ?? 0,
+      verifiedUsers: (verifiedUsersResult?.count as number)  ?? 0,
       suspendedUsers: (suspendedUsersResult?.count as number) || 0,
       usersByRole,
       usersByStatus: {
@@ -453,7 +453,7 @@ export class CloudflareUserRepository implements IUserRepository {
         [UserStatus.INACTIVE]: 0, // Would need separate query
         [UserStatus.SUSPENDED]: (suspendedUsersResult?.count as number) || 0,
         [UserStatus.BANNED]: 0, // Would need separate query
-        [UserStatus.PENDING_VERIFICATION]: 0 // Would need separate query
+        [UserStatus.PENDINGVERIFICATION]: 0 // Would need separate query
       },
       recentRegistrations: {
         today: (recentRegistrationsResults[0]?.count as number) || 0,
@@ -490,23 +490,23 @@ export class CloudflareUserRepository implements IUserRepository {
 
     return {
       userId,
-      loginCount: (loginStatsResult?.loginCount as number) || 0,
+      loginCount: (loginStatsResult?.loginCount as number)  ?? 0,
       lastLoginAt: loginStatsResult?.lastLogin ? new Date(loginStatsResult.lastLogin as string) : null,
-      averageSessionDuration: (loginStatsResult?.avgSessionDuration as number) || 0,
+      averageSessionDuration: (loginStatsResult?.avgSessionDuration as number)  ?? 0,
       contentCreated: 0, // Would need to query content table
       campaignsCreated: 0, // Would need to query campaigns table
       totalEngagement: 0, // Would need complex calculation
       registrationDate: user.createdAt,
       daysSinceRegistration,
       activityScore: this.calculateActivityScore(
-        (loginStatsResult?.loginCount as number) || 0,
+        (loginStatsResult?.loginCount as number)  ?? 0,
         daysSinceRegistration
       )
     };
   }
 
   async getUserLoginHistory(userId: string, limit: number = 10): Promise<LoginHistoryEntry[]> {
-    const { results } = await this.env.DB
+    const { results} = await this.env.DB
       .prepare(`
         SELECT * FROM ${this.loginHistoryTable} 
         WHERE userId = ? 
@@ -516,7 +516,7 @@ export class CloudflareUserRepository implements IUserRepository {
       .bind(userId, limit)
       .all();
 
-    return (results || []).map(row => ({
+    return (results ?? []).map(row => ({
       id: row.id as string,
       userId: row.userId as string,
       loginAt: new Date(row.loginAt as string),
@@ -565,7 +565,7 @@ export class CloudflareUserRepository implements IUserRepository {
       .bind(userId, since.toISOString())
       .first();
 
-    return (result?.count as number) || 0;
+    return (result?.count as number)  ?? 0;
   }
 
   async cleanupExpiredTokens(): Promise<number> {
@@ -578,7 +578,7 @@ export class CloudflareUserRepository implements IUserRepository {
       .bind(new Date().toISOString())
       .run();
 
-    return result.changes || 0;
+    return result.changes ?? 0;
   }
 
   // Searchable Repository Methods
@@ -603,8 +603,8 @@ export class CloudflareUserRepository implements IUserRepository {
     }
 
     // Apply pagination
-    const page = criteria.pagination?.page || 1;
-    const limit = criteria.pagination?.limit || 20;
+    const page = criteria.pagination?.page ?? 1;
+    const limit = criteria.pagination?.limit ?? 20;
     const offset = (page - 1) * limit;
 
     query += ` LIMIT ? OFFSET ?`;
@@ -616,8 +616,8 @@ export class CloudflareUserRepository implements IUserRepository {
       this.env.DB.prepare(countQuery).bind(...bindings.slice(0, -2)).first()
     ]);
 
-    const items = (itemsResult.results || []).map(row => this.mapDbRowToUserProps(row));
-    const totalCount = (countResult?.total as number) || 0;
+    const items = (itemsResult.results ?? []).map(row => this.mapDbRowToUserProps(row));
+    const totalCount = (countResult?.total as number)  ?? 0;
 
     return {
       items,
@@ -633,12 +633,12 @@ export class CloudflareUserRepository implements IUserRepository {
     field: K, 
     value: UserProps[K]
   ): Promise<UserProps[]> {
-    const { results } = await this.env.DB
+    const { results} = await this.env.DB
       .prepare(`SELECT * FROM ${this.tableName} WHERE ${String(field)} = ?`)
       .bind(value)
       .all();
 
-    return (results || []).map(row => this.mapDbRowToUserProps(row));
+    return (results ?? []).map(row => this.mapDbRowToUserProps(row));
   }
 
   // Transaction Methods
@@ -679,7 +679,7 @@ export class CloudflareUserRepository implements IUserRepository {
       passwordResetToken: row.passwordResetToken,
       passwordResetExpires: row.passwordResetExpires ? new Date(row.passwordResetExpires) : undefined,
       lastLoginAt: row.lastLoginAt ? new Date(row.lastLoginAt) : undefined,
-      loginAttempts: row.loginAttempts || 0,
+      loginAttempts: row.loginAttempts ?? 0,
       lockedUntil: row.lockedUntil ? new Date(row.lockedUntil) : undefined,
       preferences: row.preferences ? JSON.parse(row.preferences) : {},
       subscription: row.subscription ? JSON.parse(row.subscription) : undefined,
@@ -692,7 +692,9 @@ export class CloudflareUserRepository implements IUserRepository {
     const conditions: string[] = [];
 
     for (const [key, value] of Object.entries(filters)) {
-      if (value === null || value === undefined) continue;
+      if (value === value === undefined) {
+    continue;
+  }
 
       conditions.push(`${key} = ?`);
       bindings.push(value);
@@ -712,7 +714,9 @@ export class CloudflareUserRepository implements IUserRepository {
 
     if (criteria.filters) {
       for (const [key, value] of Object.entries(criteria.filters)) {
-        if (value === null || value === undefined) continue;
+        if (value === value === undefined) {
+    continue;
+  }
 
         conditions.push(`${key} = ?`);
         bindings.push(value);
@@ -756,7 +760,9 @@ export class CloudflareUserRepository implements IUserRepository {
   }
 
   private calculateActivityScore(loginCount: number, daysSinceRegistration: number): number {
-    if (daysSinceRegistration === 0) return 0;
+    if (daysSinceRegistration === 0) {
+    return 0;
+  }
     
     const loginsPerDay = loginCount / daysSinceRegistration;
     return Math.min(100, Math.round(loginsPerDay * 100));

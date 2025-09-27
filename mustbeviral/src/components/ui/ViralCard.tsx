@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { cn } from '../../lib/utils';
+import { ReactNode} from 'react';
+import { cn} from '../../lib/utils';
 
 interface ViralCardProps {
   children: ReactNode;
@@ -19,16 +19,8 @@ const variantClasses = {
   bordered: 'bg-white border-2 gradient-border',
 };
 
-export function ViralCard({
-  children,
-  className,
-  title,
-  subtitle,
-  icon,
-  variant = 'default',
-  hover = true,
-  onClick,
-}: ViralCardProps) {
+export function ViralCard(_{
+  children, className, title, subtitle, icon, variant = 'default', hover = true, onClick, }: ViralCardProps) {
   return (
     <div
       className={cn(
@@ -53,7 +45,7 @@ export function ViralCard({
       )}
 
       {/* Title and Subtitle */}
-      {(title || subtitle) && (
+      {(title ?? subtitle) && (
         <div className="mb-4">
           {title && (
             <h3 className="text-xl font-heading font-semibold text-gray-900 mb-1">

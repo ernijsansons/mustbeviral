@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../../lib/utils';
+import { motion, AnimatePresence} from 'framer-motion';
+import { cn} from '../../lib/utils';
 
 interface FilterSidebarProps {
   onFilterChange?: (filters: FilterState) => void;
@@ -46,7 +46,7 @@ const niches = [
   { id: 'art', label: 'Art', icon: '🎨', color: 'from-violet-500 to-purple-500' }
 ];
 
-export function FilterSidebar({ onFilterChange, className }: FilterSidebarProps) {
+export function FilterSidebar(_{ onFilterChange, className }: FilterSidebarProps) {
   const [filters, setFilters] = useState<FilterState>({
     priceRange: [0, 10000],
     viralScore: 0,
@@ -97,8 +97,12 @@ export function FilterSidebar({ onFilterChange, className }: FilterSidebarProps)
   };
 
   const formatFollowers = (value: number) => {
-    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+    if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(1)}M`;
+  }
+    if (value >= 1000) {
+    return `${(value / 1000).toFixed(0)}K`;
+  }
     return value.toString();
   };
 

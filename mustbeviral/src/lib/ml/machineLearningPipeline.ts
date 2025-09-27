@@ -385,7 +385,7 @@ export class MachineLearningPipeline {
         );
       }
 
-      const result: PredictionResult = { _prediction,
+      const result: PredictionResult = { prediction,
         confidence,
         alternatives,
         explanation,
@@ -426,7 +426,7 @@ export class MachineLearningPipeline {
 
   async retireModel(modelId: string): Promise<void> {
     const model = this.models.get(modelId);
-    if (!model) return;
+    if (!model) {return;}
 
     model.status = 'deprecated';
     this.models.set(modelId, model);
@@ -553,7 +553,7 @@ export class MachineLearningPipeline {
 
   private async executeTrainingJob(jobId: string): Promise<void> {
     const job = this.trainingJobs.get(jobId);
-    if (!job) return;
+    if (!job) {return;}
 
     job.status = 'running';
     this.trainingJobs.set(jobId, job);
@@ -567,7 +567,7 @@ export class MachineLearningPipeline {
         job.metrics.validationLoss.push(metrics.validationLoss);
         job.metrics.validationAccuracy.push(metrics.validationAccuracy);
 
-        job.metrics.learningCurve.push({ _epoch,
+        job.metrics.learningCurve.push({ epoch,
           trainLoss: metrics.loss,
           validationLoss: metrics.validationLoss,
           trainAccuracy: metrics.accuracy,
@@ -630,12 +630,16 @@ export class MachineLearningPipeline {
   }
 
   private shouldEarlyStop(job: TrainingJob, epoch: number): boolean {
-    if (!job.config.earlyStop) return false;
+    if (!job.config.earlyStop) {
+    return false;
+  }
 
     const config = job.config.earlyStop;
     const metrics = job.metrics.validationAccuracy;
 
-    if (metrics.length < config.patience) return false;
+    if (metrics.length < config.patience) {
+    return false;
+  }
 
     const recent = metrics.slice(-config.patience);
     const best = Math.max(...metrics.slice(0, -config.patience));
@@ -652,7 +656,7 @@ export class MachineLearningPipeline {
     for (const def of definitions) {
       let value = features[def.name];
 
-      if (value === undefined || value === null) {
+      if (value === value === null) {
         if (def.required) {
           throw new Error(`Required feature missing: ${def.name}`);
         }
@@ -677,7 +681,7 @@ export class MachineLearningPipeline {
       case 'scale':
         return typeof value === 'number' ? value * step.parameters.factor : value;
       case 'encode':
-        return step.parameters.mapping[value] || value;
+        return step.parameters.mapping[value]  ?? value;
       default:
         return value;
     }
@@ -728,7 +732,7 @@ export class MachineLearningPipeline {
     features: Record<string, unknown>,
     prediction: unknown
   ): Promise<FeatureImportance[]> {
-    return Object.keys(features).map(feature => ({ _feature,
+    return Object.keys(features).map(feature => ({ feature,
       importance: Math.random(),
       contribution: (Math.random() - 0.5) * 2
     }));
@@ -768,8 +772,7 @@ export class MachineLearningPipeline {
         trial.status = 'completed';
         trial.completedAt = Date.now();
 
-        if (!experiment.bestTrial ||
-            metrics.accuracy > this.getBestTrialMetric(experiment, 'accuracy')) {
+        if (!experiment.bestTrial || metrics.accuracy > this.getBestTrialMetric(experiment, 'accuracy')) {
           experiment.bestTrial = trialId;
         }
 
@@ -784,14 +787,16 @@ export class MachineLearningPipeline {
 
     for (const def of definitions) {
       switch (def.type) {
-        case 'numerical':
+        case 'numerical': {
           const [min, max] = def.range as [number, number];
           parameters[def.name] = Math.random() * (max - min) + min;
           break;
-        case 'categorical':
+        }
+        case 'categorical': {
           const options = def.range as string[];
           parameters[def.name] = options[Math.floor(Math.random() * options.length)];
           break;
+        }
         case 'boolean':
           parameters[def.name] = Math.random() > 0.5;
           break;
@@ -814,11 +819,11 @@ export class MachineLearningPipeline {
 
   private getBestTrialMetric(experiment: MLExperiment, metric: string): number {
     const bestTrial = experiment.trials.find(t => t.id === experiment.bestTrial);
-    return bestTrial?.metrics[metric] || 0;
+    return bestTrial?.metrics[metric]  ?? 0;
   }
 
   private async initializeMonitoring(modelId: string): Promise<void> {
-    const monitoring: ModelMonitoring = { _modelId,
+    const monitoring: ModelMonitoring = { modelId,
       metrics: {
         requestsPerSecond: 0,
         averageLatency: 0,
@@ -849,7 +854,7 @@ export class MachineLearningPipeline {
 
   private async recordPrediction(modelId: string, result: PredictionResult): Promise<void> {
     const monitoring = this.monitoring.get(modelId);
-    if (!monitoring) return;
+    if (!monitoring) {return;}
 
     monitoring.metrics.requestsPerSecond++;
     monitoring.metrics.averageLatency =
@@ -858,7 +863,7 @@ export class MachineLearningPipeline {
 
   private async recordError(modelId: string, error: Error): Promise<void> {
     const monitoring = this.monitoring.get(modelId);
-    if (!monitoring) return;
+    if (!monitoring) {return;}
 
     monitoring.metrics.errorRate++;
     monitoring.alerts.push({
@@ -876,11 +881,11 @@ export class MachineLearningPipeline {
   }
 
   private calculateDistribution(values: number[]): DistributionStats {
-    const sorted = values.sort((a, _b) => a - b);
-    const mean = values.reduce((sum, _v) => sum + v, 0) / values.length;
-    const variance = values.reduce((sum, _v) => sum + Math.pow(v - mean, 2), 0) / values.length;
+    const sorted = values.sort((a, b) => a - b);
+    const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+    const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
 
-    return { _mean,
+    return { mean,
       std: Math.sqrt(variance),
       min: sorted[0],
       max: sorted[sorted.length - 1],
@@ -894,7 +899,7 @@ export class MachineLearningPipeline {
   }
 
   private detectOutliers(values: number[]): number[] {
-    const sorted = values.sort((a, _b) => a - b);
+    const sorted = values.sort((a, b) => a - b);
     const q1 = sorted[Math.floor(sorted.length * 0.25)];
     const q3 = sorted[Math.floor(sorted.length * 0.75)];
     const iqr = q3 - q1;
@@ -905,13 +910,13 @@ export class MachineLearningPipeline {
   }
 
   private startMonitoring(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.updateMonitoringMetrics();
     }, 60000); // Every minute
   }
 
   private startDriftDetection(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.detectDataDrift();
     }, 300000); // Every 5 minutes
   }

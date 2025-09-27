@@ -28,7 +28,7 @@ export class AnalyticsController {
   async trackEvent(eventData: AnalyticsEvent): Promise<{ success: boolean; eventId: string }> {
     try {
       const eventId = this.generateEventId();
-      const timestamp = eventData.timestamp || Date.now();
+      const timestamp = eventData.timestamp  ?? Date.now();
       
       // Validate event data
       if (!eventData.event) {
@@ -42,10 +42,10 @@ export class AnalyticsController {
       `).bind(
         eventId,
         eventData.event,
-        eventData.userId || null,
-        eventData.sessionId || null,
-        JSON.stringify(eventData.properties || {}),
-        JSON.stringify(eventData.context || {}),
+        eventData.userId  ?? null,
+        eventData.sessionId ?? null,
+        JSON.stringify(eventData.properties ?? {}),
+        JSON.stringify(eventData.context  ?? {}),
         timestamp,
         new Date().toISOString()
       ).run();
@@ -84,7 +84,7 @@ export class AnalyticsController {
       }
 
       const config = JSON.parse(testConfig);
-      const variants = config.variants || ['control', 'variant'];
+      const variants = config.variants  ?? ['control', 'variant'];
       
       // Assign variant based on user ID hash
       const hash = this.hashUserId(userId);
@@ -317,12 +317,13 @@ export class AnalyticsController {
     `).bind(
       eventData.userId,
       eventData.event,
-      JSON.stringify(eventData.properties || {}),
+      JSON.stringify(eventData.properties  ?? {}),
       Date.now(),
       new Date().toISOString()
     ).run();
   }
 }
+
 
 
 

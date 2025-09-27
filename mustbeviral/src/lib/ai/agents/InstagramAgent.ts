@@ -5,20 +5,8 @@
  */
 
 import {
-  PlatformMetrics,
-  AlgorithmFactors,
-  ViralMechanics,
-  ContentSpecification,
-  ContentOptimization,
-  ContentGenerationRequest,
-  BatchGenerationRequest,
-  AdvancedAnalysis,
-  ReasoningChain,
-  TrendAnalysis,
-  CompetitorInsights,
-  PlatformAgentConfig
-} from './IPlatformAgent';
-import { ALGORITHM_DATABASE } from './AlgorithmData';
+  PlatformMetrics, AlgorithmFactors, ViralMechanics, ContentSpecification, ContentOptimization, ContentGenerationRequest, BatchGenerationRequest, AdvancedAnalysis, ReasoningChain, TrendAnalysis, CompetitorInsights, PlatformAgentConfig} from './IPlatformAgent';
+import { ALGORITHMDATABASE} from './AlgorithmData';
 
 export class InstagramAgent implements IPlatformAgent {
   readonly platformName = 'Instagram';
@@ -94,8 +82,7 @@ export class InstagramAgent implements IPlatformAgent {
   }
 
   getContentSpecifications(contentType: string): ContentSpecification {
-    const specs = this.algorithmData.contentSpecifications.formats[contentType] ||
-                  this.algorithmData.contentSpecifications.formats.feed_post;
+    const specs = this.algorithmData.contentSpecifications.formats[contentType]  ?? this.algorithmData.contentSpecifications.formats.feedpost;
 
     return {
       format: contentType,
@@ -109,7 +96,7 @@ export class InstagramAgent implements IPlatformAgent {
     };
   }
 
-  async generateContent(_request: ContentGenerationRequest): Promise<{
+  async generateContent(request: ContentGenerationRequest): Promise<{
     content: string;
     optimization: ContentOptimization;
     analysis: AdvancedAnalysis;
@@ -121,7 +108,7 @@ export class InstagramAgent implements IPlatformAgent {
     };
   }> {
     const startTime = Date.now();
-    const maxTokens = request.maxTokens || this.maxTokenOutput;
+    const maxTokens = request.maxTokens ?? this.maxTokenOutput;
 
     // Advanced Instagram reasoning chain
     const reasoningChain = await this.buildInstagramReasoningChain(request);
@@ -140,7 +127,7 @@ export class InstagramAgent implements IPlatformAgent {
     const optimization = await this.optimizeForAlgorithm(content);
     const analysis = await this.analyzeContent(content);
 
-    return { _content,
+    return { content,
       optimization,
       analysis,
       metadata: {
@@ -167,12 +154,12 @@ export class InstagramAgent implements IPlatformAgent {
     for (let i = 0; i < request.requests.length; i += batchSize) {
       const batch = request.requests.slice(i, i + batchSize);
 
-      const batchPromises = batch.map(async () => {
+      const batchPromises = batch.map(async() => {
         // Enhance request with aesthetic consistency
         const enhancedRequest = {
           ...req,
-          context: `${req.context || ''} AESTHETIC THEME: ${aestheticTheme}`,
-          style: `${req.style || ''} visual_consistency aesthetic_appeal`
+          context: `${req.context ?? ''} AESTHETIC THEME: ${aestheticTheme}`,
+          style: `${req.style ?? ''} visual_consistency aesthetic_appeal`
         };
 
         const generated = await this.generateContent(enhancedRequest);
@@ -202,7 +189,7 @@ export class InstagramAgent implements IPlatformAgent {
     return results;
   }
 
-  async analyzeContent(_content: string): Promise<AdvancedAnalysis> {
+  async analyzeContent(content: string): Promise<AdvancedAnalysis> {
     const reasoningChain = await this.analyzeInstagramContentReasoning(content);
 
     // Instagram-specific scoring
@@ -212,7 +199,7 @@ export class InstagramAgent implements IPlatformAgent {
 
     // Platform score calculated but not used
 
-    return { _platformScore,
+    return { platformScore,
       algorithmAlignment,
       viralPrediction,
       engagementForecast,
@@ -289,7 +276,7 @@ export class InstagramAgent implements IPlatformAgent {
     // Advanced Instagram trend analysis
     // Current trends analyzed
 
-    return { _currentTrends,
+    return { currentTrends,
       emergingTopics: ['#Sustainability', '#DigitalDetox', '#CreatorEconomy', '#Mindfulness'],
       decliningTrends: ['#InfluencerLife', '#PerfectFeed'],
       seasonalPatterns: ['#NewYearAesthetics', '#WinterMood', '#2024Goals'],
@@ -303,7 +290,7 @@ export class InstagramAgent implements IPlatformAgent {
     };
   }
 
-  async getCompetitorInsights(_topic: string): Promise<CompetitorInsights> {
+  async getCompetitorInsights(topic: string): Promise<CompetitorInsights> {
     return {
       topPerformers: [
         {
@@ -405,7 +392,7 @@ export class InstagramAgent implements IPlatformAgent {
 
     // Add trending hashtags if missing
     const trendingHashtags = await this.getCurrentTrendingHashtags();
-    if (trendingHashtags.length > 0 && (content.match(/#w+/g) || []).length < 5) {
+    if (trendingHashtags.length > 0 && (content.match(/#w+/g)  ?? []).length < 5) {
       optimizedContent += ` ${trendingHashtags.slice(0, 3).join(' ')}`;
       changes.push({
         type: 'trending_hashtags',
@@ -423,13 +410,13 @@ export class InstagramAgent implements IPlatformAgent {
       emergencyFixes.push('Include carousel format for better engagement');
     }
 
-    return { _optimizedContent,
+    return { optimizedContent,
       changes,
       emergencyFixes
     };
   }
 
-  async adaptForPlatform(_sourcePlatform: string, content: string): Promise<{
+  async adaptForPlatform(sourcePlatform: string, content: string): Promise<{
     adaptedContent: string;
     adaptationStrategy: string[];
     retainedElements: string[];
@@ -450,7 +437,7 @@ export class InstagramAgent implements IPlatformAgent {
     adaptedContent = await this.addInstagramHashtags(adaptedContent);
     adaptedContent = await this.addSavePrompt(adaptedContent);
 
-    return { _adaptedContent,
+    return { adaptedContent,
       adaptationStrategy,
       retainedElements: ['core_message', 'value_proposition'],
       modifiedElements: ['visual_elements', 'hashtags', 'formatting'],
@@ -527,7 +514,7 @@ export class InstagramAgent implements IPlatformAgent {
     // Instagram multi-format distribution strategy
     const distributionStrategy = await this.createInstagramDistributionStrategy(sections);
 
-    return { _fullContent,
+    return { fullContent,
       sections,
       executiveSummary,
       keyTakeaways,
@@ -583,7 +570,7 @@ export class InstagramAgent implements IPlatformAgent {
   }> {
     // Fallback content prepared
 
-    return { _fallbackContent,
+    return { fallbackContent,
       errorAnalysis: `Instagram generation failed: ${error.message}`,
       retryStrategy: 'simplify_aesthetic_requirements_and_retry',
       preventionMeasures: [
@@ -642,7 +629,7 @@ export class InstagramAgent implements IPlatformAgent {
   private async buildInstagramPrompt(request: ContentGenerationRequest, reasoningChain: ReasoningChain[]): Promise<string> {
     const aestheticTrends = await this.getCurrentAestheticTrends();
     const viralTriggers = Object.keys(this.algorithmData.viralMechanics.triggers)
-      .sort((a, _b) => this.algorithmData.viralMechanics.triggers[b] - this.algorithmData.viralMechanics.triggers[a])
+      .sort((a, b) => this.algorithmData.viralMechanics.triggers[b] - this.algorithmData.viralMechanics.triggers[a])
       .slice(0, 3);
 
     return `You are the world's most advanced Instagram content strategist with deep aesthetic and algorithm knowledge.
@@ -664,7 +651,7 @@ CONTENT SPECIFICATIONS:
 - Topic: ${request.topic}
 - Tone: ${request.tone}
 - Target: ${request.targetAudience}
-- Format: ${request.contentType || 'feed_post'}
+- Format: ${request.contentType ?? 'feed_post'}
 - Visual Focus: High aesthetic appeal required
 - Caption: 300-500 characters optimal for engagement
 
@@ -677,7 +664,7 @@ INSTAGRAM ENGAGEMENT FORMULA:
 6. HASHTAG STRATEGY: Mix of popular, niche, and branded tags
 
 REASONING INSIGHTS:
-${reasoningChain.map((step, _i) => `${i + 1}. ${step.reasoning} (Confidence: ${step.confidence * 100}%)`).join('n')}
+${reasoningChain.map((step, i) => `${i + 1}. ${step.reasoning} (Confidence: ${step.confidence * 100}%)`).join('n')}
 
 AESTHETIC OPTIMIZATION:
 - Create visually cohesive content
@@ -710,10 +697,18 @@ Instagram Content:`;
   }
 
   private extractContent(result: unknown): string {
-    if (typeof result === 'string') return result.trim();
-    if (result.response) return result.response.trim();
-    if (result.content) return result.content.trim();
-    if (result.text) return result.text.trim();
+    if (typeof result === 'string') {
+    return result.trim();
+  }
+    if (result.response) {
+    return result.response.trim();
+  }
+    if (result.content) {
+    return result.content.trim();
+  }
+    if (result.text) {
+    return result.text.trim();
+  }
     return String(result).trim();
   }
 
@@ -721,19 +716,19 @@ Instagram Content:`;
     let score = 50;
 
     // Relationship building indicators
-    if (content.toLowerCase().includes('save') || content.includes('💾')) score += 20;
-    if (content.toLowerCase().includes('share') || content.toLowerCase().includes('tag someone')) score += 15;
+    if (content.toLowerCase().includes('save')  ?? content.includes('💾')) {score += 20;}
+    if (content.toLowerCase().includes('share')  ?? content.toLowerCase().includes('tag someone')) {score += 15;}
 
     // Visual appeal indicators
-    if (content.match(/[✨🌟💫⭐]/g)) score += 12; // Aesthetic emojis
-    if (content.toLowerCase().includes('aesthetic') || content.toLowerCase().includes('beautiful')) score += 10;
+    if (content.match(/[✨🌟💫⭐]/g)) {score += 12;} // Aesthetic emojis
+    if (content.toLowerCase().includes('aesthetic')  ?? content.toLowerCase().includes('beautiful')) {score += 10;}
 
     // Engagement triggers
-    if (content.includes('?') || content.toLowerCase().includes('comment')) score += 15;
-    if (content.toLowerCase().includes('carousel') || content.toLowerCase().includes('swipe')) score += 18;
+    if (content.includes('?')  ?? content.toLowerCase().includes('comment')) {score += 15;}
+    if (content.toLowerCase().includes('carousel')  ?? content.toLowerCase().includes('swipe')) {score += 18;}
 
     // Save-worthy content
-    if (content.toLowerCase().includes('tips') || content.toLowerCase().includes('guide')) score += 12;
+    if (content.toLowerCase().includes('tips')  ?? content.toLowerCase().includes('guide')) {score += 12;}
 
     return Math.min(score, 100);
   }
@@ -753,10 +748,10 @@ Instagram Content:`;
     score += this.predictVisualAppeal(content) * 0.3;
 
     // Save potential
-    if (this.hasSavePotential(content)) score += 20;
+    if (this.hasSavePotential(content)) {score += 20;}
 
     // Story sharing potential
-    if (this.hasStorySharePotential(content)) score += 15;
+    if (this.hasStorySharePotential(content)) {score += 15;}
 
     return Math.min(score, 100);
   }
@@ -765,16 +760,16 @@ Instagram Content:`;
     let score = 52;
 
     // Save triggers
-    if (content.toLowerCase().includes('save') || content.includes('💾')) score += 18;
+    if (content.toLowerCase().includes('save')  ?? content.includes('💾')) {score += 18;}
 
     // Comment triggers
-    if (content.includes('?') || content.toLowerCase().includes('thoughts')) score += 14;
+    if (content.includes('?')  ?? content.toLowerCase().includes('thoughts')) {score += 14;}
 
     // Share triggers
-    if (content.toLowerCase().includes('tag') || content.toLowerCase().includes('share')) score += 16;
+    if (content.toLowerCase().includes('tag')  ?? content.toLowerCase().includes('share')) {score += 16;}
 
     // DM triggers
-    if (content.toLowerCase().includes('dm') || content.toLowerCase().includes('message')) score += 12;
+    if (content.toLowerCase().includes('dm')  ?? content.toLowerCase().includes('message')) {score += 12;}
 
     return Math.min(score, 100);
   }
@@ -788,24 +783,26 @@ Instagram Content:`;
       lifestyle_aspirational: ['lifestyle', 'goals', 'inspiration', 'dream'],
       educational_carousel: ['carousel', 'tips', 'guide', 'tutorial', 'swipe'],
       transformation: ['transformation', 'before and after', 'progress', 'change'],
-      relatable_moment: ['relatable', 'me when', 'anyone else', 'we all']
+      relatable_moment: ['relatable', 'me when', 'anyone else {
+    ', 'we all']
+  }
     };
 
-    const keywords = triggerMappings[trigger] || [trigger];
-    return keywords.some(keyword => content.toLowerCase().includes(keyword.toLowerCase()));
+    const keywords = triggerMappings[trigger]  ?? [trigger];
+    return keywords.some(keyword = > content.toLowerCase().includes(keyword.toLowerCase()));
   }
 
   private predictVisualAppeal(content: string): number {
     let score = 50;
 
     // Aesthetic indicators
-    if (content.match(/[✨🌟💫⭐🎨📸]/g)) score += 15;
-    if (content.toLowerCase().includes('aesthetic')) score += 12;
-    if (content.toLowerCase().includes('beautiful') || content.toLowerCase().includes('stunning')) score += 10;
+    if (content.match(/[✨🌟💫⭐🎨📸]/g)) {score += 15;}
+    if (content.toLowerCase().includes('aesthetic')) {score += 12;}
+    if (content.toLowerCase().includes('beautiful')  ?? content.toLowerCase().includes('stunning')) {score += 10;}
 
     // Visual content indicators
-    if (content.toLowerCase().includes('photo') || content.toLowerCase().includes('picture')) score += 8;
-    if (content.toLowerCase().includes('colors') || content.toLowerCase().includes('palette')) score += 8;
+    if (content.toLowerCase().includes('photo')  ?? content.toLowerCase().includes('picture')) {score += 8;}
+    if (content.toLowerCase().includes('colors')  ?? content.toLowerCase().includes('palette')) {score += 8;}
 
     return Math.min(score, 100);
   }
@@ -851,7 +848,7 @@ Instagram Content:`;
       optimizations.push('Include question to boost comment engagement');
     }
 
-    if ((content.match(/#\w+/g) || []).length < 5) {
+    if ((content.match(/#\w+/g)  ?? []).length < 5) {
       optimizations.push('Add more relevant hashtags (up to 30 allowed)');
     }
 
@@ -861,7 +858,7 @@ Instagram Content:`;
   private identifyInstagramRiskFactors(content: string): string[] {
     const risks: string[] = [];
 
-    if ((content.match(/#\w+/g) || []).length > 30) {
+    if ((content.match(/#\w+/g)  ?? []).length > 30) {
       risks.push('Too many hashtags may reduce reach');
     }
 
@@ -1052,7 +1049,7 @@ Instagram Content:`;
   }> {
     const sectionKeys = Object.keys(sections);
     return {
-      primaryPost: `✨ ${sections[sectionKeys[0]] || 'Aesthetic carousel series'} 📸`,
+      primaryPost: `✨ ${sections[sectionKeys[0]]  ?? 'Aesthetic carousel series'} 📸`,
       followUpPosts: ['Story highlights series', 'Reels version', 'IGTV deep dive'],
       crossPromotionPosts: ['Pinterest pin version', 'TikTok aesthetic trends', 'Blog post expansion']
     };

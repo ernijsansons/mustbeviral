@@ -3,11 +3,10 @@
  * Provides SQL injection protection and query validation
  */
 
-import { CloudflareEnv } from '../cloudflare';
-import { _createSafeBinding, ValidationError } from '../../middleware/validation';
+import { CloudflareEnv} from '../cloudflare';
+import { createSafeBinding, ValidationError} from '../../middleware/validation';
 
 // Allowed SQL operations for query validation
-const ALLOWED_OPERATIONS = new Set([
   'SELECT',
   'INSERT',
   'UPDATE',
@@ -27,7 +26,7 @@ const ALLOWED_TABLES = new Set([
 ]);
 
 // Allowed column names for common tables
-const ALLOWED_COLUMNS = {
+const ALLOWEDCOLUMNS = {
   users: new Set([
     'id', 'email', 'username', 'password_hash', 'role', 'profile_data',
     'ai_preference_level', 'onboarding_completed', 'created_at', 'updated_at'
@@ -93,13 +92,13 @@ export class SecureDatabase {
       const result = await statement.bind(...safeParams).all<T>();
 
       return {
-        results: result.results || [],
+        results: result.results ?? [],
         success: result.success,
         meta: {
-          changes: result.meta?.changes || 0,
-          duration: result.meta?.duration || 0,
-          rows_read: result.meta?.rows_read || 0,
-          rows_written: result.meta?.rows_written || 0
+          changes: result.meta?.changes ?? 0,
+          duration: result.meta?.duration ?? 0,
+          rows_read: result.meta?.rows_read ?? 0,
+          rows_written: result.meta?.rows_written ?? 0
         }
       };
     } catch (error: unknown) {
@@ -115,7 +114,7 @@ export class SecureDatabase {
    */
   async fetchOne<T = unknown>(sql: string, params: unknown[] = []): Promise<T | null> {
     const result = await this.executeSafeQuery<T>(sql, params);
-    return result.results[0] || null;
+    return result.results[0]  ?? null;
   }
 
   /**
@@ -140,13 +139,13 @@ export class SecureDatabase {
     try {
       // Validate all queries first
       for (const query of queries) {
-        const preparedQuery = this.parseAndValidateQuery(query.sql, query.params || []);
+        const preparedQuery = this.parseAndValidateQuery(query.sql, query.params ?? []);
         this.validateQuerySafety(preparedQuery);
       }
 
       // Prepare all statements
       const statements = queries.map(query => {
-        const safeParams = (query.params || []).map(param => createSafeBinding(param));
+        const safeParams = (query.params ?? []).map(param => createSafeBinding(param));
         return this.env.DB.prepare(query.sql).bind(...safeParams);
       });
 
@@ -154,13 +153,13 @@ export class SecureDatabase {
       const results = await this.env.DB.batch(statements);
 
       return results.map(result => ({
-        results: result.results || [],
+        results: result.results ?? [],
         success: result.success,
         meta: {
-          changes: result.meta?.changes || 0,
-          duration: result.meta?.duration || 0,
-          rows_read: result.meta?.rows_read || 0,
-          rows_written: result.meta?.rows_written || 0
+          changes: result.meta?.changes ?? 0,
+          duration: result.meta?.duration ?? 0,
+          rows_read: result.meta?.rows_read ?? 0,
+          rows_written: result.meta?.rows_written ?? 0
         }
       }));
     } catch (error: unknown) {
@@ -197,7 +196,7 @@ export class SecureDatabase {
     const tables = this.extractTableNames(normalizedSql, operation);
 
     // Validate parameter count
-    const placeholderCount = (normalizedSql.match(/\?/g) || []).length;
+    const placeholderCount = (normalizedSql.match(/\?/g)  ?? []).length;
     if (placeholderCount !== params.length) {
       throw new ValidationError(
         [{ field: 'params', message: 'Parameter count mismatch' }],
@@ -340,10 +339,10 @@ export class SecureDatabase {
     const restrictedTables = ['users', 'content', 'matches'];
 
     for (const table of query.tables) {
-      if (restrictedTables.includes(table) && ALLOWED_COLUMNS[table as keyof typeof ALLOWED_COLUMNS]) {
+      if (restrictedTables.includes(table) && ALLOWED_COLUMNS[table as keyof typeof ALLOWEDCOLUMNS]) {
         // Extract column names from SELECT or UPDATE queries
         const columns = this.extractColumnNames(query.sql, query.operation, table);
-        const allowedColumns = ALLOWED_COLUMNS[table as keyof typeof ALLOWED_COLUMNS];
+        const allowedColumns = ALLOWED_COLUMNS[table as keyof typeof ALLOWEDCOLUMNS];
 
         for (const column of columns) {
           if (column !== '*' && !allowedColumns.has(column)) {
@@ -418,7 +417,7 @@ export class SecureDatabase {
       `);
 
       return {
-        tables: result?.table_count || 0,
+        tables: result?.table_count ?? 0,
         total_size: 0 // D1 doesn't expose size information
       };
     } catch (error: unknown) {

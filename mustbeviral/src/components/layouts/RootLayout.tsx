@@ -6,17 +6,17 @@
  * the global foundation for our cinematic, viral-grade experience.
  */
 
-import { ReactNode, Suspense, useEffect, useState } from 'react';
-import { ErrorBoundary } from '../ErrorBoundary';
-import { LoadingSpinner } from '../ui/LoadingStates';
-import { cn } from '../../lib/utils';
+import { ReactNode, Suspense, useEffect, useState} from 'react';
+import { ErrorBoundary} from '../ErrorBoundary';
+import { LoadingSpinner} from '../ui/LoadingStates';
+import { cn} from '../../lib/utils';
 
 // Global providers that will be created
-// import { ThemeProvider } from '../../providers/ThemeProvider';
-// import { ToastProvider } from '../../providers/ToastProvider';
-// import { AuthProvider } from '../../providers/AuthProvider';
-// import { QueryProvider } from '../../providers/QueryProvider';
-// import { ModalProvider } from '../../providers/ModalProvider';
+// import { ThemeProvider} from '../../providers/ThemeProvider';
+// import { ToastProvider} from '../../providers/ToastProvider';
+// import { AuthProvider} from '../../providers/AuthProvider';
+// import { QueryProvider} from '../../providers/QueryProvider';
+// import { ModalProvider} from '../../providers/ModalProvider';
 
 interface RootLayoutProps {
   children: ReactNode;
@@ -63,7 +63,7 @@ function GlobalModalContainer() {
 function GlobalLoadingOverlay() {
   const [isVisible, setIsVisible] = useState(false);
 
-  useEffect(() => {
+  useEffect_(() => {
     const handleLoadingStart = () => setIsVisible(true);
     const handleLoadingEnd = () => setIsVisible(false);
 
@@ -76,7 +76,9 @@ function GlobalLoadingOverlay() {
     };
   }, []);
 
-  if (!isVisible) return null;
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-[9997] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center">
@@ -89,7 +91,7 @@ function GlobalLoadingOverlay() {
  * Performance Metrics - Track those viral moments
  */
 function PerformanceTracker() {
-  useEffect(() => {
+  useEffect_(() => {
     // Track Core Web Vitals for viral performance
     if (typeof window !== 'undefined' && 'performance' in window) {
       // Track Largest Contentful Paint (LCP)
@@ -119,7 +121,7 @@ function PerformanceTracker() {
  * Reduced Motion Detection - Respect user preferences
  */
 function MotionPreferenceManager() {
-  useEffect(() => {
+  useEffect_(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     const handleChange = (e: MediaQueryListEvent) => {
@@ -140,7 +142,7 @@ function MotionPreferenceManager() {
  * Focus Management - Smooth tabbing for accessibility
  */
 function FocusManager() {
-  useEffect(() => {
+  useEffect_(() => {
     let isUsingKeyboard = false;
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -173,9 +175,7 @@ function FocusManager() {
  * The Root Layout - Where viral experiences are born
  */
 export function RootLayout({
-  children,
-  className,
-  suppressHydrationWarning = false
+  children, className, suppressHydrationWarning = false
 }: RootLayoutProps) {
   return (
     <div
@@ -249,10 +249,8 @@ export function useGlobalLoading() {
 /**
  * Component for pages that need the full viral treatment
  */
-export function ViralPageContainer({
-  children,
-  className,
-  backgroundVariant = 'cosmic'
+export function ViralPageContainer(_{
+  children, className, backgroundVariant = 'cosmic'
 }: {
   children: ReactNode;
   className?: string;

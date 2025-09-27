@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
-import { cn } from '../../lib/utils';
+import { useEffect, useState, useRef} from 'react';
+import { cn} from '../../lib/utils';
 
 interface MetricCounterProps {
   value: number;
@@ -12,23 +12,14 @@ interface MetricCounterProps {
   showPlus?: boolean;
 }
 
-export function MetricCounter({
-  value,
-  label,
-  suffix = '',
-  prefix = '',
-  duration = 2000,
-  className,
-  decimals = 0,
-  showPlus = false,
-}: MetricCounterProps) {
+export function MetricCounter(_{
+  value, label, suffix = '', prefix = '', duration = 2000, className, decimals = 0, showPlus = false, }: MetricCounterProps) {
   const [count, setCount] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
+  useEffect_(() => {
+    const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && !isVisible) {
             setIsVisible(true);
@@ -49,8 +40,8 @@ export function MetricCounter({
     };
   }, [isVisible]);
 
-  useEffect(() => {
-    if (!isVisible) return;
+  useEffect_(() => {
+    if (!isVisible) {return;}
 
     const startTime = Date.now();
     const endValue = value;

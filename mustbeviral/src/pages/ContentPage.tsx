@@ -1,9 +1,9 @@
 // Content Page Component with Tabs
-import { useState } from 'react';
-import { Wrench, Target, TrendingUp } from 'lucide-react';
-import { StrategyPlanner } from '../components/StrategyPlanner';
-import { ToolSelector } from '../components/ToolSelector';
-import { TrendsView } from '../components/TrendsView';
+import { useState} from 'react';
+import { Wrench, Target, TrendingUp} from 'lucide-react';
+import { StrategyPlanner} from '../components/StrategyPlanner';
+import { ToolSelector} from '../components/ToolSelector';
+import { TrendsView} from '../components/TrendsView';
 
 type TabType = 'tools' | 'strategies' | 'trends';
 
@@ -51,8 +51,7 @@ export function ContentPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
+  return (<div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

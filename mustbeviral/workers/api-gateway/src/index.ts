@@ -66,7 +66,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
-    const requestId = request.headers.get('X-Request-ID') || generateRequestId();
+    const requestId = request.headers.get('X-Request-ID')  ?? generateRequestId();
 
     // Add request ID to headers
     const enhancedRequest = new Request(request, {
@@ -351,6 +351,7 @@ async function handleAPIDocumentation(env: Env): Promise<Response> {
 
 // Export Durable Object classes
 export { RateLimiter, CircuitBreaker, APIMonitor };
+
 
 
 

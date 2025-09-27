@@ -1407,7 +1407,7 @@ export class EdgeComputingFramework {
 
   private selectOptimalNodes(nodes: EdgeNode[], workload: EdgeWorkload): EdgeNode[] {
     return nodes
-      .sort((a, _b) => this.calculateNodeScore(b, workload) - this.calculateNodeScore(a, workload))
+      .sort((a, b) => this.calculateNodeScore(b, workload) - this.calculateNodeScore(a, workload))
       .slice(0, Math.min(workload.scaling.maxReplicas, nodes.length));
   }
 
@@ -1492,7 +1492,7 @@ export class EdgeComputingFramework {
     const deployment = Array.from(this.deployments.values())
       .find(d => d.workloadId === workload.id && d.status === 'active');
 
-    if (!deployment) return;
+    if (!deployment) {return;}
 
     const nodesToRemove = deployment.nodeIds.slice(-replicas);
 
@@ -1508,7 +1508,7 @@ export class EdgeComputingFramework {
 
   private async removeFromNode(workload: EdgeWorkload, nodeId: string): Promise<void> {
     const node = this.nodes.get(nodeId);
-    if (!node) return;
+    if (!node) {return;}
 
     node.workloads = node.workloads.filter(w => w.id !== workload.id);
 
@@ -1538,7 +1538,7 @@ export class EdgeComputingFramework {
     const currentDeployment = Array.from(this.deployments.values())
       .find(d => d.workloadId === workload.id && d.status === 'active');
 
-    if (!currentDeployment) return;
+    if (!currentDeployment) {return;}
 
     // Rolling migration: move one replica at a time
     for (let i = 0; i < Math.min(currentDeployment.nodeIds.length, targetNodes.length); i++) {
@@ -1578,19 +1578,19 @@ export class EdgeComputingFramework {
   private generateEdgeAnalytics(nodes: EdgeNode[], timeRange?: { start: number; end: number }): EdgeAnalytics {
     const totalNodes = nodes.length;
     const activeNodes = nodes.filter(n => n.status === 'active').length;
-    const totalWorkloads = nodes.reduce((sum, _node) => sum + node.workloads.length, 0);
+    const totalWorkloads = nodes.reduce((sum, node) => sum + node.workloads.length, 0);
 
-    const avgCpuUtilization = nodes.reduce((sum, _node) =>
+    const avgCpuUtilization = nodes.reduce((sum, node) =>
       sum + ((node.capacity.cpu.allocated / node.capacity.cpu.total) * 100), 0) / totalNodes;
 
-    const avgMemoryUtilization = nodes.reduce((sum, _node) =>
+    const avgMemoryUtilization = nodes.reduce((sum, node) =>
       sum + ((node.capacity.memory.allocated / node.capacity.memory.total) * 100), 0) / totalNodes;
 
-    const avgLatency = nodes.reduce((sum, _node) =>
+    const avgLatency = nodes.reduce((sum, node) =>
       sum + node.network.latency.target, 0) / totalNodes;
 
     return {
-      summary: { _totalNodes,
+      summary: { totalNodes,
         activeNodes,
         totalWorkloads,
         avgCpuUtilization,
@@ -1615,10 +1615,10 @@ export class EdgeComputingFramework {
   }
 
   private aggregateResourceMetrics(nodes: EdgeNode[], resource: keyof EdgeCapacity): unknown {
-    const total = nodes.reduce((sum, _node) => sum + node.capacity[resource].total, 0);
-    const used = nodes.reduce((sum, _node) => sum + node.capacity[resource].allocated, 0);
+    const total = nodes.reduce((sum, node) => sum + node.capacity[resource].total, 0);
+    const used = nodes.reduce((sum, node) => sum + node.capacity[resource].allocated, 0);
 
-    return { _total,
+    return { total,
       used,
       available: total - used,
       utilization: (used / total) * 100
@@ -1626,12 +1626,12 @@ export class EdgeComputingFramework {
   }
 
   private aggregateNetworkMetrics(nodes: EdgeNode[]): unknown {
-    const totalBandwidth = nodes.reduce((sum, _node) => sum + node.network.bandwidth.inbound, 0);
-    const avgLatency = nodes.reduce((sum, _node) => sum + node.network.latency.target, 0) / nodes.length;
+    const totalBandwidth = nodes.reduce((sum, node) => sum + node.network.bandwidth.inbound, 0);
+    const avgLatency = nodes.reduce((sum, node) => sum + node.network.latency.target, 0) / nodes.length;
 
-    return { _totalBandwidth,
+    return { totalBandwidth,
       avgLatency,
-      connections: nodes.reduce((sum, _node) => sum + node.network.bandwidth.connections, 0)
+      connections: nodes.reduce((sum, node) => sum + node.network.bandwidth.connections, 0)
     };
   }
 
@@ -1640,7 +1640,7 @@ export class EdgeComputingFramework {
 
     nodes.forEach(node => {
       const region = `${node.location.continent}-${node.location.country}`;
-      distribution[region] = (distribution[region] || 0) + 1;
+      distribution[region] = (distribution[region]  ?? 0) + 1;
     });
 
     return distribution;
@@ -1649,7 +1649,7 @@ export class EdgeComputingFramework {
   private generateTrendData(timeRange?: { start: number; end: number }): unknown {
     // Generate mock trend data
     const points = 24; // 24 hours
-    const timestamps = Array.from({ length: points }, (_, _i) =>
+    const timestamps = Array.from({ length: points }, (_, i) =>
       Date.now() - (points - i) * 3600000
     );
 
@@ -1668,7 +1668,7 @@ export class EdgeComputingFramework {
         .find(d => d.workloadId === workloadId && d.status === 'active');
 
       if (deployment) {
-        placements.push({ _workloadId,
+        placements.push({ workloadId,
           nodeIds: deployment.nodeIds,
           cost: this.calculatePlacementCost(workload, deployment.nodeIds),
           latency: this.calculateAverageLatency(deployment.nodeIds),
@@ -1704,9 +1704,11 @@ export class EdgeComputingFramework {
   }
 
   private calculatePlacementCost(workload: EdgeWorkload, nodeIds: string[]): number {
-    return nodeIds.reduce((total, _nodeId) => {
+    return nodeIds.reduce((total, nodeId) => {
       const node = this.nodes.get(nodeId);
-      if (!node) return total;
+      if (!node) {
+    return total;
+  }
 
       const cpuCost = this.parseResourceValue(workload.resources.cpu) * node.provider.pricing.cpu;
       const memoryCost = this.parseResourceValue(workload.resources.memory) * node.provider.pricing.memory;
@@ -1721,13 +1723,15 @@ export class EdgeComputingFramework {
       return node ? node.network.latency.target : 0;
     });
 
-    return latencies.reduce((sum, _lat) => sum + lat, 0) / latencies.length;
+    return latencies.reduce((sum, lat) => sum + lat, 0) / latencies.length;
   }
 
   private calculateResourceUtilization(nodeIds: string[]): number {
     const utilizations = nodeIds.map(nodeId => {
       const node = this.nodes.get(nodeId);
-      if (!node) return 0;
+      if (!node) {
+    return 0;
+  }
 
       const cpuUtil = (node.capacity.cpu.allocated / node.capacity.cpu.total) * 100;
       const memUtil = (node.capacity.memory.allocated / node.capacity.memory.total) * 100;
@@ -1735,27 +1739,27 @@ export class EdgeComputingFramework {
       return (cpuUtil + memUtil) / 2;
     });
 
-    return utilizations.reduce((sum, _util) => sum + util, 0) / utilizations.length;
+    return utilizations.reduce((sum, util) => sum + util, 0) / utilizations.length;
   }
 
   private compareplacements(current: WorkloadPlacement, optimized: WorkloadPlacement): PlacementComparison {
-    const currentCost = current.placements.reduce((sum, _p) => sum + p.cost, 0);
-    const optimizedCost = optimized.placements.reduce((sum, _p) => sum + p.cost, 0);
+    const currentCost = current.placements.reduce((sum, p) => sum + p.cost, 0);
+    const optimizedCost = optimized.placements.reduce((sum, p) => sum + p.cost, 0);
     const costSavings = currentCost - optimizedCost;
 
-    const currentLatency = current.placements.reduce((sum, _p) => sum + p.latency, 0) / current.placements.length;
-    const optimizedLatency = optimized.placements.reduce((sum, _p) => sum + p.latency, 0) / optimized.placements.length;
+    const currentLatency = current.placements.reduce((sum, p) => sum + p.latency, 0) / current.placements.length;
+    const optimizedLatency = optimized.placements.reduce((sum, p) => sum + p.latency, 0) / optimized.placements.length;
     const latencyImprovement = currentLatency - optimizedLatency;
 
-    const currentUtilization = current.placements.reduce((sum, _p) => sum + p.utilization, 0) / current.placements.length;
-    const optimizedUtilization = optimized.placements.reduce((sum, _p) => sum + p.utilization, 0) / optimized.placements.length;
+    const currentUtilization = current.placements.reduce((sum, p) => sum + p.utilization, 0) / current.placements.length;
+    const optimizedUtilization = optimized.placements.reduce((sum, p) => sum + p.utilization, 0) / optimized.placements.length;
     const utilizationImprovement = optimizedUtilization - currentUtilization;
 
     const score = (costSavings / currentCost) * 0.4 +
                   (latencyImprovement / currentLatency) * 0.3 +
                   (utilizationImprovement / currentUtilization) * 0.3;
 
-    return { _score,
+    return { score,
       costSavings,
       latencyImprovement,
       utilizationImprovement
@@ -1917,7 +1921,7 @@ export class EdgeComputingFramework {
     }
 
     // Auto-recover after 2 minutes
-    setTimeout(() => {
+    setTimeout_(() => {
       this.recoverFromNetworkPartition(nodeIds);
     }, 120000);
   }
@@ -1961,7 +1965,7 @@ export class EdgeComputingFramework {
     const overall = healthyReplicas === deployment.replicas ? 'healthy' :
                    healthyReplicas > 0 ? 'degraded' : 'unhealthy';
 
-    return { _overall,
+    return { overall,
       replicas: {
         desired: deployment.replicas,
         ready: healthyReplicas,
@@ -2016,14 +2020,14 @@ export class EdgeComputingFramework {
 
   private async initializeNodeMonitoring(node: EdgeNode): Promise<void> {
     // Initialize monitoring for the node
-    setInterval(() => {
+    setInterval_(() => {
       this.updateNodeMetrics(node.id);
     }, 30000); // Update every 30 seconds
   }
 
   private updateNodeMetrics(nodeId: string): void {
     const node = this.nodes.get(nodeId);
-    if (!node) return;
+    if (!node) {return;}
 
     // Simulate metric updates
     node.monitoring.metrics.cpu.current = Math.random() * node.capacity.cpu.allocated;
@@ -2044,19 +2048,19 @@ export class EdgeComputingFramework {
   }
 
   private startResourceMonitoring(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.updateResourceMetrics();
     }, 60000); // Every minute
   }
 
   private startWorkloadOrchestration(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.processWorkloadAutoscaling();
     }, 30000); // Every 30 seconds
   }
 
   private startSecurityScanning(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.performSecurityScans();
     }, 300000); // Every 5 minutes
   }
@@ -2080,7 +2084,7 @@ export class EdgeComputingFramework {
     const deployment = Array.from(this.deployments.values())
       .find(d => d.workloadId === workload.id && d.status === 'active');
 
-    if (!deployment) return;
+    if (!deployment) {return;}
 
     const avgCpuUsage = this.calculateAverageCPUUsage(deployment.nodeIds, workload);
     const avgMemoryUsage = this.calculateAverageMemoryUsage(deployment.nodeIds, workload);
@@ -2113,25 +2117,29 @@ export class EdgeComputingFramework {
   private calculateAverageCPUUsage(nodeIds: string[], workload: EdgeWorkload): number {
     const usages = nodeIds.map(nodeId => {
       const node = this.nodes.get(nodeId);
-      if (!node) return 0;
+      if (!node) {
+    return 0;
+  }
 
       const workloadCPU = this.parseResourceValue(workload.resources.cpu);
       return (workloadCPU / node.capacity.cpu.total) * 100;
     });
 
-    return usages.reduce((sum, _usage) => sum + usage, 0) / usages.length;
+    return usages.reduce((sum, usage) => sum + usage, 0) / usages.length;
   }
 
   private calculateAverageMemoryUsage(nodeIds: string[], workload: EdgeWorkload): number {
     const usages = nodeIds.map(nodeId => {
       const node = this.nodes.get(nodeId);
-      if (!node) return 0;
+      if (!node) {
+    return 0;
+  }
 
       const workloadMemory = this.parseResourceValue(workload.resources.memory);
       return (workloadMemory / node.capacity.memory.total) * 100;
     });
 
-    return usages.reduce((sum, _usage) => sum + usage, 0) / usages.length;
+    return usages.reduce((sum, usage) => sum + usage, 0) / usages.length;
   }
 
   private performSecurityScans(): void {

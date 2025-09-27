@@ -1,33 +1,11 @@
 // Design System Demo Page
 import React, { useState } from 'react';
-import { _Button,
-  Card,
-  CardHeader,
-  CardContent,
-  CardTitle,
-  CardDescription,
-  Input,
-  CosmicBackground
-} from '../components/ui';
-import { _ThemeToggle,
-  CosmicEffectsControl,
-  AnimationToggle,
-  useTheme
-} from '../providers/ThemeProvider';
-import { _Star,
-  Zap,
-  Sparkles,
-  Rocket,
-  Atom,
-  Eye,
-  Mail,
-  Lock,
-  Search,
-  Send
-} from 'lucide-react';
+import { Button, Card, CardHeader, CardContent, CardTitle, CardDescription, Input, CosmicBackground} from '../components/ui';
+import { ThemeToggle, CosmicEffectsControl, AnimationToggle, useTheme} from '../providers/ThemeProvider';
+import { Star, Zap, Sparkles, Rocket, Atom, Eye, Mail, Lock, Search, Send} from 'lucide-react';
 
 export function DesignSystemDemo() {
-  const { tokens } = useTheme();
+  const { tokens} = useTheme();
   const [inputValue, setInputValue] = useState('');
 
   return (
@@ -139,7 +117,7 @@ export function DesignSystemDemo() {
                   rightIcon={<Send className="w-4 h-4" />}
                   animation="float"
                   value={inputValue}
-                  onChange={(_e) => setInputValue(e.target.value)}
+                  onChange={(e) => setInputValue(e.target.value)}
                 />
               </div>
             </CardContent>

@@ -1,9 +1,9 @@
 // Viral Prediction Widget with Advanced Analytics and Accessibility
 import React, { useState, useEffect, useCallback } from 'react';
-import { TrendingUp, Target, Clock, Users, Eye, Heart, Share2, Zap, Info } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
-import { Button } from './ui/Button';
-import { cn } from '../lib/utils';
+import { TrendingUp, Target, Clock, Users, Eye, Heart, Share2, Zap, Info} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle} from './ui/Card';
+import { Button} from './ui/Button';
+import { cn} from '../lib/utils';
 
 export interface ViralScore {
   overall: number; // 0-100
@@ -42,23 +42,15 @@ export interface ViralPredictionWidgetProps {
 }
 
 export const ViralPredictionWidget: React.FC<ViralPredictionWidgetProps> = ({
-  score,
-  loading = false,
-  onRefresh,
-  onApplyRecommendation,
-  className,
-  size = 'md',
-  showPredictions = true,
-  showRecommendations = true,
-  animated = true
+  score, loading = false, onRefresh, onApplyRecommendation, className, size = 'md', showPredictions = true, showRecommendations = true, animated = true
 }) => {
   const [animatedScore, setAnimatedScore] = useState(0);
   const [expandedFactors, setExpandedFactors] = useState(false);
   const [selectedRecommendation, setSelectedRecommendation] = useState<string | null>(null);
 
   // Animate score counting
-  useEffect(() => {
-    if (!animated || loading) return;
+  useEffect_(() => {
+    if (!animated ?? loading) {return;}
 
     const duration = 2000; // 2 seconds
     const steps = 60;
@@ -66,7 +58,7 @@ export const ViralPredictionWidget: React.FC<ViralPredictionWidgetProps> = ({
     const increment = score.overall / steps;
 
     let currentStep = 0;
-    const timer = setInterval(() => {
+    const timer = setInterval_(() => {
       currentStep++;
       setAnimatedScore(Math.min(score.overall, increment * currentStep));
       
@@ -81,30 +73,52 @@ export const ViralPredictionWidget: React.FC<ViralPredictionWidgetProps> = ({
 
   // Get score color and description
   const getScoreColor = useCallback((value: number) => {
-    if (value >= 80) return 'text-green-600';
-    if (value >= 60) return 'text-yellow-600';
-    if (value >= 40) return 'text-orange-600';
+    if (value >= 80) {
+    return 'text-green-600';
+  }
+    if (value >= 60) {
+    return 'text-yellow-600';
+  }
+    if (value >= 40) {
+    return 'text-orange-600';
+  }
     return 'text-red-600';
   }, []);
 
   const getScoreBgColor = useCallback((value: number) => {
-    if (value >= 80) return 'from-green-500 to-emerald-500';
-    if (value >= 60) return 'from-yellow-500 to-orange-500';
-    if (value >= 40) return 'from-orange-500 to-red-500';
+    if (value >= 80) {
+    return 'from-green-500 to-emerald-500';
+  }
+    if (value >= 60) {
+    return 'from-yellow-500 to-orange-500';
+  }
+    if (value >= 40) {
+    return 'from-orange-500 to-red-500';
+  }
     return 'from-red-500 to-red-600';
   }, []);
 
   const getScoreDescription = useCallback((value: number) => {
-    if (value >= 80) return 'Excellent viral potential';
-    if (value >= 60) return 'Good viral potential';
-    if (value >= 40) return 'Moderate viral potential';
+    if (value >= 80) {
+    return 'Excellent viral potential';
+  }
+    if (value >= 60) {
+    return 'Good viral potential';
+  }
+    if (value >= 40) {
+    return 'Moderate viral potential';
+  }
     return 'Low viral potential';
   }, []);
 
   // Format numbers for display
   const formatNumber = useCallback((num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`;
+  }
+    if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}K`;
+  }
     return num.toString();
   }, []);
 
@@ -237,7 +251,7 @@ export const ViralPredictionWidget: React.FC<ViralPredictionWidgetProps> = ({
                   trending: TrendingUp,
                   audience: Users,
                   format: Eye
-                }[factor] || Target;
+                }[factor]  ?? Target;
 
                 return (
                   <div key={factor} className="flex items-center gap-3">
@@ -347,8 +361,7 @@ export const ViralPredictionWidget: React.FC<ViralPredictionWidgetProps> = ({
                         </div>
                       </div>
                       
-                      {selectedRecommendation === rec.id && (
-                        <div className="mt-2 space-y-3">
+                      {selectedRecommendation === rec.id && (<div className="mt-2 space-y-3">
                           <p className="text-sm text-neutral-600">{rec.description}</p>
                           {onApplyRecommendation && (
                             <Button

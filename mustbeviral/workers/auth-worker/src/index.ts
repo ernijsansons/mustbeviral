@@ -55,7 +55,6 @@ export default {
     const rateLimiter = new RateLimiter(env.RATE_LIMITER);
 
     // Start request tracking
-    const requestId = crypto.randomUUID();
     const startTime = Date.now();
 
     logger.info('Request received', { _requestId,
@@ -73,7 +72,7 @@ export default {
       }
 
       // Apply rate limiting
-      const clientId = request.headers.get('CF-Connecting-IP') || 'unknown';
+      const clientId = request.headers.get('CF-Connecting-IP')  ?? 'unknown';
       const rateLimitCheck = await rateLimiter.check(clientId, request.url);
       if (!rateLimitCheck.allowed) {
         logger.warn('Rate limit exceeded', { _requestId, clientId });

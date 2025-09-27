@@ -1,9 +1,9 @@
 // User Profile Management Component
-import React, { _useState, useEffect } from 'react';
-import { _User, Edit, Save, X, Camera, Settings, Bell, Shield, Key } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { _apiClient, type User as UserType } from '../lib/api';
-import { logger } from '../lib/logging/productionLogger';
+import React, { useState, useEffect } from 'react';
+import { User, Edit, Save, X, Camera, Settings, Bell, Shield, Key} from 'lucide-react';
+import { useAuth} from '../hooks/useAuth';
+import { apiClient, type User as UserType} from '../lib/api';
+import { logger} from '../lib/logging/productionLogger';
 
 interface ProfileData {
   username: string;
@@ -29,7 +29,7 @@ interface ProfileData {
 }
 
 export function UserProfile() {
-  const { _user, refreshAuth } = useAuth();
+  const { user, refreshAuth} = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,12 +40,12 @@ export function UserProfile() {
     profile_data: {}
   });
 
-  useEffect(() => {
+  useEffect_(() => {
     if (user) {
       setProfileData({
         username: user.username,
         email: user.email,
-        profile_data: user.profile_data || {}
+        profile_data: user.profile_data ?? {}
       });
     }
   }, [user]);
@@ -56,9 +56,9 @@ export function UserProfile() {
         return {
           ...prev,
           profile_data: {
-            ...prev.profile_data,
+            ...prev.profiledata,
             [section]: {
-              ...prev.profile_data[section as keyof typeof prev.profile_data],
+              ...prev.profile_data[section as keyof typeof prev.profiledata],
               [field]: value
             }
           }
@@ -72,7 +72,7 @@ export function UserProfile() {
   };
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user) {return;}
 
     setIsLoading(true);
     setError(null);
@@ -83,7 +83,7 @@ export function UserProfile() {
         method: 'PUT',
         body: JSON.stringify({
           username: profileData.username,
-          profile_data: profileData.profile_data
+          profile_data: profileData.profiledata
         })
       });
 
@@ -100,7 +100,7 @@ export function UserProfile() {
 
         setTimeout(() => setSuccess(null), 3000);
       } else {
-        throw new Error(response.error || 'Failed to update profile');
+        throw new Error(response.error ?? 'Failed to update profile');
       }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to update profile';
@@ -121,7 +121,7 @@ export function UserProfile() {
       setProfileData({
         username: user.username,
         email: user.email,
-        profile_data: user.profile_data || {}
+        profile_data: user.profile_data ?? {}
       });
     }
     setIsEditing(false);
@@ -228,7 +228,7 @@ export function UserProfile() {
                 <input
                   type="text"
                   value={profileData.username}
-                  onChange={(_e) => handleInputChange('username', e.target.value)}
+                  onChange={(e) => handleInputChange('username', e.target.value)}
                   disabled={!isEditing}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                 />
@@ -250,8 +250,8 @@ export function UserProfile() {
                 </label>
                 <input
                   type="text"
-                  value={profileData.profile_data.firstName || ''}
-                  onChange={(_e) => handleInputChange('firstName', e.target.value, 'profile_data')}
+                  value={profileData.profile_data.firstName ?? ''}
+                  onChange={(e) => handleInputChange('firstName', e.target.value, 'profile_data')}
                   disabled={!isEditing}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                 />
@@ -262,8 +262,8 @@ export function UserProfile() {
                 </label>
                 <input
                   type="text"
-                  value={profileData.profile_data.lastName || ''}
-                  onChange={(_e) => handleInputChange('lastName', e.target.value, 'profile_data')}
+                  value={profileData.profile_data.lastName ?? ''}
+                  onChange={(e) => handleInputChange('lastName', e.target.value, 'profile_data')}
                   disabled={!isEditing}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                 />
@@ -273,8 +273,8 @@ export function UserProfile() {
                   Bio
                 </label>
                 <textarea
-                  value={profileData.profile_data.bio || ''}
-                  onChange={(_e) => handleInputChange('bio', e.target.value, 'profile_data')}
+                  value={profileData.profile_data.bio ?? ''}
+                  onChange={(e) => handleInputChange('bio', e.target.value, 'profile_data')}
                   disabled={!isEditing}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
@@ -287,8 +287,8 @@ export function UserProfile() {
                 </label>
                 <input
                   type="url"
-                  value={profileData.profile_data.website || ''}
-                  onChange={(_e) => handleInputChange('website', e.target.value, 'profile_data')}
+                  value={profileData.profile_data.website ?? ''}
+                  onChange={(e) => handleInputChange('website', e.target.value, 'profile_data')}
                   disabled={!isEditing}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   placeholder="https://yourwebsite.com"
@@ -300,8 +300,8 @@ export function UserProfile() {
                 </label>
                 <input
                   type="text"
-                  value={profileData.profile_data.location || ''}
-                  onChange={(_e) => handleInputChange('location', e.target.value, 'profile_data')}
+                  value={profileData.profile_data.location ?? ''}
+                  onChange={(e) => handleInputChange('location', e.target.value, 'profile_data')}
                   disabled={!isEditing}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   placeholder="City, Country"
@@ -320,8 +320,8 @@ export function UserProfile() {
                 </label>
                 <input
                   type="url"
-                  value={profileData.profile_data.socialLinks?.twitter || ''}
-                  onChange={(_e) => handleInputChange('twitter', e.target.value, 'socialLinks')}
+                  value={profileData.profile_data.socialLinks?.twitter ?? ''}
+                  onChange={(e) => handleInputChange('twitter', e.target.value, 'socialLinks')}
                   disabled={!isEditing}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   placeholder="https://twitter.com/yourusername"
@@ -333,8 +333,8 @@ export function UserProfile() {
                 </label>
                 <input
                   type="url"
-                  value={profileData.profile_data.socialLinks?.linkedin || ''}
-                  onChange={(_e) => handleInputChange('linkedin', e.target.value, 'socialLinks')}
+                  value={profileData.profile_data.socialLinks?.linkedin ?? ''}
+                  onChange={(e) => handleInputChange('linkedin', e.target.value, 'socialLinks')}
                   disabled={!isEditing}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   placeholder="https://linkedin.com/in/yourusername"
@@ -346,8 +346,8 @@ export function UserProfile() {
                 </label>
                 <input
                   type="url"
-                  value={profileData.profile_data.socialLinks?.instagram || ''}
-                  onChange={(_e) => handleInputChange('instagram', e.target.value, 'socialLinks')}
+                  value={profileData.profile_data.socialLinks?.instagram ?? ''}
+                  onChange={(e) => handleInputChange('instagram', e.target.value, 'socialLinks')}
                   disabled={!isEditing}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   placeholder="https://instagram.com/yourusername"
@@ -359,8 +359,8 @@ export function UserProfile() {
                 </label>
                 <input
                   type="url"
-                  value={profileData.profile_data.socialLinks?.tiktok || ''}
-                  onChange={(_e) => handleInputChange('tiktok', e.target.value, 'socialLinks')}
+                  value={profileData.profile_data.socialLinks?.tiktok ?? ''}
+                  onChange={(e) => handleInputChange('tiktok', e.target.value, 'socialLinks')}
                   disabled={!isEditing}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                   placeholder="https://tiktok.com/@yourusername"
@@ -379,12 +379,12 @@ export function UserProfile() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Member since</span>
                 <span className="text-sm font-medium">
-                  {new Date(user.created_at).toLocaleDateString()}
+                  {new Date(user.createdat).toLocaleDateString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">AI Preference</span>
-                <span className="text-sm font-medium">Level {user.ai_preference_level}</span>
+                <span className="text-sm font-medium">Level {user.aipreferencelevel}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Role</span>
@@ -423,8 +423,8 @@ export function UserProfile() {
               <label className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={profileData.profile_data.preferences?.notifications || false}
-                  onChange={(_e) => handleInputChange('notifications', e.target.checked.toString(), 'preferences')}
+                  checked={profileData.profile_data.preferences?.notifications ?? false}
+                  onChange={(e) => handleInputChange('notifications', e.target.checked.toString(), 'preferences')}
                   disabled={!isEditing}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
                 />
@@ -433,8 +433,8 @@ export function UserProfile() {
               <label className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={profileData.profile_data.preferences?.publicProfile || false}
-                  onChange={(_e) => handleInputChange('publicProfile', e.target.checked.toString(), 'preferences')}
+                  checked={profileData.profile_data.preferences?.publicProfile ?? false}
+                  onChange={(e) => handleInputChange('publicProfile', e.target.checked.toString(), 'preferences')}
                   disabled={!isEditing}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
                 />
@@ -443,8 +443,8 @@ export function UserProfile() {
               <label className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={profileData.profile_data.preferences?.emailMarketing || false}
-                  onChange={(_e) => handleInputChange('emailMarketing', e.target.checked.toString(), 'preferences')}
+                  checked={profileData.profile_data.preferences?.emailMarketing ?? false}
+                  onChange={(e) => handleInputChange('emailMarketing', e.target.checked.toString(), 'preferences')}
                   disabled={!isEditing}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
                 />

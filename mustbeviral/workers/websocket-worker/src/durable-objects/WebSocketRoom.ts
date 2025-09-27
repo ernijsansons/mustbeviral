@@ -33,7 +33,7 @@ export class WebSocketRoom {
 
   constructor(private state: DurableObjectState, private env: unknown) {
     this.roomId = state.id.toString();
-    this.logger = new Logger('WebSocketRoom', env.LOG_LEVEL || 'INFO');
+    this.logger = new Logger('WebSocketRoom', env.LOG_LEVEL  ?? 'INFO');
 
     // Set up cleanup alarm
     this.scheduleCleanup();
@@ -80,9 +80,9 @@ export class WebSocketRoom {
     const userId = url.searchParams.get('userId');
     const username = url.searchParams.get('username');
     const role = url.searchParams.get('role');
-    const roomType = url.searchParams.get('roomType') || 'general';
+    const roomType = url.searchParams.get('roomType')  ?? 'general';
 
-    if (!userId || !username) {
+    if (!userId  ?? !username) {
       return new Response('Missing user credentials', { status: 400 });
     }
 
@@ -108,7 +108,7 @@ export class WebSocketRoom {
       websocket: server,
       userId,
       username,
-      role: role || 'user',
+      role: role  ?? 'user',
       joinedAt: Date.now(),
       lastActivity: Date.now(),
       metadata: { _roomType,
@@ -244,7 +244,7 @@ export class WebSocketRoom {
 
   async handleChatMessage(connectionId: string, message: unknown): Promise<void> {
     const connection = this.connections.get(connectionId);
-    if (!connection) return;
+    if (!connection) {return;}
 
     const chatMessage: RoomMessage = {
       type: 'chat',
@@ -267,13 +267,13 @@ export class WebSocketRoom {
     this.logger.info('Chat message sent', {
       roomId: this.roomId,
       from: connection.userId,
-      messageLength: message.text?.length || 0
+      messageLength: message.text?.length  ?? 0
     });
   }
 
   async handleTypingIndicator(connectionId: string, message: unknown): Promise<void> {
     const connection = this.connections.get(connectionId);
-    if (!connection) return;
+    if (!connection) {return;}
 
     const typingMessage: RoomMessage = {
       type: 'typing',
@@ -292,7 +292,7 @@ export class WebSocketRoom {
 
   async handlePrivateMessage(connectionId: string, message: unknown): Promise<void> {
     const connection = this.connections.get(connectionId);
-    if (!connection) return;
+    if (!connection) {return;}
 
     const targetUserId = message.to;
     const targetConnection = Array.from(this.connections.values())
@@ -328,7 +328,7 @@ export class WebSocketRoom {
 
   async handlePing(connectionId: string): Promise<void> {
     const connection = this.connections.get(connectionId);
-    if (!connection) return;
+    if (!connection) {return;}
 
     connection.websocket.send(JSON.stringify({
       type: 'pong',
@@ -341,7 +341,7 @@ export class WebSocketRoom {
 
   async handleCursorUpdate(connectionId: string, message: unknown): Promise<void> {
     const connection = this.connections.get(connectionId);
-    if (!connection) return;
+    if (!connection) {return;}
 
     const cursorMessage: RoomMessage = {
       type: 'cursor',
@@ -349,7 +349,7 @@ export class WebSocketRoom {
       data: {
         username: connection.username,
         position: message.position,
-        color: message.color || this.getUserColor(connection.userId)
+        color: message.color  ?? this.getUserColor(connection.userId)
       },
       timestamp: Date.now(),
       messageId: crypto.randomUUID()
@@ -361,7 +361,7 @@ export class WebSocketRoom {
 
   async handleSelectionUpdate(connectionId: string, message: unknown): Promise<void> {
     const connection = this.connections.get(connectionId);
-    if (!connection) return;
+    if (!connection) {return;}
 
     const selectionMessage: RoomMessage = {
       type: 'selection',
@@ -381,7 +381,7 @@ export class WebSocketRoom {
 
   async handleCollaborativeOperation(connectionId: string, message: unknown): Promise<void> {
     const connection = this.connections.get(connectionId);
-    if (!connection) return;
+    if (!connection) {return;}
 
     // This would integrate with operational transform or CRDT
     const operationMessage: RoomMessage = {
@@ -402,7 +402,7 @@ export class WebSocketRoom {
 
   handleWebSocketClose(connectionId: string): void {
     const connection = this.connections.get(connectionId);
-    if (!connection) return;
+    if (!connection) {return;}
 
     // Notify other users
     this.broadcastMessage({
@@ -479,7 +479,7 @@ export class WebSocketRoom {
   async handleCleanup(request: Request): Promise<Response> {
     // Clean up inactive connections
     const now = Date.now();
-    const timeout = parseInt(this.env.CONNECTION_TIMEOUT || '300000');
+    const timeout = parseInt(this.env.CONNECTION_TIMEOUT  ?? '300000');
 
     for (const [connectionId, connection] of this.connections.entries()) {
       if (now - connection.lastActivity > timeout) {

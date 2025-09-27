@@ -4,11 +4,11 @@
  * Ensures SOLID principles compliance and proper separation of concerns
  */
 
-import { DIContainer, ServiceLifetime } from '../infrastructure/DIContainer';
-import { createServiceRegistry } from '../infrastructure/ServiceRegistryFixed';
-import { User, UserRole, UserStatus } from '../domain/entities/User';
-import { UserDomainService } from '../domain/services/UserDomainService';
-import { UserApplicationService } from '../application/services/UserApplicationService';
+import { DIContainer, ServiceLifetime} from '../infrastructure/DIContainer';
+import { createServiceRegistry} from '../infrastructure/ServiceRegistryFixed';
+import { User, UserRole, UserStatus} from '../domain/entities/User';
+import { UserDomainService} from '../domain/services/UserDomainService';
+import { UserApplicationService} from '../application/services/UserApplicationService';
 
 // Mock environment for testing
 const mockEnv = {
@@ -17,15 +17,15 @@ const mockEnv = {
   ANALYTICS: {} as AnalyticsEngineDataset
 };
 
-describe('Architecture Validation', () => {
-  describe('Dependency Injection Container', () => {
+describe('Architecture Validation', _() => {
+  describe('Dependency Injection Container', _() => {
     let container: DIContainer;
 
-    beforeEach(() => {
+    beforeEach_(() => {
       container = new DIContainer();
     });
 
-    test('should register and resolve services', async () => {
+    test('should register and resolve services', async() => {
       // Register a simple service
       container.registerSingleton(
         'testService',
@@ -37,7 +37,7 @@ describe('Architecture Validation', () => {
       expect(service).toEqual({ value: 'test' });
     });
 
-    test('should handle service dependencies', async () => {
+    test('should handle service dependencies', async() => {
       // Register dependency
       container.registerSingleton(
         'dependency',
@@ -57,7 +57,7 @@ describe('Architecture Validation', () => {
       expect(service.value).toBe('service');
     });
 
-    test('should detect circular dependencies', async () => {
+    test('should detect circular dependencies', async() => {
       container.registerSingleton(
         'serviceA',
         (b: any) => ({ b }),
@@ -73,7 +73,7 @@ describe('Architecture Validation', () => {
       await expect(container.resolve('serviceA')).rejects.toThrow('Circular dependency detected');
     });
 
-    test('should handle different service lifetimes', async () => {
+    test('should handle different service lifetimes', async() => {
       let callCount = 0;
 
       container.register({
@@ -89,7 +89,7 @@ describe('Architecture Validation', () => {
       expect(instance2.id).toBe(2);
     });
 
-    test('should validate service registrations', () => {
+    test('should validate service registrations', _() => {
       container.registerSingleton('service1', () => ({}), ['missingService']);
 
       const validation = container.validate();
@@ -98,8 +98,8 @@ describe('Architecture Validation', () => {
     });
   });
 
-  describe('Domain Entity Validation', () => {
-    test('User entity should encapsulate business logic', () => {
+  describe('Domain Entity Validation', _() => {
+    test('User entity should encapsulate business logic', _() => {
       const user = User.create({
         email: 'test@example.com',
         firstName: 'Test',
@@ -111,12 +111,12 @@ describe('Architecture Validation', () => {
       expect(user.id).toBeDefined();
       expect(user.email).toBe('test@example.com');
       expect(user.fullName).toBe('Test User');
-      expect(user.status).toBe(UserStatus.PENDING_VERIFICATION);
+      expect(user.status).toBe(UserStatus.PENDINGVERIFICATION);
       expect(user.emailVerified).toBe(false);
     });
 
-    test('User entity should validate business rules', () => {
-      expect(() => {
+    test('User entity should validate business rules', _() => {
+      expect_(() => {
         User.create({
           email: 'invalid-email',
           firstName: 'Test',
@@ -125,7 +125,7 @@ describe('Architecture Validation', () => {
         });
       }).toThrow('Invalid email address');
 
-      expect(() => {
+      expect_(() => {
         User.create({
           email: 'test@example.com',
           firstName: '',
@@ -135,7 +135,7 @@ describe('Architecture Validation', () => {
       }).toThrow('First name is required');
     });
 
-    test('User entity should handle email verification', () => {
+    test('User entity should handle email verification', _() => {
       const user = User.create({
         email: 'test@example.com',
         firstName: 'Test',
@@ -150,7 +150,7 @@ describe('Architecture Validation', () => {
       expect(user.status).toBe(UserStatus.ACTIVE);
     });
 
-    test('User entity should handle password reset', () => {
+    test('User entity should handle password reset', _() => {
       const user = User.create({
         email: 'test@example.com',
         firstName: 'Test',
@@ -165,7 +165,7 @@ describe('Architecture Validation', () => {
       expect(user.toPersistence().passwordHash).toBe('new_hashed_password');
     });
 
-    test('User entity should handle role-based permissions', () => {
+    test('User entity should handle role-based permissions', _() => {
       const adminUser = User.create({
         email: 'admin@example.com',
         firstName: 'Admin',
@@ -190,8 +190,8 @@ describe('Architecture Validation', () => {
     });
   });
 
-  describe('Service Registry Integration', () => {
-    test('should create fully configured service registry', () => {
+  describe('Service Registry Integration', _() => {
+    test('should create fully configured service registry', _() => {
       const serviceRegistry = createServiceRegistry(mockEnv);
       const validation = serviceRegistry.validateServices();
 
@@ -199,7 +199,7 @@ describe('Architecture Validation', () => {
       expect(validation.errors).toHaveLength(0);
     });
 
-    test('should resolve all core services', async () => {
+    test('should resolve all core services', async() => {
       const serviceRegistry = createServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -219,7 +219,7 @@ describe('Architecture Validation', () => {
       }
     });
 
-    test('should maintain proper service lifetimes', async () => {
+    test('should maintain proper service lifetimes', async() => {
       const serviceRegistry = createServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -240,8 +240,8 @@ describe('Architecture Validation', () => {
     });
   });
 
-  describe('Architecture Principles Validation', () => {
-    test('should enforce Single Responsibility Principle', () => {
+  describe('Architecture Principles Validation', _() => {
+    test('should enforce Single Responsibility Principle', _() => {
       // Each service should have a single responsibility
       const userDomainService = new UserDomainService(
         {} as any, {} as any, {} as any, {} as any
@@ -257,7 +257,7 @@ describe('Architecture Validation', () => {
       expect((userDomainService as any).createCampaign).toBeUndefined();
     });
 
-    test('should enforce Dependency Inversion Principle', () => {
+    test('should enforce Dependency Inversion Principle', _() => {
       // Services should depend on interfaces, not concrete implementations
       const serviceRegistry = createServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
@@ -270,7 +270,7 @@ describe('Architecture Validation', () => {
       expect(serviceInfo.userDomainService.dependencies).toContain('emailService');
     });
 
-    test('should enforce Interface Segregation Principle', async () => {
+    test('should enforce Interface Segregation Principle', async() => {
       const serviceRegistry = createServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -282,7 +282,7 @@ describe('Architecture Validation', () => {
       expect(userAppService.commands).not.toBe(userAppService.queries);
     });
 
-    test('should maintain proper layer separation', async () => {
+    test('should maintain proper layer separation', async() => {
       // Domain layer should not depend on application layer
       const user = User.create({
         email: 'test@example.com',
@@ -301,8 +301,8 @@ describe('Architecture Validation', () => {
     });
   });
 
-  describe('Error Handling and Validation', () => {
-    test('should handle validation errors gracefully', async () => {
+  describe('Error Handling and Validation', _() => {
+    test('should handle validation errors gracefully', async() => {
       const serviceRegistry = createServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
       const userAppService = await container.resolve<UserApplicationService>('userApplicationService');
@@ -319,7 +319,7 @@ describe('Architecture Validation', () => {
       ).rejects.toThrow();
     });
 
-    test('should maintain data consistency', () => {
+    test('should maintain data consistency', _() => {
       const user = User.create({
         email: 'test@example.com',
         firstName: 'Test',
@@ -339,8 +339,8 @@ describe('Architecture Validation', () => {
     });
   });
 
-  describe('Performance and Scalability', () => {
-    test('should handle service resolution efficiently', async () => {
+  describe('Performance and Scalability', _() => {
+    test('should handle service resolution efficiently', async() => {
       const serviceRegistry = createServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -360,7 +360,7 @@ describe('Architecture Validation', () => {
       expect(duration).toBeLessThan(1000);
     });
 
-    test('should properly clean up scoped services', async () => {
+    test('should properly clean up scoped services', async() => {
       const serviceRegistry = createServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
 
@@ -379,8 +379,8 @@ describe('Architecture Validation', () => {
   });
 });
 
-describe('Microservices Architecture Validation', () => {
-  test('should have proper service boundaries', () => {
+describe('Microservices Architecture Validation', _() => {
+  test('should have proper service boundaries', _() => {
     const serviceRegistry = createServiceRegistry(mockEnv);
     const services = serviceRegistry.getServiceInfo();
 
@@ -398,7 +398,7 @@ describe('Microservices Architecture Validation', () => {
     });
   });
 
-  test('should support independent deployment', async () => {
+  test('should support independent deployment', async() => {
     // Each microservice should be independently testable
     const serviceRegistry = createServiceRegistry(mockEnv);
     const container = serviceRegistry.getContainer();
@@ -411,7 +411,7 @@ describe('Microservices Architecture Validation', () => {
     expect(typeof userService.registerUser).toBe('function');
   });
 
-  test('should handle service communication through events', async () => {
+  test('should handle service communication through events', async() => {
     const serviceRegistry = createServiceRegistry(mockEnv);
     const container = serviceRegistry.getContainer();
 

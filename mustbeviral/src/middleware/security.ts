@@ -3,9 +3,9 @@
  * Provides comprehensive security headers and proper CORS configuration
  */
 
-import { EnvironmentManager } from '../config/environment';
-import { ValidationError } from './validation';
-import { logger } from '../lib/logging/productionLogger';
+import { EnvironmentManager} from '../config/environment';
+import { ValidationError} from './validation';
+import { logger} from '../lib/logging/productionLogger';
 
 // Generate cryptographically secure nonce for CSP
 function generateNonce(): string {
@@ -263,8 +263,8 @@ export class SecurityMiddleware {
     headers.set('Cross-Origin-Resource-Policy', 'same-origin');
 
     // Cache Control for sensitive endpoints
-    const url = new URL(response.url || 'https://example.com');
-    if (url.pathname.includes('/auth/') || url.pathname.includes('/api/user/')) {
+    const url = new URL(response.url ?? 'https://example.com');
+    if (url.pathname.includes('/auth/')  ?? url.pathname.includes('/api/user/')) {
       headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
       headers.set('Pragma', 'no-cache');
       headers.set('Expires', '0');
@@ -288,13 +288,13 @@ export class SecurityMiddleware {
    * Check if origin is allowed
    */
   private isOriginAllowed(origin: string | null): boolean {
-    if (!origin) {
+    if(!origin) {
       return false; // No origin header in request
     }
 
     // Allow localhost in development
     if (EnvironmentManager.isDevelopment()) {
-      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      if (origin.startsWith('http://localhost:')  ?? origin.startsWith('http://127.0.0.1:')) {
         return true;
       }
     }
@@ -594,8 +594,7 @@ export class SecurityMiddleware {
     const urlHostWithoutPort = url.hostname;
 
     // Allow exact match or wildcard subdomain match
-    return hostWithoutPort === urlHostWithoutPort ||
-           hostWithoutPort.endsWith('.' + urlHostWithoutPort);
+    return hostWithoutPort === urlHostWithoutPort || hostWithoutPort.endsWith('.' + urlHostWithoutPort);
   }
 
   /**
@@ -610,8 +609,8 @@ export class SecurityMiddleware {
    * Create security violation response
    */
   createSecurityViolationResponse(reason: string, request?: Request): Response {
-    const userAgent = request?.headers.get('user-agent') || 'unknown';
-    const ip = request?.headers.get('cf-connecting-ip') || request?.headers.get('x-forwarded-for') || 'unknown';
+    const userAgent = request?.headers.get('user-agent') ?? 'unknown';
+    const ip = request?.headers.get('cf-connecting-ip') ?? request?.headers.get('x-forwarded-for') ?? 'unknown';
     
     logger.security('Security violation detected', 'high', {
       component: 'SecurityMiddleware',
@@ -652,11 +651,11 @@ export function createSecurityMiddleware() {
     /**
      * Process request security
      */
-    processRequest: (request: Request): Response | null => {
+    processRequest: (request: Request): Response | null = > {
       // Validate request for security issues
       const validation = security.validateRequest(request);
       if (!validation.valid) {
-        return security.createSecurityViolationResponse(validation.reason || 'Unknown security violation', request);
+        return security.createSecurityViolationResponse(validation.reason ?? 'Unknown security violation', request);
       }
 
       return null; // Allow request to continue
@@ -745,7 +744,7 @@ export function getContentTypeSecurityHeaders(contentType: string): Headers {
  * Check if request is from a bot
  */
 export function isBotRequest(request: Request): boolean {
-  const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
+  const userAgent = request.headers.get('user-agent')?.toLowerCase() ?? '';
 
   const botPatterns = [
     'googlebot',

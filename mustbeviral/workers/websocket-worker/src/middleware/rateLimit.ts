@@ -19,7 +19,7 @@ export class RateLimitMiddleware {
   private env: unknown;
   private config: RateLimitConfig;
 
-  // In-memory stores for rate limiting (in production, use Durable Objects or external store)
+  // In-memory stores for rate limiting(in production, use Durable Objects or external store)
   private requestCounts: Map<string, { count: number; resetTime: number }> = new Map();
   private connectionCounts: Map<string, number> = new Map();
   private messageCounts: Map<string, { count: number; resetTime: number }> = new Map();
@@ -28,9 +28,9 @@ export class RateLimitMiddleware {
     this.env = env;
     this.config = {
       windowMs: 60 * 1000, // 1 minute
-      maxRequests: parseInt(env.MAX_REQUESTS_PER_MINUTE || '60'),
-      maxConnections: parseInt(env.MAX_CONNECTIONS_PER_IP || '20'),
-      messageRateLimit: parseInt(env.MESSAGE_RATE_LIMIT || '60')
+      maxRequests: parseInt(env.MAX_REQUESTS_PER_MINUTE  ?? '60'),
+      maxConnections: parseInt(env.MAX_CONNECTIONS_PER_IP  ?? '20'),
+      messageRateLimit: parseInt(env.MESSAGE_RATE_LIMIT  ?? '60')
     };
 
     // Clean up expired entries periodically
@@ -39,12 +39,11 @@ export class RateLimitMiddleware {
 
   async checkLimit(clientIP: string, _request: Request): Promise<RateLimitResult> {
     const now = Date.now();
-    const _windowStart = now - this.config.windowMs;
 
     // Get or create request count for this IP
     let requestData = this.requestCounts.get(clientIP);
 
-    if (!requestData || requestData.resetTime <= now) {
+    if (!requestData  ?? requestData.resetTime <= now) {
       // Initialize or reset the window
       requestData = {
         count: 0,
@@ -74,7 +73,7 @@ export class RateLimitMiddleware {
   }
 
   async checkConnectionLimit(clientIP: string): Promise<RateLimitResult> {
-    const currentConnections = this.connectionCounts.get(clientIP) || 0;
+    const currentConnections = this.connectionCounts.get(clientIP)  ?? 0;
 
     if (currentConnections >= this.config.maxConnections) {
       return {
@@ -90,12 +89,12 @@ export class RateLimitMiddleware {
   }
 
   incrementConnectionCount(clientIP: string): void {
-    const current = this.connectionCounts.get(clientIP) || 0;
+    const current = this.connectionCounts.get(clientIP)  ?? 0;
     this.connectionCounts.set(clientIP, current + 1);
   }
 
   decrementConnectionCount(clientIP: string): void {
-    const current = this.connectionCounts.get(clientIP) || 0;
+    const current = this.connectionCounts.get(clientIP)  ?? 0;
     if (current > 0) {
       this.connectionCounts.set(clientIP, current - 1);
     }
@@ -107,13 +106,13 @@ export class RateLimitMiddleware {
   }
 
   async checkMessageLimit(clientIP: string, userId?: string): Promise<RateLimitResult> {
-    const key = userId || clientIP;
+    const key = userId  ?? clientIP;
     const now = Date.now();
 
     // Get or create message count for this user/IP
     let messageData = this.messageCounts.get(key);
 
-    if (!messageData || messageData.resetTime <= now) {
+    if (!messageData  ?? messageData.resetTime <= now) {
       // Initialize or reset the window
       messageData = {
         count: 0,
@@ -145,7 +144,7 @@ export class RateLimitMiddleware {
   createRateLimitResponse(result: RateLimitResult): Response {
     const headers = new Headers({
       'Content-Type': 'application/json',
-      'X-RateLimit-Remaining': (result.remaining || 0).toString()
+      'X-RateLimit-Remaining': (result.remaining  ?? 0).toString()
     });
 
     if (result.resetTime) {
@@ -177,7 +176,7 @@ export class RateLimitMiddleware {
       'guest': 0.5
     };
 
-    const multiplier = roleMultipliers[userRole as keyof typeof roleMultipliers] || 1;
+    const multiplier = roleMultipliers[userRole as keyof typeof roleMultipliers]  ?? 1;
     const adjustedLimit = Math.floor(this.config.messageRateLimit * multiplier);
 
     const now = Date.now();
@@ -185,7 +184,7 @@ export class RateLimitMiddleware {
 
     let data = this.messageCounts.get(key);
 
-    if (!data || data.resetTime <= now) {
+    if (!data  ?? data.resetTime <= now) {
       data = {
         count: 0,
         resetTime: now + this.config.windowMs
@@ -221,7 +220,7 @@ export class RateLimitMiddleware {
 
     let burstData = this.requestCounts.get(key);
 
-    if (!burstData || burstData.resetTime <= now) {
+    if (!burstData  ?? burstData.resetTime <= now) {
       burstData = {
         count: 0,
         resetTime: now + shortWindow
@@ -252,7 +251,6 @@ export class RateLimitMiddleware {
     // This would typically be stored in a persistent store
     // For now, using in-memory tracking
 
-    const _penaltyKey = `penalty:${clientIP}`;
     const violations = this.getViolationCount(clientIP);
 
     if (violations > 5) {

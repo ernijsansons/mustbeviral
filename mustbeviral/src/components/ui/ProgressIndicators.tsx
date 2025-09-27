@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Check, ChevronRight, Clock, AlertCircle, Info, CheckCircle, XCircle } from 'lucide-react';
+import { Check, ChevronRight, Clock, AlertCircle, Info, CheckCircle, XCircle} from 'lucide-react';
 
 export type StepStatus = 'pending' | 'current' | 'completed' | 'error' | 'warning';
 
@@ -43,18 +43,8 @@ export interface StepperProps {
   variant?: 'default' | 'compact' | 'detailed';
 }
 
-export const Stepper: React.FC<StepperProps> = ({ steps,
-  orientation = 'horizontal',
-  showProgress = true,
-  showTimeEstimates = false,
-  showSubsteps = false,
-  allowClickToNavigate = false,
-  onStepClick,
-  className = '',
-  size = 'md',
-  variant = 'default'
+export const Stepper: React.FC<StepperProps> = ({ steps, orientation = 'horizontal', showProgress = true, showTimeEstimates = false, showSubsteps = false, allowClickToNavigate = false, onStepClick, className = '', size = 'md', variant = 'default'
 }) => {
-  const currentStepIndex = steps.findIndex(step => step.status === 'current');
   const completedSteps = steps.filter(step => step.status === 'completed').length;
   const totalSteps = steps.length;
   const progressPercentage = totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0;
@@ -98,7 +88,7 @@ export const Stepper: React.FC<StepperProps> = ({ steps,
   };
 
   const handleStepClick = (step: Step, index: number) => {
-    if (allowClickToNavigate && onStepClick && (step.status === 'completed' || step.status === 'current')) {
+    if (allowClickToNavigate && onStepClick && (step.status === 'completed'  ?? step.status === 'current')) {
       onStepClick(step.id);
     }
   };
@@ -110,7 +100,9 @@ export const Stepper: React.FC<StepperProps> = ({ steps,
   };
 
   const formatTime = (seconds: number): string => {
-    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 60) {
+    return `${seconds}s`;
+  }
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
@@ -134,7 +126,7 @@ export const Stepper: React.FC<StepperProps> = ({ steps,
           </div>
         )}
 
-        {steps.map((step, _index) => (
+        {steps.map((step, index) => (
           <div key={step.id} className="relative">
             <div className="flex items-start">
               {/* Step Circle */}
@@ -142,14 +134,14 @@ export const Stepper: React.FC<StepperProps> = ({ steps,
                 <button
                   type="button"
                   onClick={() => handleStepClick(step, index)}
-                  onKeyDown={(_e) => handleKeyDown(e, step, index)}
-                  disabled={!allowClickToNavigate || (step.status !== 'completed' && step.status !== 'current')}
+                  onKeyDown={(e) => handleKeyDown(e, step, index)}
+                  disabled={!allowClickToNavigate ?? (step.status !== 'completed' && step.status !== 'current')}
                   className={`${getStepClasses(step, index)} ${
-                    allowClickToNavigate && (step.status === 'completed' || step.status === 'current')
+                    allowClickToNavigate && (step.status === 'completed'  ?? step.status === 'current')
                       ? 'cursor-pointer hover:scale-105'
                       : 'cursor-default'
                   }`}
-                  aria-label={`Step ${index + 1}: ${step.title}`}
+                  aria-label = {`Step ${index + 1}: ${step.title}`}
                 >
                   {getStepIcon(step, index)}
                 </button>
@@ -207,7 +199,7 @@ export const Stepper: React.FC<StepperProps> = ({ steps,
                 {/* Substeps */}
                 {showSubsteps && step.substeps && step.substeps.length > 0 && (
                   <div className="mt-3 ml-4 space-y-2">
-                    {step.substeps.map((_substep) => (
+                    {step.substeps.map((substep) => (
                       <div key={substep.id} className="flex items-center text-sm">
                         <div className={`w-2 h-2 rounded-full mr-3 ${
                           substep.status === 'completed' ? 'bg-green-500' :
@@ -259,17 +251,17 @@ export const Stepper: React.FC<StepperProps> = ({ steps,
       )}
 
       <div className="flex items-center justify-between">
-        {steps.map((step, _index) => (
+        {steps.map((step, index) => (
           <React.Fragment key={step.id}>
             <div className="flex flex-col items-center flex-1">
               {/* Step Circle */}
               <button
                 type="button"
                 onClick={() => handleStepClick(step, index)}
-                onKeyDown={(_e) => handleKeyDown(e, step, index)}
-                disabled={!allowClickToNavigate || (step.status !== 'completed' && step.status !== 'current')}
+                onKeyDown={(e) => handleKeyDown(e, step, index)}
+                disabled={!allowClickToNavigate ?? (step.status !== 'completed' && step.status !== 'current')}
                 className={`${getStepClasses(step, index)} ${
-                  allowClickToNavigate && (step.status === 'completed' || step.status === 'current')
+                  allowClickToNavigate && (step.status === 'completed'  ?? step.status === 'current')
                     ? 'cursor-pointer hover:scale-105'
                     : 'cursor-default'
                 } mb-4`}
@@ -333,12 +325,7 @@ export interface WizardProgressProps {
   className?: string;
 }
 
-export const WizardProgress: React.FC<WizardProgressProps> = ({ _currentStep,
-  totalSteps,
-  stepTitles,
-  allowSkipSteps = false,
-  onStepClick,
-  className = ''
+export const WizardProgress: React.FC<WizardProgressProps> = ({ currentStep, totalSteps, stepTitles, allowSkipSteps = false, onStepClick, className = ''
 }) => {
   const progressPercentage = (currentStep / totalSteps) * 100;
 
@@ -365,11 +352,11 @@ export const WizardProgress: React.FC<WizardProgressProps> = ({ _currentStep,
         </div>
 
         <div className="flex justify-between text-sm">
-          {stepTitles.map((title, _index) => (
+          {stepTitles.map((title, index) => (
             <button
               key={index}
               onClick={() => allowSkipSteps && onStepClick?.(index + 1)}
-              disabled={!allowSkipSteps || index + 1 > currentStep}
+              disabled={!allowSkipSteps ?? index + 1 > currentStep}
               className={`${
                 index + 1 === currentStep
                   ? 'text-indigo-600 font-medium'
@@ -409,15 +396,12 @@ export interface TimelineProgressProps {
   compact?: boolean;
 }
 
-export const TimelineProgress: React.FC<TimelineProgressProps> = ({ _events,
-  className = '',
-  showDuration = false,
-  compact = false
+export const TimelineProgress: React.FC<TimelineProgressProps> = ({ events, className = '', showDuration = false, compact = false
 }) => {
   return (
     <div className={`flow-root ${className}`}>
       <ul className="-mb-8">
-        {events.map((event, _index) => (
+        {events.map((event, index) => (
           <li key={event.id}>
             <div className="relative pb-8">
               {index !== events.length - 1 && (
@@ -503,14 +487,11 @@ export interface BreadcrumbProgressProps {
   onItemClick?: (item: BreadcrumbItem) => void;
 }
 
-export const BreadcrumbProgress: React.FC<BreadcrumbProgressProps> = ({ _items,
-  separator = <ChevronRight className="h-4 w-4 text-gray-400" />,
-  className = '',
-  onItemClick
+export const BreadcrumbProgress: React.FC<BreadcrumbProgressProps> = ({ items, separator = <ChevronRight className="h-4 w-4 text-gray-400" />, className = '', onItemClick
 }) => {
   return (
     <nav className={`flex items-center space-x-2 text-sm ${className}`} aria-label="Breadcrumb">
-      {items.map((item, _index) => (
+      {items.map((item, index) => (
         <React.Fragment key={item.id}>
           {index > 0 && separator}
 

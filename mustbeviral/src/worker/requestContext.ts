@@ -3,8 +3,8 @@
  * Provides unique request tracking and contextual logging
  */
 
-import { CloudflareEnv } from '../lib/cloudflare';
-import { SecurityLogger } from '../lib/audit/securityLogger';
+import { CloudflareEnv} from '../lib/cloudflare';
+import { SecurityLogger} from '../lib/audit/securityLogger';
 
 export interface RequestContext {
   id: string;
@@ -45,8 +45,8 @@ export interface RequestMetrics {
 
 export class RequestCorrelation {
   private static contexts = new Map<string, RequestContext>();
-  private static readonly MAX_CONTEXTS = 10000; // Prevent memory leaks
-  private static readonly CLEANUP_INTERVAL = 300000; // 5 minutes
+  private static readonly MAXCONTEXTS = 10000; // Prevent memory leaks
+  private static readonly CLEANUPINTERVAL = 300000; // 5 minutes
 
   /**
    * Generate unique request ID
@@ -67,12 +67,12 @@ export class RequestCorrelation {
     const context: RequestContext = {
       id: requestId,
       startTime: Date.now(),
-      ip: request.headers.get('CF-Connecting-IP') || 'unknown',
-      userAgent: request.headers.get('User-Agent') || 'unknown',
+      ip: request.headers.get('CF-Connecting-IP')  ?? 'unknown',
+      userAgent: request.headers.get('User-Agent')  ?? 'unknown',
       method: request.method,
       url: request.url,
-      origin: request.headers.get('Origin') || undefined,
-      country: request.headers.get('CF-IPCountry') || undefined,
+      origin: request.headers.get('Origin')  ?? undefined,
+      country: request.headers.get('CF-IPCountry')  ?? undefined,
       ray: request.headers.get('CF-Ray') || undefined,
       metadata: {},
       securityFlags: this.analyzeSecurityFlags(request)
@@ -85,7 +85,7 @@ export class RequestCorrelation {
         const token = authHeader.substring(7);
         const payload = JSON.parse(atob(token.split('.')[1]));
         context.userId = payload.sub;
-        context.sessionId = payload.session_id;
+        context.sessionId = payload.sessionid;
       } catch (error: unknown) {
         // Invalid token format - ignore
       }
@@ -133,14 +133,14 @@ export class RequestCorrelation {
    */
   static completeRequest(requestId: string, response: Response, metrics?: Partial<RequestMetrics>): void {
     const context = this.contexts.get(requestId);
-    if (!context) return;
+    if (!context) {return;}
 
     const endTime = Date.now();
     const duration = endTime - context.startTime;
 
-    const requestMetrics: RequestMetrics = { _duration,
+    const requestMetrics: RequestMetrics = { duration,
       statusCode: response.status,
-      responseSize: parseInt(response.headers.get('Content-Length') || '0'),
+      responseSize: parseInt(response.headers.get('Content-Length')  ?? '0'),
       cacheHit: response.headers.get('CF-Cache-Status') === 'HIT',
       ...metrics
     };
@@ -161,7 +161,7 @@ export class RequestCorrelation {
    * Analyze security flags for request
    */
   private static analyzeSecurityFlags(request: Request): SecurityFlags {
-    const userAgent = request.headers.get('User-Agent')?.toLowerCase() || '';
+    const userAgent = request.headers.get('User-Agent')?.toLowerCase()  ?? '';
     const url = new URL(request.url);
     const origin = request.headers.get('Origin');
 
@@ -178,28 +178,25 @@ export class RequestCorrelation {
       'union select', 'drop table', 'insert into', 'delete from'
     ];
     const suspicious = suspiciousPatterns.some(pattern =>
-      request.url.toLowerCase().includes(pattern) ||
-      userAgent.includes(pattern)
+      request.url.toLowerCase().includes(pattern)  ?? userAgent.includes(pattern)
     );
 
     // Check for cross-origin requests
     const crossOrigin = origin && !origin.includes(url.hostname);
 
     // Check if authentication is required
-    const authRequired = url.pathname.startsWith('/api/user/') ||
-                        url.pathname.startsWith('/api/auth/') ||
-                        url.pathname.includes('/protected/');
+    const authRequired = url.pathname.startsWith('/api/user/')  ?? url.pathname.startsWith('/api/auth/')  ?? url.pathname.includes('/protected/');
 
     // Check for geo restrictions
     const restrictedCountries = ['CN', 'RU', 'KP', 'IR'];
-    const country = request.headers.get('CF-IPCountry') || '';
+    const country = request.headers.get('CF-IPCountry')  ?? '';
     const geoRestricted = restrictedCountries.includes(country);
 
-    return { _suspicious,
+    return { suspicious,
       rateLimited: false, // Will be updated by rate limiter
       authenticationRequired: authRequired,
       piiPresent: false, // Will be updated when PII is detected
-      crossOrigin: crossOrigin || false,
+      crossOrigin: crossOrigin ?? false,
       maliciousUserAgent,
       geoRestricted
     };
@@ -210,10 +207,7 @@ export class RequestCorrelation {
    */
   private static hasSecurityConcerns(context: RequestContext): boolean {
     const flags = context.securityFlags;
-    return flags.suspicious ||
-           flags.maliciousUserAgent ||
-           flags.rateLimited ||
-           flags.geoRestricted;
+    return flags.suspicious ?? flags.maliciousUserAgent ?? flags.rateLimited ?? flags.geoRestricted;
   }
 
   /**
@@ -304,10 +298,10 @@ export class RequestCorrelation {
    * Cleanup old contexts to prevent memory leaks
    */
   private static cleanupOldContexts(): void {
-    if (this.contexts.size <= this.MAX_CONTEXTS) return;
+    if (this.contexts.size <= this.MAXCONTEXTS) {return;}
 
     const now = Date.now();
-    const cutoff = now - this.CLEANUP_INTERVAL;
+    const cutoff = now - this.CLEANUPINTERVAL;
 
     for (const [id, context] of this.contexts.entries()) {
       if (context.startTime < cutoff) {
@@ -374,7 +368,7 @@ export class RequestContextMiddleware {
     });
 
     // Log security events immediately if high-risk
-    if (context.securityFlags.maliciousUserAgent || context.securityFlags.suspicious) {
+    if (context.securityFlags.maliciousUserAgent ?? context.securityFlags.suspicious) {
       await this.securityLogger.logSecurityEvent('suspicious_request', {
         requestId: context.id,
         ip: context.ip,
@@ -394,9 +388,9 @@ export class RequestContextMiddleware {
   async processResponse(context: RequestContext, response: Response): Promise<Response> {
     // Calculate metrics
     const duration = Date.now() - context.startTime;
-    const metrics: RequestMetrics = { _duration,
+    const metrics: RequestMetrics = { duration,
       statusCode: response.status,
-      responseSize: parseInt(response.headers.get('Content-Length') || '0'),
+      responseSize: parseInt(response.headers.get('Content-Length')  ?? '0'),
       cacheHit: response.headers.get('CF-Cache-Status') === 'HIT'
     };
 
@@ -435,10 +429,7 @@ export class RequestContextMiddleware {
     });
 
     // Log security event for errors that might indicate attacks
-    if (error.message.includes('SQL') ||
-        error.message.includes('injection') ||
-        error.message.includes('XSS') ||
-        context.securityFlags.suspicious) {
+    if (error.message.includes('SQL')  ?? error.message.includes('injection')  ?? error.message.includes('XSS')  ?? context.securityFlags.suspicious) {
 
       await this.securityLogger.logSecurityEvent('request_error_suspicious', {
         requestId: context.id,
@@ -452,7 +443,7 @@ export class RequestContextMiddleware {
     }
 
     // Complete request tracking with error
-    const errorMetrics: RequestMetrics = { _duration,
+    const errorMetrics: RequestMetrics = { duration,
       statusCode: 500,
       errorType: error.constructor.name
     };
@@ -473,7 +464,7 @@ export function getCurrentRequestId(request: Request): string | null {
  */
 export function logWithContext(requestId: string, level: 'info' | 'warn' | 'error', message: string, data?: unknown): void {
   const context = RequestCorrelation.getContext(requestId);
-  const logData = { _requestId,
+  const logData = { requestId,
     message,
     data,
     context: context ? {

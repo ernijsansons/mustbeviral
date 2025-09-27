@@ -4,8 +4,8 @@
  */
 
 import React, { Component, ReactNode, ErrorInfo } from 'react';
-import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
-import { logger } from '../lib/logging/productionLogger';
+import { AlertTriangle, RefreshCw, Home, Bug} from 'lucide-react';
+import { logger} from '../lib/logging/productionLogger';
 
 export interface ErrorBoundaryState {
   hasError: boolean;
@@ -47,7 +47,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   constructor(props: ErrorBoundaryProps) {
     super(props);
 
-    this.maxRetries = props.maxRetries || 3;
+    this.maxRetries = props.maxRetries ?? 3;
 
     this.state = {
       hasError: false,
@@ -97,8 +97,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidUpdate(prevProps: ErrorBoundaryProps): void {
-    const { resetOnPropsChange, resetKeys } = this.props;
-    const { hasError } = this.state;
+    const { resetOnPropsChange, resetKeys} = this.props;
+    const { hasError} = this.state;
 
     if (hasError && prevProps.children !== this.props.children) {
       if (resetOnPropsChange) {
@@ -107,7 +107,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
 
     if (hasError && resetKeys) {
-      const prevResetKeys = prevProps.resetKeys || [];
+      const prevResetKeys = prevProps.resetKeys ?? [];
       const hasResetKeyChanged = resetKeys.some(
         (key, index) => key !== prevResetKeys[index]
       );
@@ -155,7 +155,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   };
 
   private handleRetry = (): void => {
-    const { retryCount } = this.state;
+    const { retryCount} = this.state;
 
     if (retryCount >= this.maxRetries) {
       logger.warn('Maximum retry attempts exceeded', {
@@ -208,7 +208,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       });
 
       // Store in localStorage for offline reporting
-      const storedErrors = JSON.parse(localStorage.getItem('errorReports') || '[]');
+      const storedErrors = JSON.parse(localStorage.getItem('errorReports')  ?? '[]');
       storedErrors.push(errorReport);
 
       // Keep only last 10 errors
@@ -228,8 +228,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   };
 
   render(): ReactNode {
-    const { hasError, error, errorInfo, retryCount } = this.state;
-    const { children, fallback, level = 'component', context, enableRetry = true } = this.props;
+    const { hasError, error, errorInfo, retryCount} = this.state;
+    const { children, fallback, level = 'component', context, enableRetry = true} = this.props;
 
     if (hasError && error && errorInfo) {
       if (fallback) {
@@ -257,13 +257,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 /**
  * Error Fallback Component
  */
-const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error,
-  errorInfo,
-  retry,
-  canRetry,
-  level,
-  context
-}) => {
+  const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, errorInfo, retry, canRetry, level, context
+  }) => {
   const getErrorTitle = (): string => {
     switch (level) {
       case 'critical':
@@ -382,7 +377,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error,
             </button>
           </div>
 
-          {process.env.NODE_ENV === 'development' && (
+          {process.env.NODEENV === 'development' && (
             <details className="mt-4">
               <summary className="text-sm font-medium cursor-pointer">
                 Error Details (Development Only)
@@ -458,8 +453,7 @@ export const CriticalErrorBoundary: React.FC<{ children: ReactNode }> = ({ child
  * Async Component Error Boundary
  * Specifically for handling errors in async components and lazy loading
  */
-export const AsyncErrorBoundary: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ children,
-  fallback
+export const AsyncErrorBoundary: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ children, fallback
 }) => {
   const defaultFallback = (
     <div className="flex items-center justify-center p-8">
@@ -476,7 +470,7 @@ export const AsyncErrorBoundary: React.FC<{ children: ReactNode; fallback?: Reac
       context="Async Component"
       enableRetry={true}
       maxRetries={2}
-      fallback={fallback || defaultFallback}
+      fallback={fallback ?? defaultFallback}
     >
       {children}
     </ErrorBoundary>
@@ -512,7 +506,7 @@ export function withErrorBoundary<T extends {}>(
     </ErrorBoundary>
   );
 
-  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
+  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName ?? Component.name})`;
 
   return WrappedComponent;
 }

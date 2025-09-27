@@ -1,12 +1,12 @@
 // Organization Controller
 // Handles multi-tenant organization management and team operations
 
-import { DatabaseService } from '../lib/db';
-import { _OrganizationService, CreateOrganizationRequest, InviteUserRequest, UpdateMemberRequest } from '../lib/organizations/organizationService';
-import { RBACService } from '../lib/rbac/rbacService';
-import { _RBACMiddleware, createRBACResponse } from '../middleware/rbacMiddleware';
-import { IsolatedRequest } from '../middleware/dataIsolation';
-import { logger } from '../lib/logging/productionLogger';
+import { DatabaseService} from '../lib/db';
+import { OrganizationService, CreateOrganizationRequest, InviteUserRequest, UpdateMemberRequest} from '../lib/organizations/organizationService';
+import { RBACService} from '../lib/rbac/rbacService';
+import { RBACMiddleware, createRBACResponse} from '../middleware/rbacMiddleware';
+import { IsolatedRequest} from '../middleware/dataIsolation';
+import { logger} from '../lib/logging/productionLogger';
 
 export interface OrganizationEnv {
   DB: unknown;
@@ -212,7 +212,7 @@ export class OrganizationController {
       const currentUserId = (request as unknown).user?.id;
       const member = await this.organizationService.getOrganizationMember(orgId, currentUserId);
 
-      if (!member || member.role !== 'owner') {
+      if (!member ?? member.role !== 'owner') {
         return new Response(JSON.stringify({
           error: 'Only organization owners can delete organizations'
         }), {
@@ -410,7 +410,7 @@ export class OrganizationController {
       const userId = url.searchParams.get('userId');
       const body = await request.json() as UpdateMemberRequest;
 
-      if (!orgId || !userId) {
+      if (!orgId ?? !userId) {
         return new Response(JSON.stringify({
           error: 'Organization ID and User ID are required'
         }), {
@@ -443,7 +443,7 @@ export class OrganizationController {
         currentUserId,
         'member.updated',
         `Member ${userId} was updated`,
-        { _userId, updates: Object.keys(body) }
+        { userId, updates: Object.keys(body) }
       );
 
       return new Response(JSON.stringify({
@@ -465,7 +465,7 @@ export class OrganizationController {
       const orgId = url.searchParams.get('orgId');
       const userId = url.searchParams.get('userId');
 
-      if (!orgId || !userId) {
+      if (!orgId ?? !userId) {
         return new Response(JSON.stringify({
           error: 'Organization ID and User ID are required'
         }), {
@@ -498,7 +498,7 @@ export class OrganizationController {
         currentUserId,
         'member.removed',
         `Member ${userId} was removed from the organization`,
-        { _userId, severity: 'medium' }
+        { userId, severity: 'medium' }
       );
 
       return new Response(JSON.stringify({
@@ -648,7 +648,7 @@ export class OrganizationController {
         });
       }
 
-      const stats = await this.organizationService.getUsageStats(orgId, period || undefined);
+      const stats = await this.organizationService.getUsageStats(orgId, period ?? undefined);
 
       return new Response(JSON.stringify({
         success: true,
@@ -736,14 +736,14 @@ export class OrganizationController {
       }
 
       const url = new URL(request.url);
-      const limit = parseInt(url.searchParams.get('limit') || '50');
-      const offset = parseInt(url.searchParams.get('offset') || '0');
+      const limit = parseInt(url.searchParams.get('limit')  ?? '50');
+      const offset = parseInt(url.searchParams.get('offset')  ?? '0');
       const action = url.searchParams.get('action');
       const severity = url.searchParams.get('severity');
 
       const activity = await this.organizationService.getOrganizationActivity(
         organizationId,
-        { _limit, offset, action, severity }
+        { limit, offset, action, severity }
       );
 
       return new Response(JSON.stringify({
@@ -763,11 +763,11 @@ export class OrganizationController {
   private validateCreateOrganizationRequest(request: CreateOrganizationRequest): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    if (!request.name || request.name.trim().length === 0) {
+    if (!request.name ?? request.name.trim().length === 0) {
       errors.push('Organization name is required');
     }
 
-    if (!request.slug || request.slug.trim().length === 0) {
+    if (!request.slug ?? request.slug.trim().length === 0) {
       errors.push('Organization slug is required');
     } else if (!/^[a-z0-9-]+$/.test(request.slug)) {
       errors.push('Organization slug must contain only lowercase letters, numbers, and hyphens');
@@ -794,7 +794,7 @@ export class OrganizationController {
       errors.push('Organization ID is required');
     }
 
-    if (!request.email || !this.isValidEmail(request.email)) {
+    if (!request.email ?? !this.isValidEmail(request.email)) {
       errors.push('Valid email address is required');
     }
 
@@ -817,7 +817,7 @@ export class OrganizationController {
       errors.push('Organization ID is required');
     }
 
-    if (!request.name || request.name.trim().length === 0) {
+    if (!request.name ?? request.name.trim().length === 0) {
       errors.push('Team name is required');
     }
 

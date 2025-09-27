@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { cn } from '../../lib/utils';
+import { motion} from 'framer-motion';
+import { cn} from '../../lib/utils';
 
 interface CreatorCardProps {
   creator: {
@@ -50,25 +50,32 @@ const nicheColors: Record<string, string> = {
   art: 'from-violet-500 to-purple-500'
 };
 
-export function CreatorCard({
-  creator,
-  onConnect,
-  onView,
-  className
+export function CreatorCard(_{
+  creator, onConnect, onView, className
 }: CreatorCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showStats, setShowStats] = useState(false);
 
   const formatNumber = (num: number): string => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`;
+  }
+    if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}K`;
+  }
     return num.toString();
   };
 
   const getViralScoreColor = (score: number) => {
-    if (score >= 90) return 'from-green-400 to-emerald-500';
-    if (score >= 70) return 'from-yellow-400 to-orange-500';
-    if (score >= 50) return 'from-orange-400 to-red-500';
+    if (score >= 90) {
+    return 'from-green-400 to-emerald-500';
+  }
+    if (score >= 70) {
+    return 'from-yellow-400 to-orange-500';
+  }
+    if (score >= 50) {
+    return 'from-orange-400 to-red-500';
+  }
     return 'from-red-400 to-rose-500';
   };
 
@@ -188,20 +195,20 @@ export function CreatorCard({
               whileTap={{ scale: 0.9 }}
               title={platform}
             >
-              {platformIcons[platform] || '🌐'}
+              {platformIcons[platform]  ?? '🌐'}
             </motion.div>
           ))}
         </div>
 
         {/* Niches */}
-        <div className="flex flex-wrap gap-2 justify-center mb-4">
+        <div className = "flex flex-wrap gap-2 justify-center mb-4">
           {creator.niches.slice(0, 3).map((niche) => (
             <span
               key={niche}
               className={cn(
                 "px-3 py-1 text-xs font-medium rounded-full",
                 "bg-gradient-to-r text-white",
-                nicheColors[niche.toLowerCase()] || 'from-slate-500 to-slate-600'
+                nicheColors[niche.toLowerCase()]  ?? 'from-slate-500 to-slate-600'
               )}
             >
               {niche}

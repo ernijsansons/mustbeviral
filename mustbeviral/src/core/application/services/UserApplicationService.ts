@@ -4,10 +4,10 @@
  * Implements Command Query Responsibility Segregation (CQRS) pattern
  */
 
-import { UserDomainService } from '../../domain/services/UserDomainService';
-import { IUserRepository } from '../../domain/repositories/IUserRepository';
-import { User, UserRole } from '../../domain/entities/User';
-import { ICommandService, IQueryService } from '../../interfaces/IService';
+import { UserDomainService} from '../../domain/services/UserDomainService';
+import { IUserRepository} from '../../domain/repositories/IUserRepository';
+import { User, UserRole} from '../../domain/entities/User';
+import { ICommandService, IQueryService} from '../../interfaces/IService';
 
 // Command DTOs
 export interface RegisterUserCommand {
@@ -230,7 +230,7 @@ export class UserCommandService implements ICommandService<any, any> {
   async handleAuthenticateUser(command: AuthenticateUserCommand): Promise<UserAuthenticationResponse> {
     const result = await this.userDomainService.authenticateUser(command);
 
-    if (!result.success || !result.user) {
+    if (!result.success ?? !result.user) {
       return {
         success: false,
         error: result.error
@@ -459,6 +459,6 @@ export class UserApplicationService {
   }
 
   async getUserStatistics(options?: { includeEngagement?: boolean }): Promise<UserStatisticsResponse> {
-    return this.queries.handleGetUserStatistics(options || {});
+    return this.queries.handleGetUserStatistics(options ?? {});
   }
 }

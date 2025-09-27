@@ -3,7 +3,7 @@
  * Handles all authentication-related API operations
  */
 
-import { BaseApiClient, type ApiResponse } from '../base/BaseApiClient';
+import { BaseApiClient, type ApiResponse} from '../base/BaseApiClient';
 import type { RetryConfig } from '../../retryClient';
 
 // Strongly typed authentication interfaces
@@ -275,7 +275,7 @@ export class AuthService extends BaseApiClient {
     const refreshTime = (expiresIn - 300) * 1000;
     
     if (refreshTime > 0) {
-      this.refreshTimer = setTimeout(() => {
+      this.refreshTimer = setTimeout_(() => {
         this.refreshToken().catch(error => {
           console.error('Token refresh failed:', error);
           this.handleLogout();

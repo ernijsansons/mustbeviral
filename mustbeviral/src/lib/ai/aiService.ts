@@ -1,10 +1,10 @@
 // AI Service Manager
 // Coordinates all AI functionality and provides unified interface
 
-import { ContentGenerator, ContentGenerationRequest, ContentGenerationResult } from './contentGenerator';
-import { ContentAnalyzer, ContentAnalysisRequest, ContentAnalysisResult } from './contentAnalyzer';
+import { ContentGenerator, ContentGenerationRequest, ContentGenerationResult} from './contentGenerator';
+import { ContentAnalyzer, ContentAnalysisRequest, ContentAnalysisResult} from './contentAnalyzer';
 import type { CloudflareEnv } from '../cloudflare';
-import { logger } from '../monitoring/logger';
+import { logger} from '../monitoring/logger';
 
 // Cloudflare AI types
 interface CloudflareAI {
@@ -195,7 +195,7 @@ export class AIService {
       type: 'article',
       topic: content.substring(0, 100), // Use first part as topic
       tone: analysis.scores.sentiment.label === 'positive' ? 'inspiring' : 'professional',
-      audience: (targetAudience as unknown) || 'general',
+      audience: (targetAudience as unknown)  ?? 'general',
       length: content.length > 500 ? 'long' : 'medium',
       context: `Improve this content based on analysis. Current scores - Overall: ${analysis.scores.overall}, SEO: ${analysis.scores.seo}, Engagement: ${analysis.scores.engagement}.
 
@@ -287,9 +287,9 @@ Focus on: ${analysis.suggestions.improvements.join(', ')}`
     const results: unknown[] = [];
     const batchSize = 5;
 
-    for (let i = 0; i < requests.length; i += batchSize) {
+    for(let i = 0; i < requests.length; i += batchSize) {
       const batch = requests.slice(i, i + batchSize);
-      const batchPromises = batch.map(async (req) => {
+      const batchPromises = batch.map(async(req) => {
         if (req.type === 'generate') {
           return this.generateContent(req.data as ContentGenerationRequest);
         } else {
@@ -367,7 +367,6 @@ Focus on: ${analysis.suggestions.improvements.join(', ')}`
   private async checkRateLimit(): Promise<void> {
     // Simple rate limiting implementation
     const now = Date.now();
-    const windowStart = now - 60000; // 1 minute window
 
     // In production, use more sophisticated rate limiting with persistent storage
     if (this.usage.requestCount > this.config.maxRequestsPerMinute) {
@@ -402,7 +401,7 @@ Focus on: ${analysis.suggestions.improvements.join(', ')}`
       'default': 0.001
     };
 
-    const rate = pricing[model as keyof typeof pricing] || pricing.default;
+    const rate = pricing[model as keyof typeof pricing]  ?? pricing.default;
     return (tokensUsed / 1000) * rate * 100; // Convert to cents
   }
 
@@ -429,8 +428,8 @@ Focus on: ${analysis.suggestions.improvements.join(', ')}`
     for (let i = 0; i < Math.min(count, lines.length); i++) {
       const line = lines[i];
       ideas.push({
-        title: line.replace(/^\d+\.\s*/, '').split(':')[0] || `Idea ${i + 1}`,
-        description: line.split(':')[1]?.trim() || 'Content idea description',
+        title: line.replace(/^\d+\.\s*/, '').split(':')[0]  ?? `Idea ${i + 1}`,
+        description: line.split(':')[1]?.trim()  ?? 'Content idea description',
         contentType: 'article',
         estimatedEngagement: Math.floor(Math.random() * 40) + 60, // 60-100%
         keywords: this.extractKeywords(line)

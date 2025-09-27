@@ -3,10 +3,10 @@
  * Comprehensive security event logging and monitoring
  */
 
-import { CloudflareEnv } from '../cloudflare';
-import { PIIEncryption } from '../crypto/encryption';
-import { ValidationError } from '../../middleware/validation';
-import { logger } from '../monitoring/logger';
+import { CloudflareEnv} from '../cloudflare';
+import { PIIEncryption} from '../crypto/encryption';
+import { ValidationError} from '../../middleware/validation';
+import { logger} from '../monitoring/logger';
 
 export type SecurityEventType =
   | 'authentication_success'
@@ -67,10 +67,10 @@ export class SecurityLogger {
     await logger.logSecurityEvent({
       type: type as SecurityEventType,
       severity: 'MEDIUM',
-      ip: event.ip || 'unknown',
-      userAgent: event.userAgent || 'unknown',
-      url: event.url || '',
-      method: event.method || '',
+      ip: event.ip ?? 'unknown',
+      userAgent: event.userAgent ?? 'unknown',
+      url: event.url ?? '',
+      method: event.method ?? '',
       details: event,
       outcome: 'blocked',
       source: 'system'
@@ -148,7 +148,7 @@ export class SecurityAuditLogger {
       userAgent: this.getUserAgent(request),
       url: request.url,
       method: request.method,
-      details: details || {},
+      details: details ?? {},
       outcome: 'success',
       source: 'auth_service',
       geolocation: this.getGeolocation(request)
@@ -188,7 +188,7 @@ export class SecurityAuditLogger {
       userAgent: this.getUserAgent(request),
       url: request.url,
       method: request.method,
-      details: { _limit,
+      details: { limit,
         ...details
       },
       outcome: 'blocked',
@@ -208,7 +208,7 @@ export class SecurityAuditLogger {
       userAgent: this.getUserAgent(request),
       url: request.url,
       method: request.method,
-      details: { _violation,
+      details: { violation,
         ...details
       },
       outcome: 'blocked',
@@ -229,7 +229,7 @@ export class SecurityAuditLogger {
       userAgent: this.getUserAgent(request),
       url: request.url,
       method: request.method,
-      details: { _activity,
+      details: { activity,
         ...details
       },
       outcome: 'blocked',
@@ -250,7 +250,7 @@ export class SecurityAuditLogger {
       userAgent: this.getUserAgent(request),
       url: request.url,
       method: request.method,
-      details: { _resource,
+      details: { resource,
         ...details
       },
       outcome: 'success',
@@ -271,7 +271,7 @@ export class SecurityAuditLogger {
       userAgent: this.getUserAgent(request),
       url: request.url,
       method: request.method,
-      details: { _action,
+      details: { action,
         ...details
       },
       outcome: 'success',
@@ -314,21 +314,21 @@ export class SecurityAuditLogger {
     try {
       // Query security events from D1
       const query = `
-        SELECT type, severity, ip, user_agent, timestamp
+        SELECT type, severity, ip, useragent, timestamp
         FROM security_audit_logs
         WHERE timestamp BETWEEN ? AND ?
-        ${userId ? 'AND user_id = ?' : ''}
+        ${userId ? 'AND userid = ?' : ''}
         ORDER BY timestamp DESC
       `;
 
       const params = [startTime.toISOString(), endTime.toISOString()];
-      if (userId) params.push(userId);
+      if (userId) {params.push(userId);}
 
       const events = await this.env.DB.prepare(query).bind(...params).all();
 
       // Calculate metrics
       const metrics: SecurityMetrics = {
-        eventCount: events.results?.length || 0,
+        eventCount: events.results?.length ?? 0,
         severityBreakdown: { LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 },
         typeBreakdown: {} as Record<SecurityEventType, number>,
         hourlyDistribution: {},
@@ -339,7 +339,7 @@ export class SecurityAuditLogger {
       const ipCounts = new Map<string, number>();
       const userAgentCounts = new Map<string, number>();
 
-      for (const event of events.results || []) {
+      for (const event of events.results ?? []) {
         const eventData = event as unknown;
 
         // Severity breakdown
@@ -347,32 +347,32 @@ export class SecurityAuditLogger {
 
         // Type breakdown
         const type = eventData.type as SecurityEventType;
-        metrics.typeBreakdown[type] = (metrics.typeBreakdown[type] || 0) + 1;
+        metrics.typeBreakdown[type] = (metrics.typeBreakdown[type]  ?? 0) + 1;
 
         // Hourly distribution
         const hour = new Date(eventData.timestamp).getHours().toString();
-        metrics.hourlyDistribution[hour] = (metrics.hourlyDistribution[hour] || 0) + 1;
+        metrics.hourlyDistribution[hour] = (metrics.hourlyDistribution[hour]  ?? 0) + 1;
 
         // IP counts
         const ip = eventData.ip;
-        ipCounts.set(ip, (ipCounts.get(ip) || 0) + 1);
+        ipCounts.set(ip, (ipCounts.get(ip)  ?? 0) + 1);
 
         // User agent counts
-        const userAgent = eventData.user_agent;
-        userAgentCounts.set(userAgent, (userAgentCounts.get(userAgent) || 0) + 1);
+        const userAgent = eventData.useragent;
+        userAgentCounts.set(userAgent, (userAgentCounts.get(userAgent)  ?? 0) + 1);
       }
 
       // Top IPs
       metrics.topIPs = Array.from(ipCounts.entries())
         .sort(([, a], [, b]) => b - a)
         .slice(0, 10)
-        .map(([ip, count]) => ({ _ip, count }));
+        .map(([ip, count]) => ({ ip, count }));
 
       // Top User Agents
       metrics.topUserAgents = Array.from(userAgentCounts.entries())
         .sort(([, a], [, b]) => b - a)
         .slice(0, 10)
-        .map(([userAgent, count]) => ({ _userAgent, count }));
+        .map(([userAgent, count]) => ({ userAgent, count }));
 
       return metrics;
     } catch (error: unknown) {
@@ -418,7 +418,7 @@ export class SecurityAuditLogger {
       }
 
       if (filters.userId) {
-        conditions.push('user_id = ?');
+        conditions.push('userid = ?');
         params.push(filters.userId);
       }
 
@@ -456,11 +456,11 @@ export class SecurityAuditLogger {
 
       const result = await this.env.DB.prepare(query).bind(...params).all();
 
-      return (result.results || []).map(row => {
+      return (result.results ?? []).map(row => {
         const event = row as unknown;
         return {
           ...event,
-          details: JSON.parse(event.details || '{}'),
+          details: JSON.parse(event.details ?? '{}'),
           geolocation: event.geolocation ? JSON.parse(event.geolocation) : undefined
         };
       });
@@ -519,7 +519,7 @@ export class SecurityAuditLogger {
    * Deep sanitize object for PII
    */
   private deepSanitizePII(obj: unknown): unknown {
-    if (typeof obj !== 'object' || obj === null) {
+    if (typeof obj !== 'object'  ?? obj === null) {
       return typeof obj === 'string' ? this.sanitizeStringForPII(obj) : obj;
     }
 
@@ -576,7 +576,7 @@ export class SecurityAuditLogger {
     sanitized = sanitized.replace(/\b[A-Za-z0-9\-_]{20,}\.[A-Za-z0-9\-_]{20,}\.[A-Za-z0-9\-_]{20,}\b/g, '[TOKEN]');
 
     // API key patterns
-    sanitized = sanitized.replace(/\b[a-zA-Z0-9]{32,}\b/g, '[API_KEY]');
+    sanitized = sanitized.replace(/\b[a-zA-Z0-9]{32,}\b/g, '[APIKEY]');
 
     return sanitized;
   }
@@ -589,8 +589,7 @@ export class SecurityAuditLogger {
     const parts = userAgent.split(/[s()]/);
     const safeParts = parts.filter(part => {
       // Keep browser names, versions, OS info
-      return /^(Mozilla|Chrome|Safari|Firefox|Edge|Opera|Windows|Macintosh|Linux|Android|iOS|Version)/i.test(part) ||
-             /^d+.d+/.test(part); // Version numbers
+      return /^(Mozilla|Chrome|Safari|Firefox|Edge|Opera|Windows|Macintosh|Linux|Android|iOS|Version)/i.test(part)  ?? /^d+.d+/.test(part); // Version numbers
     });
 
     return safeParts.length > 0 ? safeParts.slice(0, 5).join(' ') : 'sanitized-ua';
@@ -617,7 +616,7 @@ export class SecurityAuditLogger {
       return urlObj.toString();
     } catch (error: unknown) {
       // If URL parsing fails, return sanitized version
-      return url.replace(/[?&][^=&]*=([^&]*)/g, (match, _value) => {
+      return url.replace(/[?&][^=&]*=([^&]*)/g, (match, value) => {
         return this.containsPII(value) ? match.replace(value, '[REDACTED]') : match;
       });
     }
@@ -628,19 +627,19 @@ export class SecurityAuditLogger {
    */
   private containsPII(str: string): boolean {
     // Email pattern
-    if (/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}/.test(str)) return true;
+    if (/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}/.test(str)) {return true;}
 
     // Phone pattern
-    if (/\+?[\d\s\-()]{10,}/.test(str)) return true;
+    if (/\+?[\d\s\-()]{10,}/.test(str)) {return true;}
 
     // Credit card pattern
-    if (/\b\d{4}[\s\-]?\d{4}[\s\-]?\d{4}[\s\-]?\d{4}\b/.test(str)) return true;
+    if (/\b\d{4}[\s\-]?\d{4}[\s\-]?\d{4}[\s\-]?\d{4}\b/.test(str)) {return true;}
 
     // SSN pattern
-    if (/\b\d{3}\-?\d{2}\-?\d{4}\b/.test(str)) return true;
+    if (/\b\d{3}\-?\d{2}\-?\d{4}\b/.test(str)) {return true;}
 
     // Token pattern
-    if (/\b[A-Za-z0-9\-_]{20,}\.[A-Za-z0-9\-_]{20,}\.[A-Za-z0-9\-_]{20,}\b/.test(str)) return true;
+    if (/\b[A-Za-z0-9\-_]{20,}\.[A-Za-z0-9\-_]{20,}\.[A-Za-z0-9\-_]{20,}\b/.test(str)) {return true;}
 
     return false;
   }
@@ -649,7 +648,7 @@ export class SecurityAuditLogger {
    * Flush batch of events to storage
    */
   private async flushBatch(): Promise<void> {
-    if (this.eventBatch.length === 0) return;
+    if (this.eventBatch.length === 0) {return;}
 
     try {
       const events = [...this.eventBatch];
@@ -658,17 +657,17 @@ export class SecurityAuditLogger {
       // Prepare batch insert
       const statements = events.map(event => {
         return this.env.DB.prepare(`
-          INSERT INTO security_audit_logs (
-            id, timestamp, type, severity, user_id, session_id, ip, user_agent,
-            url, method, details, outcome, source, correlation_id, geolocation
+          INSERT INTO securityauditlogs(
+            id, timestamp, type, severity, userid, sessionid, ip, useragent,
+            url, method, details, outcome, source, correlationid, geolocation
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).bind(
           event.id,
           event.timestamp,
           event.type,
           event.severity,
-          event.userId || null,
-          event.sessionId || null,
+          event.userId ?? null,
+          event.sessionId ?? null,
           event.ip,
           event.userAgent,
           event.url,
@@ -676,7 +675,7 @@ export class SecurityAuditLogger {
           JSON.stringify(event.details),
           event.outcome,
           event.source,
-          event.correlationId || null,
+          event.correlationId ?? null,
           event.geolocation ? JSON.stringify(event.geolocation) : null
         );
       });
@@ -702,7 +701,7 @@ export class SecurityAuditLogger {
    * Start batch flush timer
    */
   private startBatchFlush(): void {
-    this.flushTimer = setInterval(() => {
+    this.flushTimer = setInterval_(() => {
       this.flushBatch().catch(error => {
         logger.error('Timer flush failed', error instanceof Error ? error : new Error(String(error)), {
           component: 'SecurityAuditLogger',
@@ -748,20 +747,18 @@ export class SecurityAuditLogger {
    * Helper methods for extracting request information
    */
   private getIP(request: Request): string {
-    return request.headers.get('CF-Connecting-IP') ||
-           request.headers.get('X-Forwarded-For') ||
-           'unknown';
+    return request.headers.get('CF-Connecting-IP')  ?? request.headers.get('X-Forwarded-For')  ?? 'unknown';
   }
 
   private getUserAgent(request: Request): string {
-    return request.headers.get('User-Agent') || 'unknown';
+    return request.headers.get('User-Agent')  ?? 'unknown';
   }
 
   private getGeolocation(request: Request): SecurityEvent['geolocation'] {
     return {
-      country: request.headers.get('CF-IPCountry') || undefined,
-      region: request.headers.get('CF-Region') || undefined,
-      city: request.headers.get('CF-IPCity') || undefined
+      country: request.headers.get('CF-IPCountry')  ?? undefined,
+      region: request.headers.get('CF-Region')  ?? undefined,
+      city: request.headers.get('CF-IPCity')  ?? undefined
     };
   }
 
@@ -781,10 +778,10 @@ export class SecurityAuditLogger {
       logger.info('Cleaned up old security events', {
         component: 'SecurityAuditLogger',
         action: 'cleanupOldEvents',
-        metadata: { deletedCount: result.meta?.changes || 0, retentionDays }
+        metadata: { deletedCount: result.meta?.changes ?? 0, retentionDays }
       });
 
-      return { deleted: result.meta?.changes || 0 };
+      return { deleted: result.meta?.changes ?? 0 };
     } catch (error: unknown) {
       logger.error('Failed to cleanup old events', error instanceof Error ? error : new Error(String(error)), {
         component: 'SecurityAuditLogger',

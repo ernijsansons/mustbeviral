@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, User, Target, Sparkles, CheckCircle, AlertCircle, Mail } from 'lucide-react';
+import { ChevronRight, ChevronLeft, User, Target, Sparkles, CheckCircle, AlertCircle, Mail} from 'lucide-react';
 
 interface OnboardingData {
   email: string;
@@ -49,28 +49,28 @@ export function OnboardFlow({ onComplete }: { onComplete?: (data: OnboardingData
 
     switch (step) {
       case 1:
-        if (!data.email) newErrors.email = 'Email is required';
-        else if (!/\S+@\S+\.\S+/.test(data.email)) newErrors.email = 'Invalid email format';
+        if (!data.email) {newErrors.email = 'Email is required';}
+        else if (!/\S+@\S+\.\S+/.test(data.email)) {newErrors.email = 'Invalid email format';}
         
-        if (!data.username) newErrors.username = 'Username is required';
-        else if (data.username.length < 3) newErrors.username = 'Username must be at least 3 characters';
+        if (!data.username) {newErrors.username = 'Username is required';}
+        else if (data.username.length < 3) {newErrors.username = 'Username must be at least 3 characters';}
         
-        if (!data.password) newErrors.password = 'Password is required';
-        else if (data.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+        if (!data.password) {newErrors.password = 'Password is required';}
+        else if (data.password.length < 8) {newErrors.password = 'Password must be at least 8 characters';}
         
-        if (data.password !== data.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+        if (data.password !== data.confirmPassword) {newErrors.confirmPassword = 'Passwords do not match';}
         
-        if (!data.role) newErrors.role = 'Please select your role';
+        if (!data.role) {newErrors.role = 'Please select your role';}
         break;
 
       case 2:
-        if (!data.industry) newErrors.industry = 'Please select your industry';
-        if (!data.primaryGoal) newErrors.primaryGoal = 'Please select your primary goal';
+        if (!data.industry) {newErrors.industry = 'Please select your industry';}
+        if (!data.primaryGoal) {newErrors.primaryGoal = 'Please select your primary goal';}
         break;
 
       case 3:
-        if (!data.firstPrompt.trim()) newErrors.firstPrompt = 'Please enter a prompt to get started';
-        else if (data.firstPrompt.length < 10) newErrors.firstPrompt = 'Please provide more detail in your prompt';
+        if (!data.firstPrompt.trim()) {newErrors.firstPrompt = 'Please enter a prompt to get started';}
+        else if (data.firstPrompt.length < 10) {newErrors.firstPrompt = 'Please provide more detail in your prompt';}
         break;
     }
 
@@ -119,8 +119,8 @@ export function OnboardFlow({ onComplete }: { onComplete?: (data: OnboardingData
         
         onComplete?.(data);
       } else {
-        console.error('LOG: ONBOARD-FLOW-ERROR-1 - Onboarding failed:', result.error || result.message);
-        setErrors({ submit: result.error || result.message || 'Failed to create account' });
+        console.error('LOG: ONBOARD-FLOW-ERROR-1 - Onboarding failed:', result.error ?? result.message);
+        setErrors({ submit: result.error ?? result.message ?? 'Failed to create account' });
       }
     } catch (error) {
       console.error('LOG: ONBOARD-FLOW-ERROR-2 - API call failed:', error);
@@ -158,8 +158,7 @@ export function OnboardFlow({ onComplete }: { onComplete?: (data: OnboardingData
         {/* Step Content */}
         <div className="bg-white rounded-lg shadow-lg p-6">
           {/* Step 1: Account Setup */}
-          {currentStep === 1 && (
-            <div className="space-y-6">
+          {currentStep === 1 && (<div className="space-y-6">
               <div className="text-center mb-6">
                 <User className="w-12 h-12 text-indigo-600 mx-auto mb-3" />
                 <h2 className="text-2xl font-bold text-gray-900">Create Your Account</h2>

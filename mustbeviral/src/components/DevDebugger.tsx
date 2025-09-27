@@ -1,6 +1,6 @@
 // Development Mode Debugger
-import React, { _useState, useEffect } from 'react';
-import { env } from '../lib/env';
+import React, { useState, useEffect } from 'react';
+import { env} from '../lib/env';
 
 interface DebugInfo {
   timestamp: string;
@@ -18,7 +18,7 @@ export function DevDebugger() {
     return null;
   }
 
-  useEffect(() => {
+  useEffect_(() => {
     // Capture console logs
     const originalLog = console.log;
     const originalWarn = console.warn;
@@ -80,7 +80,7 @@ export function DevDebugger() {
       </div>
 
       <div className="h-64 overflow-y-auto p-2 font-mono text-xs">
-        {debugLogs.map((log, _index) => (
+        {debugLogs.map((log, index) => (
           <div key={index} className={`mb-1 ${
             log.level === 'error' ? 'text-red-400' :
             log.level === 'warn' ? 'text-yellow-400' :

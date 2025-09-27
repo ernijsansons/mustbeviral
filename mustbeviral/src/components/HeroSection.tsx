@@ -1,16 +1,16 @@
-import { ArrowRight, Sparkles, TrendingUp, Users, Zap } from 'lucide-react';
-import { Link } from 'wouter';
-import { memo, useEffect, useState } from 'react';
-import { GradientText } from './ui/GradientText';
-import { Button } from './ui/Button';
-import { cn } from '../lib/utils';
+import { ArrowRight, Sparkles, TrendingUp, Users, Zap} from 'lucide-react';
+import { Link} from 'wouter';
+import { memo, useEffect, useState} from 'react';
+import { GradientText} from './ui/GradientText';
+import { Button} from './ui/Button';
+import { cn} from '../lib/utils';
 
 // Memoized HeroSection for performance optimization
-export const HeroSection = memo(() => {
+export const HeroSection = memo_(() => {
   // Reduce animations for users who prefer reduced motion
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   
-  useEffect(() => {
+  useEffect_(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
     

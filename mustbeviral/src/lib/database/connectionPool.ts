@@ -4,8 +4,8 @@
  */
 
 import type { D1Database, D1Result } from '@cloudflare/workers-types';
-import { CloudflareEnv } from '../cloudflare';
-import { ValidationError } from '../../middleware/validation';
+import { CloudflareEnv} from '../cloudflare';
+import { ValidationError} from '../../middleware/validation';
 
 export interface ConnectionPoolConfig {
   maxConnections: number;
@@ -53,7 +53,7 @@ export class DatabaseConnectionPool {
   private preWarmTimer?: unknown;
   private metrics: ConnectionMetrics;
   private queryTimeHistory: number[] = [];
-  private readonly MAX_HISTORY = 100;
+  private readonly MAXHISTORY = 100;
 
   constructor(env: CloudflareEnv, config?: Partial<ConnectionPoolConfig>) {
     this.env = env;
@@ -147,9 +147,9 @@ export class DatabaseConnectionPool {
         connection = await this.getConnection();
 
         // Execute query with timeout
-        const queryPromise = connection.db.prepare(query).bind(...(params || [])).all();
+        const queryPromise = connection.db.prepare(query).bind(...(params ?? [])).all();
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Query timeout')), options?.timeout || this.config.connectionTimeout);
+          setTimeout(() => reject(new Error('Query timeout')), options?.timeout ?? this.config.connectionTimeout);
         });
 
         const result = await Promise.race([queryPromise, timeoutPromise]) as D1Result<T>;
@@ -171,7 +171,7 @@ export class DatabaseConnectionPool {
           // Mark connection as unhealthy if it's consistently failing
           if (connection.errorCount > 5) {
             connection.isHealthy = false;
-            console.log(`LOG: DB-POOL-HEALTH-1 - Connection ${connection.id} marked as unhealthy`);
+            console.warn(`LOG: DB-POOL-HEALTH-1 - Connection ${connection.id} marked as unhealthy`);
           }
         }
 
@@ -284,12 +284,12 @@ export class DatabaseConnectionPool {
       if (idleTime > this.config.idleTimeout) {
         this.connections.delete(id);
         removedCount++;
-        console.log(`LOG: DB-POOL-CLEANUP-1 - Removed idle connection ${id}`);
+        console.warn(`LOG: DB-POOL-CLEANUP-1 - Removed idle connection ${id}`);
       }
     }
 
     if (removedCount > 0) {
-      console.log(`LOG: DB-POOL-CLEANUP-2 - Cleaned up ${removedCount} idle connections`);
+      console.warn(`LOG: DB-POOL-CLEANUP-2 - Cleaned up ${removedCount} idle connections`);
     }
 
     return removedCount;
@@ -299,7 +299,7 @@ export class DatabaseConnectionPool {
    * Force refresh all connections
    */
   async refreshConnections(): Promise<void> {
-    console.log('LOG: DB-POOL-REFRESH-1 - Refreshing all database connections');
+    console.warn('LOG: DB-POOL-REFRESH-1 - Refreshing all database connections');
 
     // Mark all connections as unhealthy to force recreation
     for (const connection of this.connections.values()) {
@@ -314,7 +314,7 @@ export class DatabaseConnectionPool {
     this.metrics.errorCount = 0;
     this.metrics.healthCheckStatus = 'healthy';
 
-    console.log('LOG: DB-POOL-REFRESH-2 - Connection pool refreshed');
+    console.warn('LOG: DB-POOL-REFRESH-2 - Connection pool refreshed');
   }
 
   /**
@@ -400,7 +400,7 @@ export class DatabaseConnectionPool {
 
       // Add to history for pool average
       this.queryTimeHistory.push(duration);
-      if (this.queryTimeHistory.length > this.MAX_HISTORY) {
+      if (this.queryTimeHistory.length > this.MAXHISTORY) {
         this.queryTimeHistory.shift();
       }
     } else {
@@ -412,7 +412,7 @@ export class DatabaseConnectionPool {
    * Start health check monitoring
    */
   private startHealthChecks(): void {
-    this.healthCheckTimer = setInterval(async () => {
+    this.healthCheckTimer = setInterval(async() => {
       await this.performHealthCheck();
     }, this.config.healthCheckInterval);
   }
@@ -425,22 +425,22 @@ export class DatabaseConnectionPool {
     let healthyCount = 0;
     const totalCount = this.connections.size;
 
-    console.log(`LOG: DB-POOL-HEALTH-CHECK-1 - Starting health check for ${totalCount} connections`);
+    console.warn(`LOG: DB-POOL-HEALTH-CHECK-1 - Starting health check for ${totalCount} connections`);
 
     for (const connection of this.connections.values()) {
       try {
         const result = await connection.db.prepare('SELECT 1 as health_check').first();
-        if (result && result.health_check === 1) {
+        if (result && result.healthcheck === 1) {
           connection.isHealthy = true;
           healthyCount++;
         } else {
           connection.isHealthy = false;
-          console.log(`LOG: DB-POOL-HEALTH-CHECK-2 - Connection ${connection.id} failed health check`);
+          console.warn(`LOG: DB-POOL-HEALTH-CHECK-2 - Connection ${connection.id} failed health check`);
         }
       } catch (error: unknown) {
         connection.isHealthy = false;
         connection.errorCount++;
-        console.log(`LOG: DB-POOL-HEALTH-CHECK-3 - Connection ${connection.id} health check error:`, error);
+        console.error(`LOG: DB-POOL-HEALTH-CHECK-3 - Connection ${connection.id} health check error:`, error);
       }
     }
 
@@ -457,7 +457,7 @@ export class DatabaseConnectionPool {
     this.metrics.lastHealthCheck = new Date();
 
     const duration = Date.now() - startTime;
-    console.log(`LOG: DB-POOL-HEALTH-CHECK-4 - Health check completed: ${healthyCount}/${totalCount} healthy (${duration}ms)`);
+    console.warn(`LOG: DB-POOL-HEALTH-CHECK-4 - Health check completed: ${healthyCount}/${totalCount} healthy (${duration}ms)`);
 
     // Cleanup unhealthy connections if we have too many failures
     if (this.metrics.healthCheckStatus === 'unhealthy') {
@@ -475,12 +475,12 @@ export class DatabaseConnectionPool {
       if (!connection.isHealthy && connection.errorCount > 3) {
         this.connections.delete(id);
         removedCount++;
-        console.log(`LOG: DB-POOL-CLEANUP-UNHEALTHY-1 - Removed unhealthy connection ${id}`);
+        console.warn(`LOG: DB-POOL-CLEANUP-UNHEALTHY-1 - Removed unhealthy connection ${id}`);
       }
     }
 
     if (removedCount > 0) {
-      console.log(`LOG: DB-POOL-CLEANUP-UNHEALTHY-2 - Removed ${removedCount} unhealthy connections`);
+      console.warn(`LOG: DB-POOL-CLEANUP-UNHEALTHY-2 - Removed ${removedCount} unhealthy connections`);
     }
   }
 
@@ -495,7 +495,7 @@ export class DatabaseConnectionPool {
    * Graceful shutdown
    */
   async shutdown(): Promise<void> {
-    console.log('LOG: DB-POOL-SHUTDOWN-1 - Shutting down database connection pool');
+    console.warn('LOG: DB-POOL-SHUTDOWN-1 - Shutting down database connection pool');
 
     if (this.healthCheckTimer) {
       clearInterval(this.healthCheckTimer);
@@ -512,7 +512,7 @@ export class DatabaseConnectionPool {
     this.connections.clear();
     this.metrics.activeConnections = 0;
 
-    console.log('LOG: DB-POOL-SHUTDOWN-2 - Database connection pool shutdown complete');
+    console.warn('LOG: DB-POOL-SHUTDOWN-2 - Database connection pool shutdown complete');
   }
 }
 

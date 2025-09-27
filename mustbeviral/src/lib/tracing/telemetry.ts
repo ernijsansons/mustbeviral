@@ -1,14 +1,14 @@
 // OpenTelemetry Tracing Configuration
 // Provides distributed tracing across microservices and API calls
 
-import { _trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api';
-import { NodeTracerProvider } from '@opentelemetry/sdk-node';
-import { Resource } from '@opentelemetry/resources';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-otlp-http';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { registerInstrumentations } from '@opentelemetry/instrumentation';
+import { trace, context, SpanStatusCode, SpanKind} from '@opentelemetry/api';
+import { NodeTracerProvider} from '@opentelemetry/sdk-node';
+import { Resource} from '@opentelemetry/resources';
+import { SemanticResourceAttributes} from '@opentelemetry/semantic-conventions';
+import { BatchSpanProcessor} from '@opentelemetry/sdk-trace-base';
+import { OTLPTraceExporter} from '@opentelemetry/exporter-otlp-http';
+import { getNodeAutoInstrumentations} from '@opentelemetry/auto-instrumentations-node';
+import { registerInstrumentations} from '@opentelemetry/instrumentation';
 
 export interface TraceConfig {
   serviceName: string;
@@ -48,14 +48,14 @@ class TelemetryService {
       // Create resource with service information
       const resource = Resource.default().merge(
         new Resource({
-          [SemanticResourceAttributes.SERVICE_NAME]: this.config.serviceName,
-          [SemanticResourceAttributes.SERVICE_VERSION]: this.config.serviceVersion,
-          [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: this.config.environment,
+          [SemanticResourceAttributes.SERVICENAME]: this.config.serviceName,
+          [SemanticResourceAttributes.SERVICEVERSION]: this.config.serviceVersion,
+          [SemanticResourceAttributes.DEPLOYMENTENVIRONMENT]: this.config.environment,
         })
       );
 
       // Create tracer provider
-      this.provider = new NodeTracerProvider({ _resource,
+      this.provider = new NodeTracerProvider({ resource,
       });
 
       // Configure exporter
@@ -82,9 +82,8 @@ class TelemetryService {
         instrumentations: [
           getNodeAutoInstrumentations({
             '@opentelemetry/instrumentation-http': {
-              enabled: true,
-              requestHook: (span, _request) => {
-                span.setAttribute('http.request.size', request.headers['content-length'] || 0);
+              enabled: true, requestHook: (span, request) => {
+                span.setAttribute('http.request.size', request.headers['content-length']  ?? 0);
               },
             },
             '@opentelemetry/instrumentation-fetch': {
@@ -118,8 +117,8 @@ class TelemetryService {
 
     try {
       const span = this.tracer.startSpan(spanConfig.name, {
-        kind: spanConfig.kind || SpanKind.INTERNAL,
-        attributes: spanConfig.attributes || {},
+        kind: spanConfig.kind ?? SpanKind.INTERNAL,
+        attributes: spanConfig.attributes ?? {},
       }, spanConfig.parentSpan ? trace.setSpan(context.active(), spanConfig.parentSpan) : undefined);
 
       return span;
@@ -315,7 +314,7 @@ class TelemetryService {
 
   // Add attributes to the current span
   addSpanAttributes(attributes: SpanAttributes): void {
-    if (!this.initialized) return;
+    if (!this.initialized) {return;}
 
     const currentSpan = trace.getActiveSpan();
     if (currentSpan) {
@@ -329,7 +328,7 @@ class TelemetryService {
 
   // Add an event to the current span
   addSpanEvent(name: string, attributes: SpanAttributes = {}): void {
-    if (!this.initialized) return;
+    if (!this.initialized) {return;}
 
     const currentSpan = trace.getActiveSpan();
     if (currentSpan) {
@@ -339,7 +338,7 @@ class TelemetryService {
 
   // Record an exception in the current span
   recordException(error: Error): void {
-    if (!this.initialized) return;
+    if (!this.initialized) {return;}
 
     const currentSpan = trace.getActiveSpan();
     if (currentSpan) {
@@ -353,7 +352,9 @@ class TelemetryService {
 
   // Get current trace ID
   getCurrentTraceId(): string | undefined {
-    if (!this.initialized) return undefined;
+    if (!this.initialized) {
+    return undefined;
+  }
 
     const currentSpan = trace.getActiveSpan();
     if (currentSpan) {
@@ -364,7 +365,9 @@ class TelemetryService {
 
   // Get current span ID
   getCurrentSpanId(): string | undefined {
-    if (!this.initialized) return undefined;
+    if (!this.initialized) {
+    return undefined;
+  }
 
     const currentSpan = trace.getActiveSpan();
     if (currentSpan) {
@@ -422,7 +425,7 @@ export function getTelemetry(): TelemetryService {
 export function Trace(spanName?: string, attributes: SpanAttributes = {}) {
   return function (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
-    const name = spanName || `${target.constructor.name}.${propertyKey}`;
+    const name = spanName ?? `${target.constructor.name}.${propertyKey}`;
 
     descriptor.value = function (...args: unknown[]) {
       const telemetry = getTelemetry();
@@ -437,7 +440,7 @@ export function Trace(spanName?: string, attributes: SpanAttributes = {}) {
 export function TraceAsync(spanName?: string, attributes: SpanAttributes = {}) {
   return function (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
-    const name = spanName || `${target.constructor.name}.${propertyKey}`;
+    const name = spanName ?? `${target.constructor.name}.${propertyKey}`;
 
     descriptor.value = function (...args: unknown[]) {
       const telemetry = getTelemetry();
@@ -465,7 +468,7 @@ export function traceHttpRequest(
 
       span.setAttributes({
         'http.status_code': response.status,
-        'http.response.size': response.headers.get('content-length') || 0,
+        'http.response.size': response.headers.get('content-length')  ?? 0,
       });
 
       if (response.status >= 400) {

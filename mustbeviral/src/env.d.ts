@@ -30,5 +30,5 @@ interface ImportMeta {
 }
 
 // Global compile-time feature flags
-declare const __DEV__: boolean;
-declare const __PROD__: boolean;
+declare const DEV__: boolean;
+declare const PROD__: boolean;

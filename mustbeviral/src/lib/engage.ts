@@ -65,7 +65,7 @@ export class EngagementTracker {
 
   // Track engagement event
   async trackEvent(event: Omit<EngagementEvent, 'id' | 'timestamp'>): Promise<void> {
-    console.log('LOG: ENGAGE-TRACK-1 - Tracking event:', event.event_type, 'for content:', event.content_id);
+    console.log('LOG: ENGAGE-TRACK-1 - Tracking event:', event.eventtype, 'for content:', event.contentid);
     
     const fullEvent: EngagementEvent = {
       ...event,
@@ -77,7 +77,7 @@ export class EngagementTracker {
     this.eventQueue.push(fullEvent);
     
     // Notify real-time clients immediately for certain events
-    if (['view', 'share', 'click'].includes(event.event_type)) {
+    if (['view', 'share', 'click'].includes(event.eventtype)) {
       this.notifySSEClients({
         type: 'engagement_event',
         data: fullEvent
@@ -89,7 +89,7 @@ export class EngagementTracker {
 
   // Process queued events and update metrics
   private async processEvents(): Promise<void> {
-    if (this.eventQueue.length === 0) return;
+    if (this.eventQueue.length === 0) {return;}
 
     console.log('LOG: ENGAGE-PROCESS-1 - Processing', this.eventQueue.length, 'events');
     
@@ -140,10 +140,10 @@ export class EngagementTracker {
 
   // Calculate engagement metrics from events
   private calculateMetrics(events: EngagementEvent[]): Partial<EngagementMetrics> {
-    const views = events.filter(e => e.event_type === 'view').length;
-    const shares = events.filter(e => e.event_type === 'share').length;
-    const clicks = events.filter(e => e.event_type === 'click').length;
-    const uniqueUsers = new Set(events.map(e => e.user_id || e.session_id)).size;
+    const views = events.filter(e => e.eventtype === 'view').length;
+    const shares = events.filter(e => e.eventtype === 'share').length;
+    const clicks = events.filter(e => e.eventtype === 'click').length;
+    const uniqueUsers = new Set(events.map(e => e.user_id ?? e.sessionid)).size;
     
     const totalEngagements = shares + clicks;
     const engagementRate = views > 0 ? (totalEngagements / views) * 100 : 0;
@@ -164,7 +164,7 @@ export class EngagementTracker {
     // For now, we'll use a simple in-memory store
     if (typeof window === 'undefined') {
       // Server-side storage simulation
-      global.contentMetrics = global.contentMetrics || new Map();
+      global.contentMetrics = global.contentMetrics ?? new Map();
       global.contentMetrics.set(contentId, {
         ...global.contentMetrics.get(contentId),
         ...metrics
@@ -245,9 +245,9 @@ export class EngagementTracker {
     const grouped = new Map<string, EngagementEvent[]>();
     
     events.forEach(event => {
-      const existing = grouped.get(event.content_id) || [];
+      const existing = grouped.get(event.contentid)  ?? [];
       existing.push(event);
-      grouped.set(event.content_id, existing);
+      grouped.set(event.contentid, existing);
     });
     
     return grouped;
@@ -262,7 +262,7 @@ export class EngagementTracker {
   private startProcessing(): void {
     console.log('LOG: ENGAGE-PROCESS-3 - Starting background event processing');
     
-    this.processingInterval = setInterval(() => {
+    this.processingInterval = setInterval_(() => {
       this.processEvents();
     }, 5000); // Process every 5 seconds
   }
@@ -370,7 +370,7 @@ export class ClientTracker {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      console.log('LOG: ENGAGE-CLIENT-2 - Event sent successfully:', event.event_type);
+      console.log('LOG: ENGAGE-CLIENT-2 - Event sent successfully:', event.eventtype);
     } catch (error) {
       console.error('LOG: ENGAGE-CLIENT-ERROR-1 - Failed to send event:', error);
       // Could implement retry logic or local storage for offline events
@@ -384,7 +384,9 @@ export class ClientTracker {
 
   // Get basic device info
   private getDeviceInfo(): string {
-    if (typeof window === 'undefined') return 'server';
+    if (typeof window === 'undefined') {
+    return 'server';
+  }
     
     return `${window.navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop'}_${window.screen.width}x${window.screen.height}`;
   }

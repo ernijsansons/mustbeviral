@@ -58,7 +58,7 @@ async function handleContentAPI(request: Request, path: string, method: string):
     const authHeader = request.headers.get('Authorization');
 
     // Check authentication for protected routes
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return Response.json({ error: 'Authorization required' }, { status: 401 });
     }
 
@@ -191,7 +191,7 @@ async function handleBoostAPI(request: Request, path: string, method: string): P
   try {
     const authHeader = request.headers.get('Authorization');
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return Response.json({ error: 'Authorization required' }, { status: 401 });
     }
 

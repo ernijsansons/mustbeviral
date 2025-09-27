@@ -290,7 +290,7 @@ export class GamificationService {
       const pointsMap = this.getPointsForEvent(eventType);
       
       // Award base points
-      profile.points += pointsMap.base_points;
+      profile.points += pointsMap.basepoints;
       
       // Update relevant stats
       this.updateStats(profile, eventType, metadata);
@@ -302,32 +302,31 @@ export class GamificationService {
       // Award achievement points and unlock badges
       for (const achievement of newAchievements) {
         if (!profile.achievements.includes(achievement.id)) {
-          profile.points += achievement.points_reward;
+          profile.points += achievement.pointsreward;
           profile.achievements.push(achievement.id);
           
-          if (achievement.badge_unlock && !profile.badges.includes(achievement.badge_unlock)) {
-            profile.badges.push(achievement.badge_unlock);
-            const badge = this.badges.get(achievement.badge_unlock);
-            if (badge) newBadges.push(badge);
+          if (achievement.badge_unlock && !profile.badges.includes(achievement.badgeunlock)) {
+            profile.badges.push(achievement.badgeunlock);
+            const badge = this.badges.get(achievement.badgeunlock);
+            if (badge) {newBadges.push(badge);}
           }
         }
       }
       
       // Update level based on points
       const newLevel = this.calculateLevel(profile.points);
-      const leveledUp = newLevel > profile.level;
       profile.level = newLevel;
       
       // Update activity timestamp
-      profile.last_activity = new Date().toISOString();
+      profile.lastactivity = new Date().toISOString();
       
       // Save profile back to database (in production)
       await this.saveUserProfile(userId, profile);
       
-      console.log('LOG: GAMIFICATION-AWARD-2 - Points awarded successfully:', pointsMap.base_points, 'New level:', profile.level);
+      console.log('LOG: GAMIFICATION-AWARD-2 - Points awarded successfully:', pointsMap.basepoints, 'New level:', profile.level);
       
       return {
-        points_awarded: pointsMap.base_points + newAchievements.reduce((sum, a) => sum + a.points_reward, 0),
+        points_awarded: pointsMap.base_points + newAchievements.reduce((sum, a) => sum + a.pointsreward, 0),
         new_achievements: newAchievements,
         new_badges: newBadges
       };
@@ -347,7 +346,7 @@ export class GamificationService {
       'match_completed': { base_points: 150 }
     };
 
-    return pointsMap[eventType] || { base_points: 10 };
+    return pointsMap[eventType]  ?? { base_points: 10 };
   }
 
   private updateStats(profile: GamificationProfile, eventType: GamificationEvent['event_type'], metadata?: unknown): void {
@@ -373,7 +372,7 @@ export class GamificationService {
     const newAchievements: Achievement[] = [];
     
     for (const [id, achievement] of this.achievements.entries()) {
-      if (profile.achievements.includes(id)) continue;
+      if (profile.achievements.includes(id)) {continue;}
       
       const meetsRequirement = this.checkAchievementCriteria(achievement, profile);
       if (meetsRequirement) {
@@ -386,7 +385,7 @@ export class GamificationService {
   }
 
   private checkAchievementCriteria(achievement: Achievement, profile: GamificationProfile): boolean {
-    const { criteria } = achievement;
+    const { criteria} = achievement;
     
     switch (criteria.type) {
       case 'points':
@@ -394,12 +393,16 @@ export class GamificationService {
       case 'level':
         return profile.level >= criteria.threshold;
       case 'count':
-        if (!criteria.stat_key) return false;
+        if (!criteria.statkey) {
+    return false;
+  }
         const statValue = profile.stats[criteria.stat_key as keyof typeof profile.stats];
         return typeof statValue === 'number' && statValue >= criteria.threshold;
       case 'streak':
         // For now, treat streak as count (can be enhanced later)
-        if (!criteria.stat_key) return false;
+        if (!criteria.statkey) {
+    return false;
+  }
         const streakValue = profile.stats[criteria.stat_key as keyof typeof profile.stats];
         return typeof streakValue === 'number' && streakValue >= criteria.threshold;
       default:
@@ -427,7 +430,7 @@ export class GamificationService {
       // In production, this would update the users.profile_data field
       // For now, store in memory for demo purposes
       if (typeof global !== 'undefined') {
-        global.gamificationProfiles = global.gamificationProfiles || new Map();
+        global.gamificationProfiles = global.gamificationProfiles ?? new Map();
         global.gamificationProfiles.set(userId, profile);
       }
       
@@ -447,11 +450,11 @@ export class GamificationService {
   }
 
   getAchievement(id: string): Achievement | null {
-    return this.achievements.get(id) || null;
+    return this.achievements.get(id)  ?? null;
   }
 
   getBadge(id: string): Badge | null {
-    return this.badges.get(id) || null;
+    return this.badges.get(id)  ?? null;
   }
 
   async getLeaderboard(limit: number = 10): Promise<Array<{ user_id: string; username: string; points: number; level: number; badges: number }>> {

@@ -6,30 +6,13 @@
  * The collapsible sidebar adapts beautifully across all screen sizes.
  */
 
-import { ReactNode, useState, useEffect } from 'react';
-import { Link, useLocation } from 'wouter';
+import { ReactNode, useState, useEffect} from 'react';
+import { Link, useLocation} from 'wouter';
 import {
-  Home,
-  PenTool,
-  Users,
-  Calendar,
-  BarChart3,
-  Settings,
-  Sparkles,
-  Menu,
-  X,
-  Zap,
-  Heart,
-  Rocket,
-  Bell,
-  Search,
-  Plus,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
-import { cn } from '../../lib/utils';
-import { Button } from '../ui/Button';
-import { GradientText } from '../ui/GradientText';
+  Home, PenTool, Users, Calendar, BarChart3, Settings, Sparkles, Menu, X, Zap, Heart, Rocket, Bell, Search, Plus, ChevronLeft, ChevronRight} from 'lucide-react';
+import { cn} from '../../lib/utils';
+import { Button} from '../ui/Button';
+import { GradientText} from '../ui/GradientText';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -99,7 +82,7 @@ function UserProfileWidget({ collapsed }: { collapsed: boolean }) {
   });
 
   return (
-    <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+    <div className = "p-4 border-t border-slate-200 dark:border-slate-700">
       <div className={cn(
         'flex items-center gap-3 p-3 bg-gradient-to-r from-primary-50 to-viral-50 dark:from-primary-900/20 dark:to-viral-900/20 rounded-xl border border-primary-200 dark:border-primary-800',
         'hover:shadow-glow hover:shadow-primary-500/20 transition-all duration-300 cursor-pointer group'
@@ -143,10 +126,8 @@ function UserProfileWidget({ collapsed }: { collapsed: boolean }) {
 /**
  * Sidebar Navigation Item
  */
-function SidebarNavItem({
-  item,
-  isActive,
-  collapsed
+function SidebarNavItem(_{
+  item, isActive, collapsed
 }: {
   item: SidebarItem;
   isActive: boolean;
@@ -222,7 +203,7 @@ function SidebarNavItem({
 /**
  * Main Sidebar Component
  */
-function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+function Sidebar(_{ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const [location] = useLocation();
 
   return (
@@ -281,7 +262,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
           <SidebarNavItem
             key={item.id}
             item={item}
-            isActive={location === item.href || location.startsWith(item.href + '/')}
+              isActive={location === item.href  ?? location.startsWith(item.href + '/')}
             collapsed={collapsed}
           />
         ))}
@@ -362,8 +343,7 @@ function MobileBottomNav() {
 
   const quickItems = sidebarItems.slice(0, 4); // Show first 4 items
 
-  return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40">
+  return (<div className="lg:hidden fixed bottom-0 left-0 right-0 z-40">
       <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200 dark:border-slate-700 p-2">
         <div className="flex items-center justify-around">
           {quickItems.map((item) => {
@@ -406,12 +386,12 @@ function MobileBottomNav() {
 /**
  * Main App Layout Component
  */
-export function AppLayout({ children, className }: AppLayoutProps) {
+export function AppLayout(_{ children, className }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Handle responsive sidebar
-  useEffect(() => {
+  useEffect_(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) {
         setSidebarCollapsed(true);

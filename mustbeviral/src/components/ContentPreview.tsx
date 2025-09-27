@@ -1,6 +1,6 @@
 // Content Preview Component
 import React, { useState } from 'react';
-import { _X, Edit, Copy, Share, Eye, EyeOff, Twitter, Linkedin, Instagram, Facebook, FileText } from 'lucide-react';
+import { X, Edit, Copy, Share, Eye, EyeOff, Twitter, Linkedin, Instagram, Facebook, FileText} from 'lucide-react';
 
 interface ContentItem {
   id: string;
@@ -39,14 +39,16 @@ const platformColors = {
   default: 'bg-gray-500',
 };
 
-export function ContentPreview({ _content, isOpen, onClose, onEdit, onStatusChange }: ContentPreviewProps) {
+export function ContentPreview(_{ content, isOpen, onClose, onEdit, onStatusChange }: ContentPreviewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
-  const PlatformIcon = platformIcons[content.platform as keyof typeof platformIcons] || platformIcons.default;
-  const platformColor = platformColors[content.platform as keyof typeof platformColors] || platformColors.default;
+  const PlatformIcon = platformIcons[content.platform as keyof typeof platformIcons]  ?? platformIcons.default;
+  const platformColor = platformColors[content.platform as keyof typeof platformColors]  ?? platformColors.default;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(content.body);
@@ -152,7 +154,7 @@ export function ContentPreview({ _content, isOpen, onClose, onEdit, onStatusChan
                     </div>
                   )}
 
-                  {(content.platform === 'instagram' || content.platform === 'facebook') && (
+                  {(content.platform === 'instagram'  ?? content.platform === 'facebook') && (
                     <div>
                       <div className="flex items-center space-x-2 mb-3">
                         <div className="w-8 h-8 bg-gray-300 rounded-full"></div>

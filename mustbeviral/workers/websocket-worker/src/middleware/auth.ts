@@ -41,7 +41,7 @@ export class AuthMiddleware {
 
       if (!response.ok) {
         const errorData = await response.json() as unknown;
-        return { valid: false, error: errorData.error || 'Authentication failed' };
+        return { valid: false, error: errorData.error  ?? 'Authentication failed' };
       }
 
       const authData = await response.json() as unknown;
@@ -53,7 +53,7 @@ export class AuthMiddleware {
           username: authData.user.username,
           email: authData.user.email,
           role: authData.user.role,
-          permissions: authData.user.permissions || []
+          permissions: authData.user.permissions  ?? []
         }
       };
 
@@ -87,7 +87,7 @@ export class AuthMiddleware {
 
       if (!response.ok) {
         const errorData = await response.json() as unknown;
-        return { valid: false, error: errorData.error || 'Authentication failed' };
+        return { valid: false, error: errorData.error  ?? 'Authentication failed' };
       }
 
       const authData = await response.json() as unknown;
@@ -99,7 +99,7 @@ export class AuthMiddleware {
           username: authData.user.username,
           email: authData.user.email,
           role: authData.user.role,
-          permissions: authData.user.permissions || []
+          permissions: authData.user.permissions  ?? []
         }
       };
 
@@ -112,7 +112,7 @@ export class AuthMiddleware {
   }
 
   authorize(user: AuthResult['user'], requiredPermission: string): boolean {
-    if (!user || !user.permissions) {
+    if (!user?.permissions) {
       return false;
     }
 
@@ -211,7 +211,7 @@ export class AuthMiddleware {
     const cookieHeader = request.headers.get('Cookie');
     if (cookieHeader) {
       const cookies = this.parseCookies(cookieHeader);
-      const authToken = cookies.auth_token || cookies.access_token;
+      const authToken = cookies.auth_token  ?? cookies.access_token;
       if (authToken) {
         return authToken;
       }

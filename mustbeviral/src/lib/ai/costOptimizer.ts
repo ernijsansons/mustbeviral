@@ -64,7 +64,7 @@ export class AICostOptimizer {
     quality: number;
   }> = [];
   private costMetrics: CostMetrics;
-  private readonly MAX_HISTORY = 10000;
+  private readonly MAXHISTORY = 10000;
   private requestQueue: Map<string, Array<{
     request: any;
     resolve: Function;
@@ -72,8 +72,8 @@ export class AICostOptimizer {
     timestamp: number;
   }>> = new Map();
   private batchTimer?: NodeJS.Timeout;
-  private readonly BATCH_DELAY = 50; // ms
-  private readonly MAX_BATCH_SIZE = 10;
+  private readonly BATCHDELAY = 50; // ms
+  private readonly MAXBATCHSIZE = 10;
 
   constructor() {
     this.costMetrics = {
@@ -152,16 +152,16 @@ export class AICostOptimizer {
       });
 
       // Process immediately if batch is full
-      if (queue.length >= this.MAX_BATCH_SIZE) {
+      if (queue.length >= this.MAXBATCHSIZE) {
         this.processBatch(batchKey, processFn);
         return;
       }
 
       // Schedule batch processing
       if (!this.batchTimer) {
-        this.batchTimer = setTimeout(() => {
+        this.batchTimer = setTimeout_(() => {
           this.processAllBatches(processFn);
-        }, this.BATCH_DELAY);
+        }, this.BATCHDELAY);
       }
     });
   }
@@ -174,7 +174,7 @@ export class AICostOptimizer {
     processFn: (requests: any[]) => Promise<T[]>
   ): Promise<void> {
     const queue = this.requestQueue.get(batchKey);
-    if (!queue || queue.length === 0) return;
+    if (!queue ?? queue.length === 0) {return;}
 
     // Remove from queue
     this.requestQueue.delete(batchKey);
@@ -228,8 +228,12 @@ export class AICostOptimizer {
   private estimateRequestComplexity(request: any): string {
     if (typeof request === 'string') {
       const length = request.length;
-      if (length < 100) return 'simple';
-      if (length < 500) return 'medium';
+      if (length < 100) {
+    return 'simple';
+  }
+      if (length < 500) {
+    return 'medium';
+  }
       return 'complex';
     }
     
@@ -244,7 +248,9 @@ export class AICostOptimizer {
       record => record.model === modelName && record.taskType === taskType
     );
 
-    if (relevantHistory.length === 0) return 0.5; // Neutral score for unknown combinations
+    if (relevantHistory.length === 0) {
+    return 0.5;
+  } // Neutral score for unknown combinations
 
     const recentHistory = relevantHistory.slice(-50); // Last 50 requests
     const successRate = recentHistory.filter(r => r.success).length / recentHistory.length;
@@ -280,7 +286,7 @@ export class AICostOptimizer {
     this.requestHistory.push(record);
 
     // Maintain history size
-    if (this.requestHistory.length > this.MAX_HISTORY) {
+    if (this.requestHistory.length > this.MAXHISTORY) {
       this.requestHistory.shift();
     }
 
@@ -375,7 +381,7 @@ export class AICostOptimizer {
 
     // Aggregate stats from history
     for (const record of this.requestHistory) {
-      const stats = modelStats.get(record.model) || {
+      const stats = modelStats.get(record.model)  ?? {
         count: 0,
         totalCost: 0,
         totalLatency: 0,
@@ -386,7 +392,7 @@ export class AICostOptimizer {
       stats.count++;
       stats.totalCost += record.cost;
       stats.totalLatency += record.latency;
-      if (record.success) stats.successes++;
+      if (record.success) {stats.successes++;}
       stats.totalQuality += record.quality;
 
       modelStats.set(record.model, stats);
@@ -520,24 +526,33 @@ export class AICostOptimizer {
   private getCandidateModels(context: RequestContext): ModelConfig[] {
     return Array.from(this.models.values())
       .filter(model => {
-        if (!model.enabled) return false;
+        if (!model.enabled) {
+    return false;
+  }
         
         // Check capability match
         const hasCapability = model.capabilities.some(
-          cap => cap.type === context.taskType || 
-                 (context.taskType === 'content-generation' && cap.type === 'text-generation')
+          cap => cap.type === context.taskType ?? (context.taskType === 'content-generation' && cap.type === 'text-generation')
         );
-        if (!hasCapability) return false;
+        if (!hasCapability) {
+    return false;
+  }
 
         // Check cost constraint
         const estimatedCost = this.estimateCost(model, context);
-        if (estimatedCost > context.maxCost) return false;
+        if (estimatedCost > context.maxCost) {
+    return false;
+  }
 
         // Check latency constraint
-        if (model.latency > context.maxLatency) return false;
+        if (model.latency > context.maxLatency) {
+    return false;
+  }
 
         // Check quality threshold
-        if (model.qualityScore < context.qualityThreshold) return false;
+        if (model.qualityScore < context.qualityThreshold) {
+    return false;
+  }
 
         return true;
       });
@@ -562,8 +577,7 @@ export class AICostOptimizer {
 
     // Capability match (10%)
     const capability = model.capabilities.find(
-      cap => cap.type === context.taskType ||
-             (context.taskType === 'content-generation' && cap.type === 'text-generation')
+      cap => cap.type === context.taskType ?? (context.taskType === 'content-generation' && cap.type === 'text-generation')
     );
     if (capability) {
       score += capability.performance * 0.1;
@@ -639,11 +653,11 @@ export class AICostOptimizer {
 
     // Update by model
     this.costMetrics.costByModel[record.model] = 
-      (this.costMetrics.costByModel[record.model] || 0) + record.cost;
+      (this.costMetrics.costByModel[record.model]  ?? 0) + record.cost;
 
     // Update by task
     this.costMetrics.costByTask[record.taskType] = 
-      (this.costMetrics.costByTask[record.taskType] || 0) + record.cost;
+      (this.costMetrics.costByTask[record.taskType]  ?? 0) + record.cost;
 
     // Calculate efficiency
     const recentRequests = this.requestHistory.slice(-1000);
@@ -657,7 +671,7 @@ export class AICostOptimizer {
    */
   private updateModelPerformance(modelName: string, record: any): void {
     const model = this.models.get(modelName);
-    if (!model) return;
+    if (!model) {return;}
 
     // Simple learning: adjust quality score based on actual performance
     const actualQualityDiff = record.quality - model.qualityScore;
@@ -706,11 +720,11 @@ export class AICostOptimizer {
 
     for (const record of recentRequests) {
       const key = `${record.taskType}_${record.model}`;
-      taskGroups.set(key, (taskGroups.get(key) || 0) + 1);
+      taskGroups.set(key, (taskGroups.get(key)  ?? 0) + 1);
     }
 
     return Array.from(taskGroups.values())
-      .filter(count => count >= 5)
+      .filter(count = > count >= 5)
       .reduce((sum, count) => sum + Math.floor(count / 5), 0);
   }
 
@@ -730,7 +744,7 @@ export class AICostOptimizer {
     for (const record of recentRequests) {
       // Simple pattern: same task type + similar timing
       const pattern = `${record.taskType}_${Math.floor(record.timestamp / 3600000)}`; // Hour bucket
-      const existing = requestPatterns.get(pattern) || { count: 0, totalCost: 0 };
+      const existing = requestPatterns.get(pattern)  ?? { count: 0, totalCost: 0 };
       existing.count++;
       existing.totalCost += record.cost;
       requestPatterns.set(pattern, existing);

@@ -151,11 +151,11 @@ export class StrategyGenerator {
   }
 
   getTemplate(templateId: string): StrategyTemplate | null {
-    return this.templates.get(templateId) || null;
+    return this.templates.get(templateId)  ?? null;
   }
 
   async generatePersonalizedStrategy(request: StrategyRequest): Promise<PersonalizedStrategy> {
-    console.log('LOG: STRATEGIES-GENERATE-1 - Generating personalized strategy for:', request.brand_name);
+    console.log('LOG: STRATEGIES-GENERATE-1 - Generating personalized strategy for:', request.brandname);
     
     try {
       // Select best template based on request
@@ -173,9 +173,9 @@ export class StrategyGenerator {
       const strategy: PersonalizedStrategy = {
         id: this.generateStrategyId(),
         template_id: selectedTemplate.id,
-        user_id: request.user_id,
-        brand_name: request.brand_name,
-        customized_steps,
+        user_id: request.userid,
+        brand_name: request.brandname,
+        customizedsteps,
         timeline,
         budget_estimate: budgetEstimate,
         success_probability: successProbability,
@@ -191,12 +191,12 @@ export class StrategyGenerator {
   }
 
   private selectBestTemplate(request: StrategyRequest): StrategyTemplate {
-    console.log('LOG: STRATEGIES-SELECT-1 - Selecting best template for goal:', request.primary_goal);
+    console.log('LOG: STRATEGIES-SELECT-1 - Selecting best template for goal:', request.primarygoal);
     
     // Simple template selection logic based on primary goal
-    if (request.primary_goal === 'affiliate_revenue') {
+    if (request.primarygoal === 'affiliate_revenue') {
       return this.templates.get('affiliate-funnel-basic')!;
-    } else if (request.primary_goal === 'awareness') {
+    } else if (request.primarygoal === 'awareness') {
       return this.templates.get('brand-awareness-viral')!;
     }
     
@@ -205,7 +205,7 @@ export class StrategyGenerator {
   }
 
   private async customizeSteps(template: StrategyTemplate, request: StrategyRequest): Promise<CustomizedStep[]> {
-    console.log('LOG: STRATEGIES-CUSTOMIZE-1 - Customizing steps for brand:', request.brand_name);
+    console.log('LOG: STRATEGIES-CUSTOMIZE-1 - Customizing steps for brand:', request.brandname);
     
     return template.steps.map(step => {
       const personalizedContent = this.generatePersonalizedContent(step, request);
@@ -223,10 +223,10 @@ export class StrategyGenerator {
 
   private generatePersonalizedContent(step: StrategyStep, request: StrategyRequest): string {
     const industry = request.industry;
-    const brandName = request.brand_name;
-    const audience = request.target_audience;
+    const brandName = request.brandname;
+    const audience = request.targetaudience;
     
-    switch (step.action_type) {
+    switch (step.actiontype) {
       case 'influencer_outreach':
         return `For ${brandName} in the ${industry} industry, focus on reaching ${audience} through micro-influencers who align with your brand values. Prioritize authentic partnerships over follower count.`;
       
@@ -247,10 +247,10 @@ export class StrategyGenerator {
   private generateSpecificActions(step: StrategyStep, request: StrategyRequest): string[] {
     const actions = [
       `Research ${request.industry} influencers with 10K-100K followers`,
-      `Create outreach templates mentioning ${request.brand_name}`,
-      `Set up tracking for ${request.primary_goal} metrics`,
+      `Create outreach templates mentioning ${request.brandname}`,
+      `Set up tracking for ${request.primarygoal} metrics`,
       `Develop content calendar for ${request.timeline}`,
-      `Establish KPIs aligned with ${request.primary_goal}`
+      `Establish KPIs aligned with ${request.primarygoal}`
     ];
     
     return actions.slice(0, 3); // Return top 3 most relevant actions
@@ -264,14 +264,14 @@ export class StrategyGenerator {
       'analysis': ['insights_generated', 'opportunities_identified', 'competitive_gaps']
     };
     
-    return baseKPIs[step.action_type] || ['completion_rate', 'quality_score'];
+    return baseKPIs[step.actiontype]  ?? ['completion_rate', 'quality_score'];
   }
 
   private calculateTimeline(steps: CustomizedStep[]): string {
     const totalWeeks = steps.reduce((total, step) => {
-      const duration = step.estimated_duration;
+      const duration = step.estimatedduration;
       const weeks = duration.includes('week') ? 
-        parseInt(duration.split('-')[1] || duration.split(' ')[0]) : 1;
+        parseInt(duration.split('-')[1]  ?? duration.split(' ')[0]) : 1;
       return total + weeks;
     }, 0);
     
@@ -285,7 +285,7 @@ export class StrategyGenerator {
       'high': 15000
     };
     
-    const baseBudget = baseBudgets[request.budget_range];
+    const baseBudget = baseBudgets[request.budgetrange];
     const stepMultiplier = steps.length * 0.2;
     
     return Math.round(baseBudget * (1 + stepMultiplier));
@@ -295,14 +295,14 @@ export class StrategyGenerator {
     let probability = 70; // Base probability
     
     // Adjust based on budget
-    if (request.budget_range === 'high') probability += 15;
-    else if (request.budget_range === 'low') probability -= 10;
+    if (request.budgetrange === 'high') {probability += 15;}
+    else if (request.budgetrange === 'low') {probability -= 10;}
     
     // Adjust based on existing channels
     probability += request.existing_channels.length * 5;
     
     // Adjust based on template match
-    if (template.category === request.primary_goal) probability += 10;
+    if (template.category === request.primarygoal) {probability += 10;}
     
     return Math.min(95, Math.max(30, probability));
   }

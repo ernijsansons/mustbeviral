@@ -3,7 +3,7 @@
  * Validates critical environment setup before worker starts
  */
 
-import { CloudflareEnv } from '../lib/cloudflare';
+import { CloudflareEnv} from '../lib/cloudflare';
 
 export interface EnvironmentValidationResult {
   valid: boolean;
@@ -22,24 +22,24 @@ export interface EnvironmentChecks {
 }
 
 export class EnvironmentValidator {
-  private static readonly REQUIRED_SECRETS = [
+  private static readonly REQUIREDSECRETS = [
     'JWT_SECRET',
     'JWT_REFRESH_SECRET',
     'ENCRYPTION_KEY',
     'STRIPE_SECRET_KEY'
   ] as const;
 
-  private static readonly REQUIRED_KV_NAMESPACES = [
+  private static readonly REQUIREDKVNAMESPACES = [
     'TRENDS_CACHE',
     'USER_SESSIONS',
     'RATE_LIMITS'
   ] as const;
 
-  private static readonly REQUIRED_D1_DATABASES = [
+  private static readonly REQUIREDD1DATABASES = [
     'DB'
   ] as const;
 
-  private static readonly REQUIRED_R2_BUCKETS = [
+  private static readonly REQUIREDR2BUCKETS = [
     'CONTENT_STORAGE'
   ] as const;
 
@@ -56,7 +56,7 @@ export class EnvironmentValidator {
 
     try {
       // Check if we're in local development mode
-      const isLocalDev = env.ENVIRONMENT === 'development' || !env.ENVIRONMENT;
+      const isLocalDev = env.ENVIRONMENT === 'development'  ?? !env.ENVIRONMENT;
 
       if (isLocalDev) {
         // In local development, secrets may not be available via wrangler
@@ -105,7 +105,7 @@ export class EnvironmentValidator {
    * Validate required secrets
    */
   private static async validateSecrets(env: CloudflareEnv, result: EnvironmentValidationResult): Promise<void> {
-    for (const secret of this.REQUIRED_SECRETS) {
+    for (const secret of this.REQUIREDSECRETS) {
       try {
         const value = env[secret];
         if (!value) {
@@ -135,10 +135,10 @@ export class EnvironmentValidator {
             break;
 
           case 'STRIPE_SECRET_KEY':
-            if (!value.startsWith('sk_')) {
+            if (!value.startsWith('sk')) {
               result.errors.push(`${secret} must be a valid Stripe secret key`);
             }
-            if (value.startsWith('sk_test_') && env.ENVIRONMENT === 'production') {
+            if (value.startsWith('sk_test') && env.ENVIRONMENT === 'production') {
               result.errors.push('Using test Stripe key in production environment');
             }
             break;
@@ -153,7 +153,7 @@ export class EnvironmentValidator {
    * Validate KV namespace bindings
    */
   private static async validateKVNamespaces(env: CloudflareEnv, result: EnvironmentValidationResult): Promise<void> {
-    for (const namespace of this.REQUIRED_KV_NAMESPACES) {
+    for (const namespace of this.REQUIREDKVNAMESPACES) {
       try {
         const kv = env[namespace] as KVNamespace;
         if (!kv) {
@@ -181,7 +181,7 @@ export class EnvironmentValidator {
    * Validate D1 database bindings
    */
   private static async validateD1Databases(env: CloudflareEnv, result: EnvironmentValidationResult): Promise<void> {
-    for (const dbName of this.REQUIRED_D1_DATABASES) {
+    for (const dbName of this.REQUIREDD1DATABASES) {
       try {
         const db = env[dbName] as D1Database;
         if (!db) {
@@ -191,7 +191,7 @@ export class EnvironmentValidator {
 
         // Test database connectivity
         const testResult = await db.prepare('SELECT 1 as test').first();
-        if (!testResult || testResult.test !== 1) {
+        if (!testResult ?? testResult.test !== 1) {
           result.errors.push(`D1 database ${dbName} is not responding correctly`);
         }
 
@@ -219,7 +219,7 @@ export class EnvironmentValidator {
    * Validate R2 bucket bindings
    */
   private static async validateR2Buckets(env: CloudflareEnv, result: EnvironmentValidationResult): Promise<void> {
-    for (const bucketName of this.REQUIRED_R2_BUCKETS) {
+    for (const bucketName of this.REQUIREDR2BUCKETS) {
       try {
         const bucket = env[bucketName] as R2Bucket;
         if (!bucket) {
@@ -247,9 +247,9 @@ export class EnvironmentValidator {
    * Validate domain configuration
    */
   private static validateDomainConfiguration(env: CloudflareEnv, result: EnvironmentValidationResult): void {
-    const allowedOrigins = env.ALLOWED_ORIGINS?.split(',') || [];
+    const allowedOrigins = env.ALLOWED_ORIGINS?.split(',')  ?? [];
 
-    if (allowedOrigins.length === 0) {
+    if (allowedOrigins.length = == 0) {
       result.warnings.push('No allowed origins configured for CORS');
     }
 
@@ -265,7 +265,7 @@ export class EnvironmentValidator {
     // Check for localhost in production
     if (env.ENVIRONMENT === 'production') {
       const hasLocalhost = allowedOrigins.some(origin =>
-        origin.includes('localhost') || origin.includes('127.0.0.1')
+        origin.includes('localhost')  ?? origin.includes('127.0.0.1')
       );
 
       if (hasLocalhost) {
@@ -278,14 +278,14 @@ export class EnvironmentValidator {
    * Validate rate limiting configuration
    */
   private static validateRateLimitConfiguration(env: CloudflareEnv, result: EnvironmentValidationResult): void {
-    const windowMs = parseInt(env.RATE_LIMIT_WINDOW_MS || '60000');
-    const maxRequests = parseInt(env.RATE_LIMIT_MAX_REQUESTS || '100');
+    const windowMs = parseInt(env.RATE_LIMIT_WINDOW_MS ?? '60000');
+    const maxRequests = parseInt(env.RATE_LIMIT_MAX_REQUESTS ?? '100');
 
-    if (isNaN(windowMs) || windowMs < 1000) {
+    if (isNaN(windowMs)  ?? windowMs < 1000) {
       result.errors.push('Rate limit window must be at least 1000ms');
     }
 
-    if (isNaN(maxRequests) || maxRequests < 1) {
+    if (isNaN(maxRequests)  ?? maxRequests < 1) {
       result.errors.push('Rate limit max requests must be at least 1');
     }
 
@@ -302,26 +302,26 @@ export class EnvironmentValidator {
    * Validate environment consistency
    */
   private static validateEnvironmentConsistency(env: CloudflareEnv, result: EnvironmentValidationResult): void {
-    const environment = env.ENVIRONMENT || 'development';
+    const environment = env.ENVIRONMENT ?? 'development';
 
     // Production-specific validations
     if (environment === 'production') {
-      if (!env.JWT_SECRET || env.JWT_SECRET.length < 64) {
+      if (!env.JWT_SECRET ?? env.JWT_SECRET.length < 64) {
         result.errors.push('Production JWT secret must be at least 64 characters');
       }
 
-      if (!env.ENCRYPTION_KEY || env.ENCRYPTION_KEY.length < 64) {
+      if (!env.ENCRYPTION_KEY ?? env.ENCRYPTION_KEY.length < 64) {
         result.errors.push('Production encryption key must be at least 64 characters');
       }
 
-      if (env.STRIPE_SECRET_KEY?.startsWith('sk_test_')) {
+      if (env.STRIPE_SECRET_KEY?.startsWith('sk_test')) {
         result.errors.push('Cannot use test Stripe key in production');
       }
     }
 
     // Development-specific validations
     if (environment === 'development') {
-      if (env.STRIPE_SECRET_KEY?.startsWith('sk_live_')) {
+      if (env.STRIPE_SECRET_KEY?.startsWith('sk_live')) {
         result.warnings.push('Using live Stripe key in development environment');
       }
     }

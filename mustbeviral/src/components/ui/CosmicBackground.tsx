@@ -1,7 +1,7 @@
 // Universe-Bending Cosmic Background Component
-import React, { _useEffect, useRef, useState } from 'react';
-import { _cn, generateParticlePositions } from '../../lib/utils';
-import { useTheme } from '../../providers/ThemeProvider';
+import React, { useEffect, useRef, useState } from 'react';
+import { cn, generateParticlePositions} from '../../lib/utils';
+import { useTheme} from '../../providers/ThemeProvider';
 
 interface Particle {
   x: number;
@@ -21,14 +21,8 @@ interface CosmicBackgroundProps {
   interactive?: boolean;
 }
 
-export function CosmicBackground({ _children,
-  className,
-  variant = 'stars',
-  density = 'medium',
-  animated = true,
-  interactive = false,
-}: CosmicBackgroundProps) {
-  const { _cosmicEffectsLevel, isAnimationEnabled } = useTheme();
+export function CosmicBackground(_{ children, className, variant = 'stars', density = 'medium', animated = true, interactive = false, }: CosmicBackgroundProps) {
+  const { cosmicEffectsLevel, isAnimationEnabled} = useTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -88,7 +82,7 @@ export function CosmicBackground({ _children,
 
   // Mouse interaction
   useEffect(() => {
-    if (!interactive) return;
+    if (!interactive) {return;}
 
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
@@ -99,14 +93,16 @@ export function CosmicBackground({ _children,
   }, [interactive]);
 
   // Canvas animation
-  useEffect(() => {
-    if (!animated || !isAnimationEnabled || cosmicEffectsLevel === 'minimal') return;
+    useEffect(() => {
+      if (!animated  ?? !isAnimationEnabled  ?? cosmicEffectsLevel === 'minimal') {
+        return;
+      }
 
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {return;}
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {return;}
 
     let time = 0;
 
@@ -117,7 +113,7 @@ export function CosmicBackground({ _children,
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      particles.forEach((particle, _index) => {
+      particles.forEach((particle, index) => {
         // Calculate position with floating animation
         const baseX = (particle.x / 100) * canvas.width;
         const baseY = (particle.y / 100) * canvas.height;
@@ -145,7 +141,7 @@ export function CosmicBackground({ _children,
         ctx.globalAlpha = Math.max(0.1, opacity);
 
         // Main particle
-        ctx.fillStyle = particle.color || '#ffffff';
+        ctx.fillStyle = particle.color ?? '#ffffff';
         ctx.beginPath();
         ctx.arc(x, y, particle.size, 0, Math.PI * 2);
         ctx.fill();
@@ -153,7 +149,7 @@ export function CosmicBackground({ _children,
         // Glow effect for non-minimal variants
         if (variant !== 'minimal' && cosmicEffectsLevel !== 'minimal') {
           ctx.globalAlpha = Math.max(0.05, opacity * 0.3);
-          ctx.fillStyle = particle.color || '#ffffff';
+          ctx.fillStyle = particle.color ?? '#ffffff';
           ctx.beginPath();
           ctx.arc(x, y, particle.size * 3, 0, Math.PI * 2);
           ctx.fill();
@@ -178,7 +174,7 @@ export function CosmicBackground({ _children,
   // CSS-only fallback for minimal effects or disabled animations
   const CSSParticles = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.slice(0, Math.min(20, particles.length)).map((particle, _index) => (
+      {particles.slice(0, Math.min(20, particles.length)).map((particle, index) => (
         <div
           key={index}
           className={cn(
@@ -190,7 +186,7 @@ export function CosmicBackground({ _children,
             top: `${particle.y}%`,
             width: `${particle.size}px`,
             height: `${particle.size}px`,
-            backgroundColor: particle.color || '#ffffff',
+            backgroundColor: particle.color ?? '#ffffff',
             opacity: particle.opacity,
             animationDelay: `${particle.animationDelay}s`,
           }}

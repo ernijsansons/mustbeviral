@@ -1,10 +1,10 @@
 // Cloudflare Worker Entry Point for Must Be Viral API
 // LOG: WORKER-INIT-1 - Initialize Cloudflare Worker
 
-import { CloudflareEnv, CloudflareService } from './lib/cloudflare';
-import { DatabaseService } from './lib/db';
-import { AuthService } from './lib/auth';
-import { addSecurityHeaders } from './lib/security/csp';
+import { CloudflareEnv, CloudflareService} from './lib/cloudflare';
+import { DatabaseService} from './lib/db';
+import { AuthService} from './lib/auth';
+import { addSecurityHeaders} from './lib/security/csp';
 
 // Cloudflare Worker types
 declare global {
@@ -19,7 +19,7 @@ export default {
     console.log('LOG: WORKER-REQ-1 - Processing request:', request.method, request.url);
     
     // Initialize JWT secret for this request
-    if (!env.JWT_SECRET) {
+    if (!env.JWTSECRET) {
       console.error('LOG: WORKER-ERROR-CONFIG - JWT_SECRET not provided in environment');
       return new Response(JSON.stringify({ error: 'Server configuration error' }), {
         status: 500,
@@ -28,7 +28,7 @@ export default {
     }
     
     // Initialize AuthService with the secret from environment
-    AuthService.initJwtSecret(env.JWT_SECRET);
+    AuthService.initJwtSecret(env.JWTSECRET);
     
     // Initialize Cloudflare services
     const cloudflareService = new CloudflareService(env);
@@ -85,10 +85,10 @@ async function handleRegister(request: Request, dbService: DatabaseService, cors
   
   try {
     const body = await request.json() as any;
-    const { email, username, password, role } = body;
+    const { email, username, password, role} = body;
     
     // Validate input
-    if (!email || !username || !password || !role) {
+    if (!email ?? !username  ?? !password  ?? !role) {
       return new Response(JSON.stringify({ error: 'All fields are required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -181,7 +181,7 @@ async function handleRegister(request: Request, dbService: DatabaseService, cors
         email: newUser.email,
         username: newUser.username,
         role: newUser.role,
-        onboarding_completed: newUser.onboarding_completed
+        onboarding_completed: newUser.onboardingcompleted
       },
       token
     }), {
@@ -204,10 +204,10 @@ async function handleLogin(request: Request, dbService: DatabaseService, corsHea
   
   try {
     const body = await request.json() as any;
-    const { email, password } = body;
+    const { email, password} = body;
     
     // Validate input
-    if (!email || !password) {
+    if (!email ?? !password) {
       return new Response(JSON.stringify({ error: 'Email and password are required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -224,7 +224,7 @@ async function handleLogin(request: Request, dbService: DatabaseService, corsHea
     }
 
     // Verify password
-    const isValidPassword = await AuthService.verifyPassword(password, user.password_hash);
+    const isValidPassword = await AuthService.verifyPassword(password, user.passwordhash);
     if (!isValidPassword) {
       return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
         status: 401,
@@ -258,7 +258,7 @@ async function handleLogin(request: Request, dbService: DatabaseService, corsHea
         email: user.email,
         username: user.username,
         role: user.role,
-        onboarding_completed: user.onboarding_completed
+        onboarding_completed: user.onboardingcompleted
       },
       token
     }), {
@@ -281,7 +281,7 @@ async function handleGetMe(request: Request, dbService: DatabaseService, corsHea
   try {
     // Extract JWT token from Authorization header
     const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'No token provided' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -312,9 +312,9 @@ async function handleGetMe(request: Request, dbService: DatabaseService, corsHea
       email: user.email,
       username: user.username,
       role: user.role,
-      onboarding_completed: user.onboarding_completed,
-      ai_preference_level: user.ai_preference_level,
-      profile_data: JSON.parse(user.profile_data || '{}')
+      onboarding_completed: user.onboardingcompleted,
+      ai_preference_level: user.aipreferencelevel,
+      profile_data: JSON.parse(user.profile_data ?? '{}')
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
@@ -335,7 +335,7 @@ async function handleOnboard(request: Request, dbService: DatabaseService, corsH
   try {
     // Extract JWT token from Authorization header
     const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'No token provided' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

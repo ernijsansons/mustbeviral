@@ -3,10 +3,10 @@
  * ML-powered threat detection with behavioral analysis and anomaly detection
  */
 
-import { CloudflareEnv } from '../cloudflare';
-import { SecurityAuditLogger } from '../audit/securityLogger';
-import { RequestContext } from '../../worker/requestContext';
-import { logger } from '../logging/productionLogger';
+import { CloudflareEnv} from '../cloudflare';
+import { SecurityAuditLogger} from '../audit/securityLogger';
+import { RequestContext} from '../../worker/requestContext';
+import { logger} from '../logging/productionLogger';
 
 export interface ThreatSignature {
   id: string;
@@ -123,8 +123,8 @@ export class AdvancedThreatDetector {
   private behavioralProfiles: Map<string, BehavioralProfile> = new Map();
   private threatIntelligence: ThreatIntelligence;
   private detectionHistory: Array<{ timestamp: Date; result: ThreatDetectionResult; context: RequestContext }> = [];
-  private readonly MAX_HISTORY = 10000;
-  private readonly PROFILE_TTL = 86400000; // 24 hours
+  private readonly MAXHISTORY = 10000;
+  private readonly PROFILETTL = 86400000; // 24 hours
 
   constructor(env: CloudflareEnv) {
     this.env = env;
@@ -176,7 +176,7 @@ export class AdvancedThreatDetector {
 
       // Calculate confidence
       const confidence = threats.length > 0
-        ? threats.reduce((sum, _t) => sum + t.confidence, 0) / threats.length
+        ? threats.reduce((sum, t) => sum + t.confidence, 0) / threats.length
         : 100;
 
       const result: ThreatDetectionResult = {
@@ -228,7 +228,7 @@ export class AdvancedThreatDetector {
    * Update behavioral profile
    */
   async updateBehavioralProfile(request: Request, context: RequestContext, responseTime: number): Promise<void> {
-    const profileKey = context.userId || context.ip;
+    const profileKey = context.userId ?? context.ip;
     let profile = this.behavioralProfiles.get(profileKey);
 
     if (!profile) {
@@ -278,20 +278,20 @@ export class AdvancedThreatDetector {
       if (history.result.threatDetected) {
         for (const threat of history.result.threats) {
           // Category counts
-          threatsByCategory[threat.category] = (threatsByCategory[threat.category] || 0) + 1;
+          threatsByCategory[threat.category] = (threatsByCategory[threat.category]  ?? 0) + 1;
 
           // Severity counts
-          threatsBySeverity[threat.severity] = (threatsBySeverity[threat.severity] || 0) + 1;
+          threatsBySeverity[threat.severity] = (threatsBySeverity[threat.severity]  ?? 0) + 1;
 
           // Threat name counts
-          threatCounts.set(threat.name, (threatCounts.get(threat.name) || 0) + 1);
+          threatCounts.set(threat.name, (threatCounts.get(threat.name)  ?? 0) + 1);
         }
       }
     }
 
     const topThreats = Array.from(threatCounts.entries())
-      .map(([name, count]) => ({ _name, count }))
-      .sort((a, _b) => b.count - a.count)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
     const riskTrend = recentHistory
@@ -305,7 +305,7 @@ export class AdvancedThreatDetector {
       h.result.actions.some(a => a.action === 'block')
     ).length;
 
-    return { _totalThreats,
+    return { totalThreats,
       threatsByCategory,
       threatsBySeverity,
       topThreats,
@@ -338,11 +338,13 @@ export class AdvancedThreatDetector {
     const threats: DetectedThreat[] = [];
 
     for (const signature of this.signatures.values()) {
-      if (!signature.active) continue;
+      if (!signature.active) {
+    continue;
+  }
 
       const matches = await this.checkSignature(signature, request, context);
       if (matches.length > 0) {
-        const confidence = matches.reduce((sum, _m) => sum + m.confidence, 0) / matches.length;
+        const confidence = matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length;
 
         threats.push({
           signatureId: signature.id,
@@ -364,10 +366,12 @@ export class AdvancedThreatDetector {
    */
   private async runBehavioralAnalysis(request: Request, context: RequestContext): Promise<DetectedThreat[]> {
     const threats: DetectedThreat[] = [];
-    const profileKey = context.userId || context.ip;
+    const profileKey = context.userId ?? context.ip;
     const profile = this.behavioralProfiles.get(profileKey);
 
-    if (!profile) return threats;
+    if (!profile) {
+    return threats;
+  }
 
     // Check for anomalies
     const anomalies = this.detectBehavioralAnomalies(profile);
@@ -512,11 +516,12 @@ export class AdvancedThreatDetector {
           matched = new RegExp(pattern.pattern, 'i').test(testValue);
           break;
 
-        case 'header':
-          testValue = request.headers.get(pattern.pattern.split(':')[0]) || '';
+        case 'header': {
+          testValue = request.headers.get(pattern.pattern.split(':')[0]) ?? '';
           const headerPattern = pattern.pattern.split(':')[1];
           matched = headerPattern ? new RegExp(headerPattern).test(testValue) : !!testValue;
           break;
+        }
 
         case 'payload':
           if (request.method === 'POST' || request.method === 'PUT') {
@@ -560,7 +565,9 @@ export class AdvancedThreatDetector {
    * Calculate risk score
    */
   private calculateRiskScore(threats: DetectedThreat[]): number {
-    if (threats.length === 0) return 0;
+    if (threats.length === 0) {
+    return 0;
+  }
 
     const severityWeights = { low: 1, medium: 2, high: 3, critical: 4 };
     let totalScore = 0;
@@ -579,9 +586,15 @@ export class AdvancedThreatDetector {
    * Determine risk level
    */
   private determineRiskLevel(riskScore: number): 'low' | 'medium' | 'high' | 'critical' {
-    if (riskScore >= 80) return 'critical';
-    if (riskScore >= 60) return 'high';
-    if (riskScore >= 30) return 'medium';
+    if (riskScore >= 80) {
+    return 'critical';
+  }
+    if (riskScore >= 60) {
+    return 'high';
+  }
+    if (riskScore >= 30) {
+    return 'medium';
+  }
     return 'low';
   }
 
@@ -659,7 +672,7 @@ export class AdvancedThreatDetector {
           },
           {
             type: 'regex',
-            pattern: '(\'|")(.*)(\'|").*(\sor\s|\sand\s)',
+            pattern: '(\'|")(.*)(\'|").*(\\sor\\s|\\sand\\s)',
             weight: 70,
             description: 'SQL injection syntax patterns'
           }
@@ -778,7 +791,7 @@ export class AdvancedThreatDetector {
       ipAddress: context.ip,
       userAgent: context.userAgent,
       geolocation: {
-        country: context.country || 'unknown',
+        country: context.country ?? 'unknown',
         region: 'unknown',
         asn: 'unknown'
       },
@@ -851,7 +864,7 @@ export class AdvancedThreatDetector {
     return anomalies;
   }
 
-  private async detectRequestAnomalies(request: Request, context: RequestContext): Promise<Array<{
+  private async detectRequestAnomalies(request: Request, _context: RequestContext): Promise<Array<{
     type: string;
     severity: 'low' | 'medium' | 'high' | 'critical';
     confidence: number;
@@ -913,7 +926,7 @@ export class AdvancedThreatDetector {
       phishing: ['Validate domains', 'Check URLs', 'Educate users']
     };
 
-    return suggestions[category] || ['Monitor activity', 'Review security logs'];
+    return suggestions[category] ?? ['Monitor activity', 'Review security logs'];
   }
 
   private addToHistory(result: ThreatDetectionResult, context: RequestContext): void {
@@ -923,8 +936,8 @@ export class AdvancedThreatDetector {
       context
     });
 
-    if (this.detectionHistory.length > this.MAX_HISTORY) {
-      this.detectionHistory = this.detectionHistory.slice(0, this.MAX_HISTORY);
+    if (this.detectionHistory.length > this.MAXHISTORY) {
+      this.detectionHistory = this.detectionHistory.slice(0, this.MAXHISTORY);
     }
   }
 
@@ -955,7 +968,7 @@ export class AdvancedThreatDetector {
   }
 
   private cleanupBehavioralProfiles(): void {
-    const cutoff = Date.now() - this.PROFILE_TTL;
+    const cutoff = Date.now() - this.PROFILETTL;
     for (const [key, profile] of this.behavioralProfiles.entries()) {
       if (profile.lastUpdated.getTime() < cutoff) {
         this.behavioralProfiles.delete(key);
@@ -982,12 +995,12 @@ export class AdvancedThreatDetector {
 
   private startPeriodicTasks(): void {
     // Update threat intelligence every hour
-    setInterval(async () => {
+    setInterval(async() => {
       await this.updateThreatIntelligence();
     }, 3600000);
 
     // Cleanup old data every 6 hours
-    setInterval(() => {
+    setInterval_(() => {
       this.cleanupBehavioralProfiles();
     }, 21600000);
   }

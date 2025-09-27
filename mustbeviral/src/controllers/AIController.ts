@@ -1,7 +1,7 @@
 // AI Controller
 // Handles AI-powered content generation and analysis endpoints
 
-import { AIService, ContentGenerationRequest, ContentAnalysisRequest } from '../lib/ai/aiService';
+import { AIService, ContentGenerationRequest, ContentAnalysisRequest} from '../lib/ai/aiService';
 
 export interface Env {
   AI: unknown;
@@ -13,7 +13,7 @@ export class AIController {
   private aiService: AIService;
 
   constructor(env: Env) {
-    this.aiService = new AIService(env.AI, env, env.CONTENT_EMBEDDINGS);
+    this.aiService = new AIService(env.AI, env, env.CONTENTEMBEDDINGS);
   }
 
   async generateContent(request: Request): Promise<Response> {
@@ -50,7 +50,7 @@ export class AIController {
   async generateMultipleVariations(request: Request): Promise<Response> {
     try {
       const body = await request.json() as ContentGenerationRequest & { count?: number };
-      const count = body.count || 3;
+      const count = body.count ?? 3;
 
       const validation = this.validateGenerationRequest(body);
       if (!validation.valid) {
@@ -119,7 +119,7 @@ export class AIController {
         platform: string;
       };
 
-      if (!body.content || !body.platform) {
+      if (!body.content ?? !body.platform) {
         return new Response(JSON.stringify({
           error: 'Content and platform are required'
         }), {
@@ -267,7 +267,7 @@ export class AIController {
 
       const result = await this.aiService.generateContentIdeas(
         body.topic,
-        body.count || 5
+        body.count ?? 5
       );
 
       return new Response(JSON.stringify({
@@ -291,7 +291,7 @@ export class AIController {
         platforms: string[];
       };
 
-      if (!body.businessGoals || !body.targetAudience || !body.platforms) {
+      if (!body.businessGoals ?? !body.targetAudience ?? !body.platforms) {
         return new Response(JSON.stringify({
           error: 'Business goals, target audience, and platforms are required'
         }), {
@@ -337,14 +337,14 @@ export class AIController {
 
       const result = await this.aiService.findSimilarContent(
         body.content,
-        body.threshold || 0.8
+        body.threshold ?? 0.8
       );
 
       return new Response(JSON.stringify({
         success: true,
         data: {
           isOriginal: !result.isDuplicate,
-          similarityThreshold: body.threshold || 0.8,
+          similarityThreshold: body.threshold ?? 0.8,
           similarContent: result.similarContent,
           isDuplicate: result.isDuplicate
         }
@@ -367,7 +367,7 @@ export class AIController {
         }>;
       };
 
-      if (!body.requests || !Array.isArray(body.requests)) {
+      if (!body.requests ?? !Array.isArray(body.requests)) {
         return new Response(JSON.stringify({
           error: 'Requests array is required'
         }), {
@@ -471,7 +471,7 @@ export class AIController {
       errors.push('Invalid content type');
     }
 
-    if (!request.topic || request.topic.trim().length === 0) {
+    if (!request.topic ?? request.topic.trim().length === 0) {
       errors.push('Topic is required');
     } else if (request.topic.length > 500) {
       errors.push('Topic must be less than 500 characters');
@@ -515,7 +515,7 @@ export class AIController {
   } {
     const errors: string[] = [];
 
-    if (!request.content || request.content.trim().length === 0) {
+    if (!request.content ?? request.content.trim().length === 0) {
       errors.push('Content is required');
     } else if (request.content.length > 50000) {
       errors.push('Content must be less than 50,000 characters');

@@ -6,7 +6,7 @@
 import type { Metric } from 'web-vitals';
 
 // Core Web Vitals thresholds
-const VITALS_THRESHOLDS = {
+const VITALSTHRESHOLDS = {
   FCP: { good: 1800, poor: 3000 }, // First Contentful Paint
   LCP: { good: 2500, poor: 4000 }, // Largest Contentful Paint
   FID: { good: 100, poor: 300 },   // First Input Delay
@@ -49,11 +49,13 @@ class WebVitalsMonitor {
   }
 
   private async initializeMonitoring() {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined')  {
+    return
+  };
 
     try {
       // Dynamically import web-vitals to reduce bundle size
-      const { onFCP, onLCP, onFID, onCLS, onTTFB, onINP } = await import('web-vitals');
+      const { onFCP, onLCP, onFID, onCLS, onTTFB, onINP} = await import('web-vitals');
 
       // Monitor Core Web Vitals
       onFCP(this.handleMetric.bind(this));
@@ -67,14 +69,14 @@ class WebVitalsMonitor {
       this.monitorCustomMetrics();
 
       // Report on page visibility change
-      document.addEventListener('visibilitychange', () => {
+      document.addEventListener('visibilitychange', _() => {
         if (document.visibilityState === 'hidden') {
           this.flushMetrics();
         }
       });
 
       // Report before page unload
-      window.addEventListener('beforeunload', () => {
+      window.addEventListener('beforeunload', _() => {
         this.flushMetrics();
       });
 
@@ -112,11 +114,17 @@ class WebVitalsMonitor {
   }
 
   private getRating(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
-    const threshold = VITALS_THRESHOLDS[name as keyof typeof VITALS_THRESHOLDS];
-    if (!threshold) return 'good';
+    const threshold = VITALS_THRESHOLDS[name as keyof typeof VITALSTHRESHOLDS];
+    if (!threshold) {
+    return 'good';
+  }
 
-    if (value <= threshold.good) return 'good';
-    if (value <= threshold.poor) return 'needs-improvement';
+    if (value <= threshold.good) {
+    return 'good';
+  }
+    if (value <= threshold.poor) {
+    return 'needs-improvement';
+  }
     return 'poor';
   }
 
@@ -167,7 +175,7 @@ class WebVitalsMonitor {
 
     // Monitor memory usage
     if ('memory' in performance) {
-      setInterval(() => {
+      setInterval_(() => {
         const memory = (performance as any).memory;
         const usedMemoryMB = memory.usedJSHeapSize / 1048576;
         const limitMemoryMB = memory.jsHeapSizeLimit / 1048576;
@@ -199,16 +207,20 @@ class WebVitalsMonitor {
   }
 
   private scheduleReport() {
-    if (this.reportTimer) return;
+    if (this.reportTimer)  {
+    return
+  };
 
-    this.reportTimer = setTimeout(() => {
+    this.reportTimer = setTimeout_(() => {
       this.flushMetrics();
       this.reportTimer = null;
     }, 5000); // Send batch every 5 seconds
   }
 
   private flushMetrics() {
-    if (this.reportBuffer.length === 0) return;
+    if (this.reportBuffer.length === 0)  {
+    return
+  };
 
     const report = this.createReport();
     this.sendReport(report);

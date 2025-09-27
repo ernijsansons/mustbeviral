@@ -166,7 +166,7 @@ class WebVitalsTracker {
 
     // Use React's built-in performance hooks if available
     if (typeof window !== 'undefined' && window.requestIdleCallback) {
-      window.requestIdleCallback(() => {
+      window.requestIdleCallback_(() => {
         this.recordCustomMetric('hydration-time', performance.now() - startTime);
       });
     }
@@ -183,7 +183,7 @@ class WebVitalsTracker {
     };
 
     // Track when route change completes
-    window.addEventListener('popstate', () => {
+      window.addEventListener('popstate', () => {
       routeChangeStart = performance.now();
     });
 
@@ -212,7 +212,7 @@ class WebVitalsTracker {
   }
 
   private trackVisibilityChanges() {
-    document.addEventListener('visibilitychange', () => {
+      document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
         this.sendMetrics();
       }
@@ -220,8 +220,8 @@ class WebVitalsTracker {
   }
 
   private trackNavigationTiming() {
-    window.addEventListener('load', () => {
-      setTimeout(() => {
+      window.addEventListener('load', () => {
+        setTimeout(() => {
         const navTiming = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
 
         if (navTiming) {
@@ -235,7 +235,7 @@ class WebVitalsTracker {
   }
 
   private recordMetric(name: string, value: number) {
-    if (!this.isEnabled) return;
+    if (!this.isEnabled) {return;}
 
     this.metrics[name.toLowerCase() as keyof PerformanceData] = value;
 
@@ -246,7 +246,7 @@ class WebVitalsTracker {
   }
 
   private recordCustomMetric(name: string, value: number) {
-    if (!this.isEnabled) return;
+    if (!this.isEnabled) {return;}
 
     const metric: CustomMetric = {
       name,
@@ -265,7 +265,7 @@ class WebVitalsTracker {
   }
 
   private sendMetric(metric: Partial<CustomMetric>) {
-    if (!this.isEnabled) return;
+    if (!this.isEnabled) {return;}
 
     // Use sendBeacon for reliability
     if (navigator.sendBeacon) {
@@ -294,7 +294,7 @@ class WebVitalsTracker {
   }
 
   private sendMetrics() {
-    if (!this.isEnabled || this.customMetrics.length === 0) return;
+      if (!this.isEnabled  ?? this.customMetrics.length === 0) {return;}
 
     const data = {
       type: 'web-vitals-batch',
@@ -304,7 +304,7 @@ class WebVitalsTracker {
       page: window.location.pathname,
       referrer: document.referrer,
       userAgent: navigator.userAgent,
-      connection: (navigator as any).connection?.effectiveType || 'unknown',
+      connection: (navigator as any).connection?.effectiveType ?? 'unknown',
     };
 
     if (navigator.sendBeacon) {
@@ -357,16 +357,16 @@ export const initWebVitals = (endpoint?: string, isEnabled?: boolean) => {
   return webVitalsTracker;
 };
 
-export const trackEvent = (name: string, data?: Record<string, any>) => {
+export const trackEvent = (name: string, data?: Record<string, _any>) => {
   webVitalsTracker?.trackEvent(name, data);
 };
 
 export const startTiming = (label: string) => {
-  return webVitalsTracker?.startTiming(label) || (() => {});
+  return webVitalsTracker?.startTiming(label)  ?? _(() => {});
 };
 
 export const getWebVitals = () => {
-  return webVitalsTracker?.getMetrics() || {};
+  return webVitalsTracker?.getMetrics()  ?? {};
 };
 
 // React hook for component-level performance tracking

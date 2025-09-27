@@ -1,7 +1,7 @@
 // Organization Service
 // Handles multi-tenant organization management and data isolation
 
-import { DatabaseService } from '../db';
+import { DatabaseService} from '../db';
 
 export interface Organization {
   id: string;
@@ -146,7 +146,7 @@ export class OrganizationService {
       industry: request.industry,
       companySize: request.companySize as unknown,
       websiteUrl: request.websiteUrl,
-      planType: (request.planType as unknown) || 'free',
+      planType: (request.planType as unknown)  ?? 'free',
       timezone: 'UTC',
       language: 'en',
       subscriptionStatus: 'active',
@@ -166,11 +166,11 @@ export class OrganizationService {
 
     await this.db.executeQuery(`
       INSERT INTO organizations (
-        id, name, slug, description, industry, company_size, website_url,
-        plan_type, timezone, language, subscription_status, max_users,
-        max_content_items, max_storage_gb, ai_credits_monthly, api_requests_monthly,
-        custom_branding, advanced_analytics, sso_enabled, status, settings,
-        metadata, created_by
+        id, name, slug, description, industry, companysize, websiteurl,
+        plantype, timezone, language, subscriptionstatus, maxusers,
+        maxcontentitems, maxstoragegb, aicreditsmonthly, apirequestsmonthly,
+        custombranding, advancedanalytics, ssoenabled, status, settings,
+        metadata, createdby
       ) VALUES (
         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       )
@@ -206,12 +206,12 @@ export class OrganizationService {
     // Update user's organization
     await this.db.executeQuery(`
       UPDATE users
-      SET organization_id = ?, is_organization_owner = 1
+      SET organizationid = ?, isorganizationowner = 1
       WHERE id = ?
     `, [organizationId, request.ownerUserId]);
 
     // Create default team
-    await this.createTeam({ _organizationId,
+    await this.createTeam({ organizationId,
       name: 'General',
       description: 'Default team for all members',
       isDefault: true,
@@ -257,12 +257,12 @@ export class OrganizationService {
     }
 
     if (updates.websiteUrl !== undefined) {
-      setClause.push('website_url = ?');
+      setClause.push('websiteurl = ?');
       params.push(updates.websiteUrl);
     }
 
     if (updates.logoUrl !== undefined) {
-      setClause.push('logo_url = ?');
+      setClause.push('logourl = ?');
       params.push(updates.logoUrl);
     }
 
@@ -279,7 +279,7 @@ export class OrganizationService {
 
     await this.db.executeQuery(`
       UPDATE organizations
-      SET ${setClause.join(', ')}, updated_at = CURRENT_TIMESTAMP
+      SET ${setClause.join(', ')}, updatedat = CURRENT_TIMESTAMP
       WHERE id = ?
     `, params);
 
@@ -289,7 +289,7 @@ export class OrganizationService {
   async deleteOrganization(id: string): Promise<void> {
     await this.db.executeQuery(`
       UPDATE organizations
-      SET status = 'deleted', deleted_at = CURRENT_TIMESTAMP
+      SET status = 'deleted', deletedat = CURRENT_TIMESTAMP
       WHERE id = ?
     `, [id]);
   }
@@ -304,9 +304,9 @@ export class OrganizationService {
     const memberId = crypto.randomUUID();
 
     await this.db.executeQuery(`
-      INSERT INTO organization_members (
-        id, organization_id, user_id, role, status, permissions, accepted_at
-      ) VALUES (?, ?, ?, ?, 'active', ?, CURRENT_TIMESTAMP)
+      INSERT INTO organizationmembers(
+        id, organizationid, userid, role, status, permissions, acceptedat
+      ) VALUES (?, ?, ?, ?, 'active', ?, CURRENTTIMESTAMP)
     `, [
       memberId,
       organizationId,
@@ -318,7 +318,7 @@ export class OrganizationService {
     // Update user's organization if not set
     await this.db.executeQuery(`
       UPDATE users
-      SET organization_id = COALESCE(organization_id, ?)
+      SET organizationid = COALESCE(organizationid, ?)
       WHERE id = ?
     `, [organizationId, userId]);
 
@@ -328,7 +328,7 @@ export class OrganizationService {
   async getOrganizationMember(organizationId: string, userId: string): Promise<OrganizationMember | null> {
     const result = await this.db.fetchOne<unknown>(`
       SELECT * FROM organization_members
-      WHERE organization_id = ? AND user_id = ?
+      WHERE organizationid = ? AND userid = ?
     `, [organizationId, userId]);
 
     return result ? this.mapMemberFromDb(result) : null;
@@ -336,11 +336,11 @@ export class OrganizationService {
 
   async getOrganizationMembers(organizationId: string): Promise<OrganizationMember[]> {
     const results = await this.db.fetchAll<unknown>(`
-      SELECT om.*, u.email, u.username, u.first_name, u.last_name
+      SELECT om.*, u.email, u.username, u.firstname, u.last_name
       FROM organization_members om
-      JOIN users u ON om.user_id = u.id
-      WHERE om.organization_id = ?
-      ORDER BY om.role, u.first_name, u.last_name
+      JOIN users u ON om.userid = u.id
+      WHERE om.organizationid = ?
+      ORDER BY om.role, u.firstname, u.last_name
     `, [organizationId]);
 
     return results.map(result => this.mapMemberFromDb(result));
@@ -365,7 +365,7 @@ export class OrganizationService {
     }
 
     if (updates.teamId !== undefined) {
-      setClause.push('team_id = ?');
+      setClause.push('teamid = ?');
       params.push(updates.teamId);
     }
 
@@ -375,7 +375,7 @@ export class OrganizationService {
     }
 
     if (updates.jobTitle !== undefined) {
-      setClause.push('job_title = ?');
+      setClause.push('jobtitle = ?');
       params.push(updates.jobTitle);
     }
 
@@ -392,8 +392,8 @@ export class OrganizationService {
 
     await this.db.executeQuery(`
       UPDATE organization_members
-      SET ${setClause.join(', ')}, updated_at = CURRENT_TIMESTAMP
-      WHERE organization_id = ? AND user_id = ?
+      SET ${setClause.join(', ')}, updatedat = CURRENT_TIMESTAMP
+      WHERE organizationid = ? AND userid = ?
     `, params);
 
     return this.getOrganizationMember(organizationId, userId)!;
@@ -408,14 +408,14 @@ export class OrganizationService {
 
     await this.db.executeQuery(`
       DELETE FROM organization_members
-      WHERE organization_id = ? AND user_id = ?
+      WHERE organizationid = ? AND userid = ?
     `, [organizationId, userId]);
 
     // Clear user's organization if this was their primary org
     await this.db.executeQuery(`
       UPDATE users
-      SET organization_id = NULL, is_organization_owner = 0
-      WHERE id = ? AND organization_id = ?
+      SET organizationid = NULL, isorganizationowner = 0
+      WHERE id = ? AND organizationid = ?
     `, [userId, organizationId]);
   }
 
@@ -435,18 +435,18 @@ export class OrganizationService {
 
     await this.db.executeQuery(`
       INSERT INTO teams (
-        id, organization_id, name, description, color, is_default,
-        max_members, permissions, created_by, manager_id
+        id, organizationid, name, description, color, isdefault,
+        maxmembers, permissions, createdby, managerid
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       teamId,
       teamData.organizationId,
       teamData.name,
       teamData.description,
-      teamData.color || '#6366f1',
+      teamData.color ?? '#6366f1',
       teamData.isDefault ? 1 : 0,
       teamData.maxMembers,
-      JSON.stringify(teamData.permissions || []),
+      JSON.stringify(teamData.permissions ?? []),
       teamData.createdBy,
       teamData.managerId
     ]);
@@ -464,7 +464,7 @@ export class OrganizationService {
 
   async getOrganizationTeams(organizationId: string): Promise<Team[]> {
     const results = await this.db.fetchAll<unknown>(`
-      SELECT * FROM teams WHERE organization_id = ? ORDER BY is_default DESC, name
+      SELECT * FROM teams WHERE organizationid = ? ORDER BY is_default DESC, name
     `, [organizationId]);
 
     return results.map(result => this.mapTeamFromDb(result));
@@ -480,7 +480,7 @@ export class OrganizationService {
     const existingUser = await this.db.fetchOne<unknown>(`
       SELECT u.id FROM users u
       JOIN organization_members om ON u.id = om.user_id
-      WHERE u.email = ? AND om.organization_id = ?
+      WHERE u.email = ? AND om.organizationid = ?
     `, [request.email, request.organizationId]);
 
     if (existingUser) {
@@ -488,16 +488,16 @@ export class OrganizationService {
     }
 
     await this.db.executeQuery(`
-      INSERT INTO organization_invitations (
-        id, organization_id, email, role, permissions, team_id,
-        invited_by, invitation_token, message, expires_at
+      INSERT INTO organizationinvitations(
+        id, organizationid, email, role, permissions, teamid,
+        invitedby, invitationtoken, message, expiresat
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       invitationId,
       request.organizationId,
       request.email,
       request.role,
-      JSON.stringify(request.permissions || []),
+      JSON.stringify(request.permissions ?? []),
       request.teamId,
       request.invitedBy,
       invitationToken,
@@ -518,7 +518,7 @@ export class OrganizationService {
 
   async getInvitationByToken(token: string): Promise<OrganizationInvitation | null> {
     const result = await this.db.fetchOne<unknown>(`
-      SELECT * FROM organization_invitations WHERE invitation_token = ?
+      SELECT * FROM organization_invitations WHERE invitationtoken = ?
     `, [token]);
 
     return result ? this.mapInvitationFromDb(result) : null;
@@ -549,7 +549,7 @@ export class OrganizationService {
     // Update invitation status
     await this.db.executeQuery(`
       UPDATE organization_invitations
-      SET status = 'accepted', accepted_by = ?, accepted_at = CURRENT_TIMESTAMP
+      SET status = 'accepted', acceptedby = ?, acceptedat = CURRENT_TIMESTAMP
       WHERE id = ?
     `, [userId, invitation.id]);
 
@@ -566,7 +566,7 @@ export class OrganizationService {
   async revokeInvitation(id: string): Promise<void> {
     await this.db.executeQuery(`
       UPDATE organization_invitations
-      SET status = 'revoked', revoked_at = CURRENT_TIMESTAMP
+      SET status = 'revoked', revokedat = CURRENT_TIMESTAMP
       WHERE id = ?
     `, [id]);
   }
@@ -583,7 +583,7 @@ export class OrganizationService {
     }
 
     // Owners and admins have all permissions
-    if (member.role === 'owner' || member.role === 'admin') {
+    if (member.role === 'owner'  ?? member.role === 'admin') {
       return true;
     }
 
@@ -595,7 +595,7 @@ export class OrganizationService {
     const results = await this.db.fetchAll<unknown>(`
       SELECT o.* FROM organizations o
       JOIN organization_members om ON o.id = om.organization_id
-      WHERE om.user_id = ? AND o.status = 'active'
+      WHERE om.userid = ? AND o.status = 'active'
       ORDER BY om.role, o.name
     `, [userId]);
 
@@ -619,25 +619,25 @@ export class OrganizationService {
     periodEnd.setDate(0); // Last day of month
 
     await this.db.executeQuery(`
-      INSERT OR REPLACE INTO organization_usage (
-        organization_id, period_start, period_end,
-        active_users, content_items_created, storage_used_gb,
-        ai_credits_used, api_requests_made
+      INSERT OR REPLACE INTO organizationusage(
+        organizationid, periodstart, periodend,
+        activeusers, contentitemscreated, storageusedgb,
+        aicreditsused, apirequestsmade
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       organizationId,
       periodStart.toISOString(),
       periodEnd.toISOString(),
-      metrics.activeUsers || 0,
-      metrics.contentItemsCreated || 0,
-      metrics.storageUsedGb || 0,
-      metrics.aiCreditsUsed || 0,
-      metrics.apiRequestsMade || 0
+      metrics.activeUsers ?? 0,
+      metrics.contentItemsCreated ?? 0,
+      metrics.storageUsedGb ?? 0,
+      metrics.aiCreditsUsed ?? 0,
+      metrics.apiRequestsMade ?? 0
     ]);
   }
 
   async getUsageStats(organizationId: string, period?: string): Promise<unknown> {
-    let whereClause = 'organization_id = ?';
+    let whereClause = 'organizationid = ?';
     const params = [organizationId];
 
     if (period) {
@@ -647,11 +647,11 @@ export class OrganizationService {
 
     return await this.db.fetchOne(`
       SELECT
-        SUM(active_users) as total_active_users,
-        SUM(content_items_created) as total_content_items,
-        SUM(storage_used_gb) as total_storage_gb,
-        SUM(ai_credits_used) as total_ai_credits,
-        SUM(api_requests_made) as total_api_requests
+        SUM(activeusers) as totalactiveusers,
+        SUM(contentitemscreated) as totalcontentitems,
+        SUM(storageusedgb) as totalstoragegb,
+        SUM(aicreditsused) as totalaicredits,
+        SUM(apirequestsmade) as total_api_requests
       FROM organization_usage
       WHERE ${whereClause}
     `, params);
@@ -666,8 +666,8 @@ export class OrganizationService {
     metadata: Record<string, unknown> = {}
   ): Promise<void> {
     await this.db.executeQuery(`
-      INSERT INTO organization_activity (
-        organization_id, user_id, action, description, metadata
+      INSERT INTO organizationactivity(
+        organizationid, userid, action, description, metadata
       ) VALUES (?, ?, ?, ?, ?)
     `, [
       organizationId,
@@ -686,95 +686,95 @@ export class OrganizationService {
       slug: row.slug,
       description: row.description,
       industry: row.industry,
-      companySize: row.company_size,
-      websiteUrl: row.website_url,
-      logoUrl: row.logo_url,
-      primaryColor: row.primary_color,
-      secondaryColor: row.secondary_color,
+      companySize: row.companysize,
+      websiteUrl: row.websiteurl,
+      logoUrl: row.logourl,
+      primaryColor: row.primarycolor,
+      secondaryColor: row.secondarycolor,
       timezone: row.timezone,
       country: row.country,
       language: row.language,
-      planType: row.plan_type,
-      billingEmail: row.billing_email,
-      stripeCustomerId: row.stripe_customer_id,
-      subscriptionStatus: row.subscription_status,
-      trialEndsAt: row.trial_ends_at,
-      subscriptionEndsAt: row.subscription_ends_at,
-      maxUsers: row.max_users,
-      maxContentItems: row.max_content_items,
-      maxStorageGb: row.max_storage_gb,
-      aiCreditsMonthly: row.ai_credits_monthly,
-      apiRequestsMonthly: row.api_requests_monthly,
-      customBranding: !!row.custom_branding,
-      advancedAnalytics: !!row.advanced_analytics,
-      ssoEnabled: !!row.sso_enabled,
+      planType: row.plantype,
+      billingEmail: row.billingemail,
+      stripeCustomerId: row.stripecustomerid,
+      subscriptionStatus: row.subscriptionstatus,
+      trialEndsAt: row.trialendsat,
+      subscriptionEndsAt: row.subscriptionendsat,
+      maxUsers: row.maxusers,
+      maxContentItems: row.maxcontentitems,
+      maxStorageGb: row.maxstoragegb,
+      aiCreditsMonthly: row.aicreditsmonthly,
+      apiRequestsMonthly: row.apirequestsmonthly,
+      customBranding: !!row.custombranding,
+      advancedAnalytics: !!row.advancedanalytics,
+      ssoEnabled: !!row.ssoenabled,
       status: row.status,
-      settings: JSON.parse(row.settings || '{}'),
-      metadata: JSON.parse(row.metadata || '{}'),
-      createdBy: row.created_by,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      deletedAt: row.deleted_at
+      settings: JSON.parse(row.settings ?? '{}'),
+      metadata: JSON.parse(row.metadata ?? '{}'),
+      createdBy: row.createdby,
+      createdAt: row.createdat,
+      updatedAt: row.updatedat,
+      deletedAt: row.deletedat
     };
   }
 
   private mapMemberFromDb(row: unknown): OrganizationMember {
     return {
       id: row.id,
-      organizationId: row.organization_id,
-      userId: row.user_id,
+      organizationId: row.organizationid,
+      userId: row.userid,
       role: row.role,
       status: row.status,
-      permissions: JSON.parse(row.permissions || '[]'),
-      invitedBy: row.invited_by,
-      invitedAt: row.invited_at,
-      acceptedAt: row.accepted_at,
-      lastActivityAt: row.last_activity_at,
+      permissions: JSON.parse(row.permissions ?? '[]'),
+      invitedBy: row.invitedby,
+      invitedAt: row.invitedat,
+      acceptedAt: row.acceptedat,
+      lastActivityAt: row.lastactivityat,
       department: row.department,
-      jobTitle: row.job_title,
-      teamId: row.team_id,
-      notificationPreferences: JSON.parse(row.notification_preferences || '{}'),
-      accessRestrictions: JSON.parse(row.access_restrictions || '{}'),
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
+      jobTitle: row.jobtitle,
+      teamId: row.teamid,
+      notificationPreferences: JSON.parse(row.notification_preferences ?? '{}'),
+      accessRestrictions: JSON.parse(row.access_restrictions ?? '{}'),
+      createdAt: row.createdat,
+      updatedAt: row.updatedat
     };
   }
 
   private mapTeamFromDb(row: unknown): Team {
     return {
       id: row.id,
-      organizationId: row.organization_id,
+      organizationId: row.organizationid,
       name: row.name,
       description: row.description,
       color: row.color,
-      isDefault: !!row.is_default,
-      maxMembers: row.max_members,
-      permissions: JSON.parse(row.permissions || '[]'),
-      settings: JSON.parse(row.settings || '{}'),
-      createdBy: row.created_by,
-      managerId: row.manager_id,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
+      isDefault: !!row.isdefault,
+      maxMembers: row.maxmembers,
+      permissions: JSON.parse(row.permissions ?? '[]'),
+      settings: JSON.parse(row.settings ?? '{}'),
+      createdBy: row.createdby,
+      managerId: row.managerid,
+      createdAt: row.createdat,
+      updatedAt: row.updatedat
     };
   }
 
   private mapInvitationFromDb(row: unknown): OrganizationInvitation {
     return {
       id: row.id,
-      organizationId: row.organization_id,
+      organizationId: row.organizationid,
       email: row.email,
       role: row.role,
-      permissions: JSON.parse(row.permissions || '[]'),
-      teamId: row.team_id,
-      invitedBy: row.invited_by,
-      invitationToken: row.invitation_token,
+      permissions: JSON.parse(row.permissions ?? '[]'),
+      teamId: row.teamid,
+      invitedBy: row.invitedby,
+      invitationToken: row.invitationtoken,
       message: row.message,
-      expiresAt: row.expires_at,
+      expiresAt: row.expiresat,
       status: row.status,
-      acceptedBy: row.accepted_by,
-      acceptedAt: row.accepted_at,
-      revokedAt: row.revoked_at,
-      createdAt: row.created_at
+      acceptedBy: row.acceptedby,
+      acceptedAt: row.acceptedat,
+      revokedAt: row.revokedat,
+      createdAt: row.createdat
     };
   }
 }

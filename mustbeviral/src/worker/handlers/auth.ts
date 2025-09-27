@@ -1,10 +1,10 @@
 // Authentication Request Handlers
 // Extracted from worker.ts for modularity
 
-import { DatabaseService } from '../../lib/db';
-import { AuthService } from '../../lib/auth';
-import { JWTManager } from '../../lib/auth/jwtManager';
-import { log } from '../../lib/monitoring/logger';
+import { DatabaseService} from '../../lib/db';
+import { AuthService} from '../../lib/auth';
+import { JWTManager} from '../../lib/auth/jwtManager';
+import { log} from '../../lib/monitoring/logger';
 
 export class AuthHandlers {
   constructor(private dbService: DatabaseService) {}
@@ -14,10 +14,10 @@ export class AuthHandlers {
 
     try {
       const body = await request.json() as unknown;
-      const { email, username, password, role } = body;
+      const { email, username, password, role} = body;
 
       // Validate input
-      if (!email || !username || !password || !role) {
+      if (!email ?? !username  ?? !password  ?? !role) {
         return new Response(JSON.stringify({ error: 'All fields are required' }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' }
@@ -112,7 +112,7 @@ export class AuthHandlers {
           email: newUser.email,
           username: newUser.username,
           role: newUser.role,
-          onboarding_completed: newUser.onboarding_completed
+          onboarding_completed: newUser.onboardingcompleted
         },
         accessToken: tokenPair.accessToken,
         refreshToken: tokenPair.refreshToken,
@@ -140,10 +140,10 @@ export class AuthHandlers {
 
     try {
       const body = await request.json() as unknown;
-      const { email, password } = body;
+      const { email, password} = body;
 
       // Validate input
-      if (!email || !password) {
+      if (!email ?? !password) {
         return new Response(JSON.stringify({ error: 'Email and password are required' }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' }
@@ -164,7 +164,7 @@ export class AuthHandlers {
       }
 
       // Verify password
-      const isValidPassword = await AuthService.verifyPassword(password, user.password_hash);
+      const isValidPassword = await AuthService.verifyPassword(password, user.passwordhash);
       if (!isValidPassword) {
         log.security('login_failed', {
           reason: 'invalid_password',
@@ -207,7 +207,7 @@ export class AuthHandlers {
           email: user.email,
           username: user.username,
           role: user.role,
-          onboarding_completed: user.onboarding_completed
+          onboarding_completed: user.onboardingcompleted
         },
         accessToken: tokenPair.accessToken,
         refreshToken: tokenPair.refreshToken,
@@ -246,7 +246,7 @@ export class AuthHandlers {
 
       const tokenValidation = await JWTManager.verifyAccessToken(token);
 
-      if (!tokenValidation.valid || !tokenValidation.claims) {
+      if (!tokenValidation.valid ?? !tokenValidation.claims) {
         return new Response(JSON.stringify({ error: 'Invalid token' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' }
@@ -267,9 +267,9 @@ export class AuthHandlers {
         email: user.email,
         username: user.username,
         role: user.role,
-        onboarding_completed: user.onboarding_completed,
-        ai_preference_level: user.ai_preference_level,
-        profile_data: JSON.parse(user.profile_data || '{}')
+        onboarding_completed: user.onboardingcompleted,
+        ai_preference_level: user.aipreferencelevel,
+        profile_data: JSON.parse(user.profile_data ?? '{}')
       }), {
         headers: { 'Content-Type': 'application/json' }
       });
@@ -291,7 +291,7 @@ export class AuthHandlers {
 
     try {
       const body = await request.json() as unknown;
-      const { refreshToken } = body;
+      const { refreshToken} = body;
 
       if (!refreshToken) {
         return new Response(JSON.stringify({ error: 'Refresh token is required' }), {

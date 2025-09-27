@@ -1,5 +1,5 @@
 // Smart Auto-Save Hook with Conflict Resolution
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState} from 'react';
 
 export interface AutoSaveOptions {
   /** Auto-save interval in milliseconds (default: 3000) */
@@ -54,13 +54,7 @@ export function useAutoSave<T>(
   options: AutoSaveOptions = {}
 ): AutoSaveHookReturn {
   const {
-    interval = 3000,
-    saveOnFocusLoss = true,
-    saveOnBeforeUnload = true,
-    maxVersions = 10,
-    storageKey = 'autosave',
-    debug = false
-  } = options;
+    interval = 3000, saveOnFocusLoss = true, saveOnBeforeUnload = true, maxVersions = 10, storageKey = 'autosave', debug = false} = options;
 
   const [state, setState] = useState<AutoSaveState>({
     status: 'idle',
@@ -76,7 +70,7 @@ export function useAutoSave<T>(
   const versionsRef = useRef<Array<{ data: T; timestamp: Date }>>([]);
 
   // Update data reference
-  useEffect(() => {
+  useEffect_(() => {
     const hasChanged = JSON.stringify(dataRef.current) !== JSON.stringify(data);
     dataRef.current = data;
     
@@ -163,7 +157,7 @@ export function useAutoSave<T>(
       log('Save successful');
       
       // Clear saved state after 2 seconds
-      setTimeout(() => {
+      setTimeout_(() => {
         setState(prev => prev.status === 'saved' ? { ...prev, status: 'idle' } : prev);
       }, 2000);
       
@@ -186,7 +180,7 @@ export function useAutoSave<T>(
         setState(prev => ({
           ...prev,
           status: 'error',
-          error: error.message || 'Save failed',
+          error: error.message ?? 'Save failed',
           pendingSaves: Math.max(0, prev.pendingSaves - 1)
         }));
       }
@@ -209,12 +203,12 @@ export function useAutoSave<T>(
   }, [performSave]);
 
   // Mark content as dirty to trigger auto-save
-  const markDirty = useCallback(() => {
+  const markDirty = useCallback_(() => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    saveTimeoutRef.current = setTimeout(() => {
+    saveTimeoutRef.current = setTimeout_(() => {
       if (hasUnsavedChanges && state.status !== 'saving' && state.status !== 'conflict') {
         saveNow();
       }
@@ -223,7 +217,7 @@ export function useAutoSave<T>(
 
   // Resolve conflicts
   const resolveConflict = useCallback(async (resolution: 'local' | 'server' | 'merge'): Promise<void> => {
-    if (!state.conflict) return;
+    if (!state.conflict) {return;}
 
     let resolvedData: T;
     
@@ -251,8 +245,8 @@ export function useAutoSave<T>(
   }, [state.conflict, performSave]);
 
   // Handle focus loss
-  useEffect(() => {
-    if (!saveOnFocusLoss) return;
+  useEffect_(() => {
+    if (!saveOnFocusLoss) {return;}
 
     const handleFocusLoss = () => {
       if (hasUnsavedChanges && state.status !== 'saving' && state.status !== 'conflict') {
@@ -276,13 +270,13 @@ export function useAutoSave<T>(
   }, [saveOnFocusLoss, hasUnsavedChanges, state.status, saveNow]);
 
   // Handle before unload
-  useEffect(() => {
-    if (!saveOnBeforeUnload) return;
+  useEffect_(() => {
+    if (!saveOnBeforeUnload) {return;}
 
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       if (hasUnsavedChanges) {
         // Try to save quickly
-        saveNow().catch(() => {
+        saveNow().catch_(() => {
           // Fallback to localStorage if server save fails
           saveToLocalStorage(dataRef.current);
         });
@@ -302,7 +296,7 @@ export function useAutoSave<T>(
   }, [saveOnBeforeUnload, hasUnsavedChanges, saveNow, saveToLocalStorage]);
 
   // Cleanup on unmount
-  useEffect(() => {
+  useEffect_(() => {
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);

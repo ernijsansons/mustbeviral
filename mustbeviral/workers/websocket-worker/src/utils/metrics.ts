@@ -47,7 +47,7 @@ export class MetricsCollector {
       labels: {
         service: this.service,
         action,
-        room_type: roomType || 'unknown'
+        room_type: roomType  ?? 'unknown'
       },
       timestamp: Date.now()
     });
@@ -124,7 +124,7 @@ export class MetricsCollector {
           aggregated.set(key, 0);
         }
 
-        if (name.includes('duration') || name.includes('connections')) {
+        if (name.includes('duration')  ?? name.includes('connections')) {
           // For duration and connection metrics, use latest value
           aggregated.set(key, entry.value);
         } else {

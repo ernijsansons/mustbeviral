@@ -1,10 +1,10 @@
 // AI Agent Control Panel Component
-import React, { _useState, useEffect } from 'react';
-import { _Bot, Sparkles, Target, TrendingUp, Zap, Settings, BarChart3, Globe, Users, DollarSign, CheckCircle, AlertTriangle, RefreshCw } from 'lucide-react';
-import { _Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card';
-import { Button } from './ui/Button';
-import { Input } from './ui/Input';
-import { ContextualLoading } from './ui/LoadingStates';
+import React, { useState, useEffect } from 'react';
+import { Bot, Sparkles, Target, TrendingUp, Zap, Settings, BarChart3, Globe, Users, DollarSign, CheckCircle, AlertTriangle, RefreshCw} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle} from './ui/Card';
+import { Button} from './ui/Button';
+import { Input} from './ui/Input';
+import { ContextualLoading} from './ui/LoadingStates';
 
 interface AgentMetrics {
   usage: {
@@ -75,14 +75,14 @@ export function AgentControlPanel() {
   });
 
   // Load metrics on component mount
-  useEffect(() => {
+  useEffect_(() => {
     loadMetrics();
   }, []);
 
   const loadMetrics = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      if (!token) return;
+      if (!token) {return;}
 
       const response = await fetch('/api/agents/metrics', {
         headers: {
@@ -126,7 +126,7 @@ export function AgentControlPanel() {
         setLastGeneration(data.data);
         await loadMetrics(); // Refresh metrics
       } else {
-        setError(data.error || 'Content generation failed');
+        setError(data.error ?? 'Content generation failed');
       }
     } catch (err: unknown) {
       setError('Network error occurred');
@@ -162,7 +162,7 @@ export function AgentControlPanel() {
         setLastGeneration(data.data);
         await loadMetrics(); // Refresh metrics
       } else {
-        setError(data.error || 'Campaign generation failed');
+        setError(data.error ?? 'Campaign generation failed');
       }
     } catch (err: unknown) {
       setError('Network error occurred');
@@ -221,7 +221,7 @@ export function AgentControlPanel() {
               label="Topic"
               placeholder="Enter your content topic..."
               value={contentForm.topic}
-              onChange={(_e) => setContentForm({ ...contentForm, topic: e.target.value })}
+              onChange={(e) => setContentForm({ ...contentForm, topic: e.target.value })}
               variant="cosmic"
             />
 
@@ -229,7 +229,7 @@ export function AgentControlPanel() {
               <label className="block text-sm font-medium text-neutral-700 mb-2">Platform</label>
               <select
                 value={contentForm.platform}
-                onChange={(_e) => setContentForm({ ...contentForm, platform: e.target.value })}
+                onChange={(e) => setContentForm({ ...contentForm, platform: e.target.value })}
                 className="w-full h-10 px-3 border border-purple-300 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 focus:ring-2 focus:ring-purple-500"
               >
                 {platformOptions.map(option => (
@@ -242,7 +242,7 @@ export function AgentControlPanel() {
               <label className="block text-sm font-medium text-neutral-700 mb-2">Content Type</label>
               <select
                 value={contentForm.contentType}
-                onChange={(_e) => setContentForm({ ...contentForm, contentType: e.target.value })}
+                onChange={(e) => setContentForm({ ...contentForm, contentType: e.target.value })}
                 className="w-full h-10 px-3 border border-purple-300 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 focus:ring-2 focus:ring-purple-500"
               >
                 {contentTypeOptions.map(option => (
@@ -255,7 +255,7 @@ export function AgentControlPanel() {
               <label className="block text-sm font-medium text-neutral-700 mb-2">Tone</label>
               <select
                 value={contentForm.tone}
-                onChange={(_e) => setContentForm({ ...contentForm, tone: e.target.value })}
+                onChange={(e) => setContentForm({ ...contentForm, tone: e.target.value })}
                 className="w-full h-10 px-3 border border-purple-300 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 focus:ring-2 focus:ring-purple-500"
               >
                 {toneOptions.map(option => (
@@ -268,7 +268,7 @@ export function AgentControlPanel() {
               label="Target Audience"
               placeholder="Describe your target audience..."
               value={contentForm.targetAudience}
-              onChange={(_e) => setContentForm({ ...contentForm, targetAudience: e.target.value })}
+              onChange={(e) => setContentForm({ ...contentForm, targetAudience: e.target.value })}
               variant="cosmic"
             />
 
@@ -277,7 +277,7 @@ export function AgentControlPanel() {
                 type="checkbox"
                 id="optimization"
                 checked={contentForm.enableOptimization}
-                onChange={(_e) => setContentForm({ ...contentForm, enableOptimization: e.target.checked })}
+                onChange={(e) => setContentForm({ ...contentForm, enableOptimization: e.target.checked })}
                 className="w-4 h-4 text-purple-600 bg-white border-purple-300 rounded focus:ring-purple-500"
               />
               <label htmlFor="optimization" className="text-sm font-medium text-neutral-700">
@@ -288,7 +288,7 @@ export function AgentControlPanel() {
 
           <Button
             onClick={handleContentGeneration}
-            disabled={!contentForm.topic || isLoading}
+            disabled={!contentForm.topic ?? isLoading}
             loading={isLoading}
             variant="cosmic"
             size="lg"
@@ -325,7 +325,7 @@ export function AgentControlPanel() {
                   </div>
                   <div className="flex items-center gap-1">
                     <DollarSign className="h-4 w-4 text-blue-600" />
-                    <span>Cost: ${lastGeneration.performance?.costEstimate?.toFixed(4) || 'N/A'}</span>
+                    <span>Cost: ${lastGeneration.performance?.costEstimate?.toFixed(4)  ?? 'N/A'}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <TrendingUp className="h-4 w-4 text-purple-600" />
@@ -358,7 +358,7 @@ export function AgentControlPanel() {
               label="Campaign Topic"
               placeholder="Enter your campaign topic..."
               value={campaignForm.topic}
-              onChange={(_e) => setCampaignForm({ ...campaignForm, topic: e.target.value })}
+              onChange={(e) => setCampaignForm({ ...campaignForm, topic: e.target.value })}
               variant="plasma"
             />
 
@@ -366,7 +366,7 @@ export function AgentControlPanel() {
               <label className="block text-sm font-medium text-neutral-700 mb-2">Tone</label>
               <select
                 value={campaignForm.tone}
-                onChange={(_e) => setCampaignForm({ ...campaignForm, tone: e.target.value })}
+                onChange={(e) => setCampaignForm({ ...campaignForm, tone: e.target.value })}
                 className="w-full h-10 px-3 border border-pink-300 rounded-lg bg-gradient-to-r from-pink-50 to-violet-50 focus:ring-2 focus:ring-pink-500"
               >
                 {toneOptions.map(option => (
@@ -379,7 +379,7 @@ export function AgentControlPanel() {
               label="Target Audience"
               placeholder="Describe your target audience..."
               value={campaignForm.targetAudience}
-              onChange={(_e) => setCampaignForm({ ...campaignForm, targetAudience: e.target.value })}
+              onChange={(e) => setCampaignForm({ ...campaignForm, targetAudience: e.target.value })}
               variant="plasma"
             />
 
@@ -387,7 +387,7 @@ export function AgentControlPanel() {
               <label className="block text-sm font-medium text-neutral-700 mb-2">Campaign Type</label>
               <select
                 value={campaignForm.campaignType}
-                onChange={(_e) => setCampaignForm({ ...campaignForm, campaignType: e.target.value })}
+                onChange={(e) => setCampaignForm({ ...campaignForm, campaignType: e.target.value })}
                 className="w-full h-10 px-3 border border-pink-300 rounded-lg bg-gradient-to-r from-pink-50 to-violet-50 focus:ring-2 focus:ring-pink-500"
               >
                 <option value="coordinated_launch">Coordinated Launch</option>
@@ -406,7 +406,7 @@ export function AgentControlPanel() {
                   <input
                     type="checkbox"
                     checked={campaignForm.platforms.includes(platform.value)}
-                    onChange={(_e) => {
+                    onChange={(e) => {
                       if (e.target.checked) {
                         setCampaignForm({
                           ...campaignForm,
@@ -429,7 +429,7 @@ export function AgentControlPanel() {
 
           <Button
             onClick={handleCampaignGeneration}
-            disabled={!campaignForm.topic || campaignForm.platforms.length === 0 || isLoading}
+            disabled={!campaignForm.topic ?? campaignForm.platforms.length === 0 ?? isLoading}
             loading={isLoading}
             variant="plasma"
             size="lg"
@@ -566,7 +566,7 @@ export function AgentControlPanel() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {metrics.recommendations.map((rec, _index) => (
+                {metrics.recommendations.map((rec, index) => (
                   <div key={index} className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
                     <AlertTriangle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <span className="text-sm">{rec}</span>
@@ -580,13 +580,12 @@ export function AgentControlPanel() {
     </div>
   );
 
-  return (
-    <div className="min-h-screen bg-gray-50">
+  return (<div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-              {tabs.map((_tab) => {
+              {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 return (

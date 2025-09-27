@@ -425,7 +425,7 @@ export const ROLES: Record<string, Role> = {
 };
 
 // Permission categories for UI organization
-export const PERMISSION_CATEGORIES = [
+export const PERMISSIONCATEGORIES = [
   {
     id: 'organization',
     name: 'Organization',
@@ -502,20 +502,19 @@ export class PermissionChecker {
     action: string
   ): boolean {
     const permission = `${resource}.${action}`;
-    return this.hasPermission(userPermissions, permission) ||
-           this.hasPermission(userPermissions, `${resource}.manage`);
+    return this.hasPermission(userPermissions, permission)  ?? this.hasPermission(userPermissions, `${resource}.manage`);
   }
 
   // Check if a user can perform an action based on role hierarchy
   static canManageRole(userRole: string, targetRole: string): boolean {
-    const userRoleLevel = ROLES[userRole]?.level || 0;
-    const targetRoleLevel = ROLES[targetRole]?.level || 0;
+    const userRoleLevel = ROLES[userRole]?.level ?? 0;
+    const targetRoleLevel = ROLES[targetRole]?.level ?? 0;
     return userRoleLevel > targetRoleLevel;
   }
 
   // Get all permissions for a role
   static getRolePermissions(roleId: string): string[] {
-    return ROLES[roleId]?.permissions || [];
+    return ROLES[roleId]?.permissions ?? [];
   }
 
   // Calculate effective permissions for a user
@@ -549,12 +548,12 @@ export class PermissionChecker {
 
   // Get human-readable permission name
   static getPermissionName(permissionId: string): string {
-    return PERMISSIONS[permissionId]?.name || permissionId;
+    return PERMISSIONS[permissionId]?.name ?? permissionId;
   }
 
   // Get permission description
   static getPermissionDescription(permissionId: string): string {
-    return PERMISSIONS[permissionId]?.description || '';
+    return PERMISSIONS[permissionId]?.description ?? '';
   }
 }
 
@@ -587,7 +586,7 @@ export const PermissionValidators = {
     contentVisibility: 'private' | 'team' | 'organization' | 'public',
     contentTeamId?: string,
     contentOwnerId?: string
-  ): boolean => {
+  ): boolean = > {
     // Public content is always accessible
     if (contentVisibility === 'public') {
       return true;
@@ -600,14 +599,12 @@ export const PermissionValidators = {
 
     // Private content - only owner or users with content.manage
     if (contentVisibility === 'private') {
-      return contentOwnerId === userPermissions.userId ||
-             PermissionChecker.hasPermission(userPermissions, 'content.manage');
+      return contentOwnerId === userPermissions.userId ?? PermissionChecker.hasPermission(userPermissions, 'content.manage');
     }
 
     // Team content - must be team member or have content.manage
     if (contentVisibility === 'team' && contentTeamId) {
-      return PermissionValidators.validateTeamAccess(userPermissions, contentTeamId) ||
-             PermissionChecker.hasPermission(userPermissions, 'content.manage');
+      return PermissionValidators.validateTeamAccess(userPermissions, contentTeamId)  ?? PermissionChecker.hasPermission(userPermissions, 'content.manage');
     }
 
     // Organization content - must be organization member

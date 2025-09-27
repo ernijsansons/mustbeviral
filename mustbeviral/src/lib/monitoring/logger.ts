@@ -1,7 +1,7 @@
 // Centralized Logging Service for Must Be Viral
 // Replaces 739+ console.log statements with structured, contextual logging
 
-import { CloudflareEnv } from '../cloudflare';
+import { CloudflareEnv} from '../cloudflare';
 
 export enum LogLevel {
   DEBUG = 0,
@@ -48,7 +48,7 @@ export class Logger {
 
   private constructor() {
     // Set log level based on environment
-    if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
+    if (typeof process !== 'undefined' && process.env.NODEENV === 'production') {
       this.logLevel = LogLevel.INFO;
     } else {
       this.logLevel = LogLevel.DEBUG;
@@ -67,14 +67,14 @@ export class Logger {
     this.requestId = requestId;
 
     // Set log level from environment
-    if (env.LOG_LEVEL) {
-      this.logLevel = LogLevel[env.LOG_LEVEL as keyof typeof LogLevel] || LogLevel.INFO;
+    if (env.LOGLEVEL) {
+      this.logLevel = LogLevel[env.LOG_LEVEL as keyof typeof LogLevel]  ?? LogLevel.INFO;
     }
   }
 
   setContext(context: Partial<LogContext>): void {
-    if (context.userId) this.userId = context.userId;
-    if (context.sessionId) this.sessionId = context.sessionId;
+    if (context.userId) {this.userId = context.userId;}
+    if (context.sessionId) {this.sessionId = context.sessionId;}
   }
 
   private createLogEntry(
@@ -122,9 +122,9 @@ export class Logger {
     }
 
     // In production, send to external logging service
-    if (this.env?.ENVIRONMENT === 'production' && this.env?.LOGS_ENDPOINT) {
+    if (this.env?.ENVIRONMENT === 'production' && this.env?.LOGSENDPOINT) {
       try {
-        await fetch(this.env.LOGS_ENDPOINT, {
+        await fetch(this.env.LOGSENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(entry)
@@ -204,9 +204,9 @@ export class Logger {
   }
 
   private async triggerAlert(entry: LogEntry): Promise<void> {
-    if (this.env?.ALERT_WEBHOOK) {
+    if (this.env?.ALERTWEBHOOK) {
       try {
-        await fetch(this.env.ALERT_WEBHOOK, {
+        await fetch(this.env.ALERTWEBHOOK, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

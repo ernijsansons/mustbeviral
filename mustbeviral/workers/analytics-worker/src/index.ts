@@ -143,7 +143,7 @@ async function handleMetrics(
 ): Promise<Response> {
   const url = new URL(request.url);
   const metricType = url.searchParams.get('type');
-  const timeRange = url.searchParams.get('range') || '24h';
+  const timeRange = url.searchParams.get('range')  ?? '24h';
   
   const metrics = await controller.getMetrics(metricType, timeRange);
   
@@ -187,7 +187,7 @@ async function handleReports(
 
 // Handle dashboard data
 async function handleDashboard(request: Request, env: Env): Promise<Response> {
-  const dashboardId = new URL(request.url).searchParams.get('id') || 'default';
+  const dashboardId = new URL(request.url).searchParams.get('id')  ?? 'default';
   
   // Get dashboard aggregator durable object
   const id = env.DASHBOARD_AGGREGATOR.idFromName(dashboardId);
@@ -233,8 +233,8 @@ async function handleExport(
   env: Env
 ): Promise<Response> {
   const url = new URL(request.url);
-  const format = url.searchParams.get('format') || 'json';
-  const dateRange = url.searchParams.get('range') || '7d';
+  const format = url.searchParams.get('format')  ?? 'json';
+  const dateRange = url.searchParams.get('range')  ?? '7d';
   
   const exportData = await controller.exportData(format, dateRange);
   
@@ -271,6 +271,7 @@ async function handleHealthCheck(env: Env): Promise<Response> {
 
 // Export Durable Object classes
 export { RealtimeAnalytics, EventProcessor, DashboardAggregator };
+
 
 
 

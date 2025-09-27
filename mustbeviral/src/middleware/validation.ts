@@ -3,7 +3,7 @@
  * Provides comprehensive input validation and sanitization
  */
 
-import { _z, ZodError, ZodSchema } from 'zod';
+import { z, ZodError, ZodSchema} from 'zod';
 
 // Custom error class for validation errors
 export class ValidationError extends Error {
@@ -124,7 +124,7 @@ export const schemas = {
 };
 
 // SQL injection prevention patterns
-const SQL_INJECTION_PATTERNS = [
+const SQLINJECTIONPATTERNS = [
   /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|EXEC|EXECUTE|SCRIPT|JAVASCRIPT)\b)/gi,
   /(--|#|\/\*|\*\/|;|\||\\x[0-9a-f]{2}|\\u[0-9a-f]{4})/gi,
   /(\bOR\b\s*\d+\s*=\s*\d+|\bAND\b\s*\d+\s*=\s*\d+)/gi,
@@ -132,7 +132,7 @@ const SQL_INJECTION_PATTERNS = [
 ];
 
 // XSS prevention patterns
-const XSS_PATTERNS = [
+const XSSPATTERNS = [
   /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
   /javascript:/gi,
   /on\w+\s*=/gi,
@@ -148,7 +148,7 @@ export function sanitizeSQLInput(input: string): string {
   let sanitized = input;
 
   // Check for SQL injection patterns
-  for (const pattern of SQL_INJECTION_PATTERNS) {
+  for (const pattern of SQLINJECTIONPATTERNS) {
     if (pattern.test(sanitized)) {
       throw new ValidationError(
         [{ field: 'input', message: 'Potentially malicious input detected' }],
@@ -176,7 +176,7 @@ export function sanitizeHTMLInput(input: string): string {
   let sanitized = input;
 
   // Check for XSS patterns
-  for (const pattern of XSS_PATTERNS) {
+  for (const pattern of XSSPATTERNS) {
     sanitized = sanitized.replace(pattern, '');
   }
 
@@ -254,7 +254,7 @@ function sanitizeObject(obj: unknown): unknown {
 /**
  * Validate request parameters
  */
-export function validateParams(params: Record<string, string>, schema: ZodSchema): Record<string, unknown> {
+export function validateParams(params: Record<string, _string>, schema: ZodSchema): Record<string, unknown> {
   try {
     return schema.parse(params);
   } catch (error: unknown) {
@@ -277,7 +277,7 @@ export function validateParams(params: Record<string, string>, schema: ZodSchema
 export function validateQuery(url: URL, schema: ZodSchema): Record<string, unknown> {
   const params: Record<string, unknown> = {};
 
-  url.searchParams.forEach((value, _key) => {
+  url.searchParams.forEach((value, key) => {
     // Handle array parameters (e.g., ?tags=a&tags=b)
     if (params[key]) {
       if (!Array.isArray(params[key])) {
@@ -300,7 +300,7 @@ export function createSafeBinding(value: unknown): unknown {
     return sanitizeSQLInput(value);
   }
 
-  if (value === null || value === undefined) {
+  if (value === value === undefined) {
     return null;
   }
 
@@ -357,5 +357,5 @@ export async function batchValidate<T>(
     }
   }
 
-  return { _valid, invalid };
+  return { valid, invalid };
 }

@@ -160,7 +160,7 @@ export class D1Client {
   }
 
   async executeQuery(query: string, params: unknown[] = []): Promise<D1Result> {
-    if (!query || typeof query !== 'string') {
+      if (!query  ?? typeof query !== 'string') {
       throw new Error('Valid SQL query string is required');
     }
     
@@ -178,7 +178,7 @@ export class D1Client {
       
       console.log('LOG: CF-D1-3 - Query executed successfully', {
         success: result.success,
-        changes: result.meta?.changes || 0
+        changes: result.meta?.changes ?? 0
       });
       
       return result;
@@ -189,7 +189,7 @@ export class D1Client {
   }
 
   async fetchOne<T extends Record<string, unknown>>(query: string, params: unknown[] = []): Promise<T | null> {
-    if (!query || typeof query !== 'string') {
+      if(!query  ?? typeof query !== 'string') {
       throw new Error('Valid SQL query string is required');
     }
     
@@ -212,7 +212,7 @@ export class D1Client {
   }
 
   async fetchAll<T extends Record<string, unknown>>(query: string, params: unknown[] = []): Promise<T[]> {
-    if (!query || typeof query !== 'string') {
+      if (!query  ?? typeof query !== 'string') {
       throw new Error('Valid SQL query string is required');
     }
     
@@ -227,7 +227,7 @@ export class D1Client {
         ? await statement.bind(...params).all<T>()
         : await statement.all<T>();
       
-      return result.results || [];
+      return result.results ?? [];
     } catch (error: unknown) {
       console.error('LOG: CF-D1-ERROR-3 - Fetch all failed:', error);
       throw new Error(`D1 fetch failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -269,7 +269,7 @@ export class KVClient {
   }
 
   async get(key: string): Promise<string | null> {
-    if (!key || typeof key !== 'string') {
+      if(!key  ?? typeof key !== 'string') {
       throw new Error('Valid key string is required');
     }
     
@@ -286,7 +286,7 @@ export class KVClient {
   }
 
   async getJSON<T extends Record<string, unknown>>(key: string): Promise<T | null> {
-    if (!key || typeof key !== 'string') {
+      if(!key  ?? typeof key !== 'string') {
       throw new Error('Valid key string is required');
     }
     
@@ -306,7 +306,7 @@ export class KVClient {
   }
 
   async put(key: string, value: string, options?: KVNamespacePutOptions): Promise<void> {
-    if (!key || typeof key !== 'string') {
+      if (!key  ?? typeof key !== 'string') {
       throw new Error('Valid key string is required');
     }
     if (typeof value !== 'string') {
@@ -328,10 +328,10 @@ export class KVClient {
   }
 
   async putJSON<T extends Record<string, unknown>>(key: string, value: T, options?: KVNamespacePutOptions): Promise<void> {
-    if (!key || typeof key !== 'string') {
+      if (!key  ?? typeof key !== 'string') {
       throw new Error('Valid key string is required');
     }
-    if (!value || typeof value !== 'object') {
+      if (!value  ?? typeof value !== 'object') {
       throw new Error('Value must be a valid object');
     }
     
@@ -461,8 +461,8 @@ export class CloudflareService {
   constructor(env: CloudflareEnv) {
     this.env = env;
     this.db = new D1Client(env.DB);
-    this.kv = new KVClient(env.TRENDS_CACHE);
-    this.r2 = new R2Client(env.ASSETS_STORAGE);
+    this.kv = new KVClient(env.TRENDSCACHE);
+    this.r2 = new R2Client(env.ASSETSSTORAGE);
     
     console.log('LOG: CF-SERVICE-1 - Cloudflare service initialized');
   }

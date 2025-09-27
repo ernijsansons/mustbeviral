@@ -3,9 +3,9 @@
  * Comprehensive health checks and monitoring endpoints for operational visibility
  */
 
-import { CloudflareEnv } from '../cloudflare';
-import { getConnectionPool } from '../database/connectionPool';
-import { getPerformanceMonitor } from '../monitoring/performanceMonitor';
+import { CloudflareEnv} from '../cloudflare';
+import { getConnectionPool} from '../database/connectionPool';
+import { getPerformanceMonitor} from '../monitoring/performanceMonitor';
 
 export interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -66,7 +66,7 @@ export class HealthMonitor {
   private startTime: Date;
   private lastHealthCheck?: HealthStatus;
   private healthHistory: Array<{ timestamp: Date; status: HealthStatus }> = [];
-  private readonly MAX_HISTORY = 100;
+  private readonly MAXHISTORY = 100;
 
   constructor(env: CloudflareEnv, config?: Partial<HealthConfig>) {
     this.env = env;
@@ -129,8 +129,8 @@ export class HealthMonitor {
         status: overallStatus,
         timestamp: new Date().toISOString(),
         uptime: this.getUptime(),
-        version: process.env.npm_package_version || '1.0.0',
-        environment: this.env.ENVIRONMENT || 'unknown',
+        version: process.env.npm_package_version ?? '1.0.0',
+        environment: this.env.ENVIRONMENT ?? 'unknown',
         checks,
         summary: {
           ...summary,
@@ -150,8 +150,8 @@ export class HealthMonitor {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
         uptime: this.getUptime(),
-        version: process.env.npm_package_version || '1.0.0',
-        environment: this.env.ENVIRONMENT || 'unknown',
+        version: process.env.npm_package_version ?? '1.0.0',
+        environment: this.env.ENVIRONMENT ?? 'unknown',
         checks: [{
           name: 'health_check_execution',
           status: 'fail',
@@ -181,7 +181,7 @@ export class HealthMonitor {
    * Get current health status (cached)
    */
   getCurrentHealth(): HealthStatus | null {
-    return this.lastHealthCheck || null;
+    return this.lastHealthCheck ?? null;
   }
 
   /**
@@ -227,15 +227,15 @@ export class HealthMonitor {
       : 100;
 
     const averageResponseTime = history.length > 0
-      ? history.reduce((sum, _h) => sum + h.status.summary.responseTime, 0) / history.length
+      ? history.reduce((sum, h) => sum + h.status.summary.responseTime, 0) / history.length
       : 0;
 
     const errorRate = history.length > 0
-      ? (history.reduce((sum, _h) => sum + h.status.summary.failed, 0) /
-         history.reduce((sum, _h) => sum + h.status.summary.total, 1)) * 100
+      ? (history.reduce((sum, h) => sum + h.status.summary.failed, 0) /
+         history.reduce((sum, h) => sum + h.status.summary.total, 1)) * 100
       : 0;
 
-    return { _uptimePercentage,
+    return { uptimePercentage,
       averageResponseTime,
       errorRate,
       trends: {
@@ -274,7 +274,7 @@ export class HealthMonitor {
         critical: true,
         details: {
           environment: this.env.ENVIRONMENT,
-          hasSecrets: !!this.env.JWT_SECRET && !!this.env.ENCRYPTION_KEY
+          hasSecrets: !!this.env.JWT_SECRET && !!this.env.ENCRYPTIONKEY
         }
       };
 
@@ -387,7 +387,7 @@ export class HealthMonitor {
 
       pool.releaseConnection(connection.id);
 
-      if (!result || result.health_check !== 1) {
+      if (!result ?? result.health_check !== 1) {
         return {
           name: 'database',
           status: 'fail',
@@ -478,7 +478,7 @@ export class HealthMonitor {
     const startTime = Date.now();
 
     try {
-      if (!this.env.CONTENT_STORAGE) {
+      if (!this.env.CONTENTSTORAGE) {
         return {
           name: 'r2_storage',
           status: 'warn',
@@ -617,7 +617,8 @@ export class HealthMonitor {
 
     try {
       // Test rate limiter functionality
-      const testRequest = new Request('https://example.com/test', {
+      const testRequest = new Request('https://example.com/health', {
+        method: 'GET',
         headers: {
           'CF-Connecting-IP': '127.0.0.1',
           'User-Agent': 'health-check'
@@ -715,7 +716,7 @@ export class HealthMonitor {
     const startTime = Date.now();
 
     try {
-      if (!this.env.CONTENT_STORAGE) {
+      if (!this.env.CONTENTSTORAGE) {
         return {
           name: 'R2 Storage',
           type: 'storage',
@@ -759,7 +760,7 @@ export class HealthMonitor {
     const warnings = checks.filter(c => c.status === 'warn').length;
     const critical = checks.filter(c => c.critical && c.status === 'fail').length;
 
-    return { _total,
+    return { total,
       passed,
       failed,
       warnings,
@@ -809,8 +810,8 @@ export class HealthMonitor {
     });
 
     // Keep only recent history
-    if (this.healthHistory.length > this.MAX_HISTORY) {
-      this.healthHistory = this.healthHistory.slice(-this.MAX_HISTORY);
+    if (this.healthHistory.length > this.MAXHISTORY) {
+      this.healthHistory = this.healthHistory.slice(-this.MAXHISTORY);
     }
   }
 }

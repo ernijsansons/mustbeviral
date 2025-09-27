@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { cn } from '../../lib/utils';
+import { ReactNode} from 'react';
+import { cn} from '../../lib/utils';
 
 interface GradientTextProps {
   children: ReactNode;
@@ -28,20 +28,15 @@ const sizeClasses = {
   '6xl': 'text-6xl',
 };
 
-export function GradientText({
-  children,
-  className,
-  variant = 'viral',
-  animate = false,
-  size = '3xl',
-}: GradientTextProps) {
+export function GradientText(_{
+  children, className, variant = 'viral', animate = false, size = '3xl', }: GradientTextProps) {
   return (
     <span
       className={cn(
         'bg-gradient-to-r bg-clip-text text-transparent font-heading font-bold',
         variantClasses[variant],
         sizeClasses[size],
-        animate && 'animate-gradient bg-[length:200%_auto]',
+        animate && 'animate-gradient bg-[length:200%auto]',
         className
       )}
     >

@@ -1,8 +1,8 @@
 // Health Check Request Handler
 // Extracted from worker.ts for modularity
 
-import { CloudflareService } from '../../lib/cloudflare';
-import { log } from '../../lib/monitoring/logger';
+import { CloudflareService} from '../../lib/cloudflare';
+import { log} from '../../lib/monitoring/logger';
 
 export class HealthHandler {
   constructor(private cloudflareService: CloudflareService) {}

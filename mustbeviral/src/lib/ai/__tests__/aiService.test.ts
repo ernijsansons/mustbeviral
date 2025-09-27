@@ -1,8 +1,8 @@
 // AI Service Tests
 // Tests for AI content generation and analysis functionality
 
-import { AIService } from '../aiService';
-import type { _ContentGenerationRequest, ContentAnalysisRequest } from '../aiService';
+import { AIService} from '../aiService';
+import type { ContentGenerationRequest, ContentAnalysisRequest } from '../aiService';
 
 // Mock AI responses
 const mockAIResponse = {
@@ -25,16 +25,16 @@ const mockEnv = {
   LOG_LEVEL: 'INFO'
 };
 
-describe('AIService', () => {
+describe('AIService', _() => {
   let aiService: AIService;
 
-  beforeEach(() => {
+  beforeEach_(() => {
     jest.clearAllMocks();
     aiService = new AIService(mockAI as unknown, mockEnv as unknown);
   });
 
-  describe('Content Generation', () => {
-    it('should generate content successfully', async () => {
+  describe('Content Generation', _() => {
+    it('should generate content successfully', async() => {
       const request: ContentGenerationRequest = {
         type: 'article',
         topic: 'AI in content creation',
@@ -59,7 +59,7 @@ describe('AIService', () => {
       );
     });
 
-    it('should generate multiple variations', async () => {
+    it('should generate multiple variations', async() => {
       const request: ContentGenerationRequest = {
         type: 'social_post',
         topic: 'Social media trends',
@@ -78,7 +78,7 @@ describe('AIService', () => {
       });
     });
 
-    it('should generate SEO optimized content', async () => {
+    it('should generate SEO optimized content', async() => {
       const request: ContentGenerationRequest = {
         type: 'article',
         topic: 'SEO best practices',
@@ -95,7 +95,7 @@ describe('AIService', () => {
       expect(mockAI.run).toHaveBeenCalled();
     });
 
-    it('should generate viral content', async () => {
+    it('should generate viral content', async() => {
       const request: ContentGenerationRequest = {
         type: 'social_post',
         topic: 'Viral marketing strategies',
@@ -111,7 +111,7 @@ describe('AIService', () => {
       expect(result.suggestions).toHaveProperty('viralTips');
     });
 
-    it('should optimize content for platform', async () => {
+    it('should optimize content for platform', async() => {
       const content = 'This is a long piece of content that needs to be optimized for Twitter.';
       const platform = 'twitter';
 
@@ -129,10 +129,10 @@ describe('AIService', () => {
     });
   });
 
-  describe('Content Analysis', () => {
-    beforeEach(() => {
+  describe('Content Analysis', _() => {
+    beforeEach_(() => {
       // Mock sentiment analysis
-      mockAI.run.mockImplementation((model, _options) => {
+      mockAI.run.mockImplementation((model, options) => {
         if (model === '@cf/huggingface/distilbert-sst-2-int8') {
           return Promise.resolve(mockSentimentResponse);
         }
@@ -140,7 +140,7 @@ describe('AIService', () => {
       });
     });
 
-    it('should analyze content successfully', async () => {
+    it('should analyze content successfully', async() => {
       const request: ContentAnalysisRequest = {
         content: 'This is a sample article about artificial intelligence and its impact on content creation.',
         type: 'article',
@@ -158,7 +158,7 @@ describe('AIService', () => {
       expect(result.topics).toBeDefined();
     });
 
-    it('should analyze content for specific platform', async () => {
+    it('should analyze content for specific platform', async() => {
       const content = 'Short social media post about AI #AI #MachineLearning';
       const platform = 'twitter';
 
@@ -171,8 +171,8 @@ describe('AIService', () => {
     });
   });
 
-  describe('Content Improvement', () => {
-    it('should improve existing content', async () => {
+  describe('Content Improvement', _() => {
+    it('should improve existing content', async() => {
       const content = 'This is basic content that needs improvement.';
       const targetAudience = 'professionals';
 
@@ -186,8 +186,8 @@ describe('AIService', () => {
     });
   });
 
-  describe('Content Ideas and Strategy', () => {
-    it('should generate content ideas', async () => {
+  describe('Content Ideas and Strategy', _() => {
+    it('should generate content ideas', async() => {
       const topic = 'Digital marketing trends';
       const count = 5;
 
@@ -206,7 +206,7 @@ describe('AIService', () => {
       });
     });
 
-    it('should create content strategy', async () => {
+    it('should create content strategy', async() => {
       const businessGoals = ['increase brand awareness', 'generate leads'];
       const targetAudience = 'small business owners';
       const platforms = ['linkedin', 'twitter', 'blog'];
@@ -224,8 +224,8 @@ describe('AIService', () => {
     });
   });
 
-  describe('Batch Processing', () => {
-    it('should process batch requests', async () => {
+  describe('Batch Processing', _() => {
+    it('should process batch requests', async() => {
       const requests = [
         {
           type: 'generate' as const,
@@ -254,8 +254,8 @@ describe('AIService', () => {
     });
   });
 
-  describe('AI Service Management', () => {
-    it('should return AI capabilities', () => {
+  describe('AI Service Management', _() => {
+    it('should return AI capabilities', _() => {
       const capabilities = aiService.getCapabilities();
 
       expect(capabilities).toBeDefined();
@@ -266,7 +266,7 @@ describe('AIService', () => {
       expect(capabilities.viralPrediction).toBe(true);
     });
 
-    it('should track usage metrics', async () => {
+    it('should track usage metrics', async() => {
       const request: ContentGenerationRequest = {
         type: 'article',
         topic: 'Test topic',
@@ -284,7 +284,7 @@ describe('AIService', () => {
       expect(metrics.modelsUsed).toContain('@cf/meta/llama-2-7b-chat-int8');
     });
 
-    it('should reset usage metrics', async () => {
+    it('should reset usage metrics', async() => {
       // Generate some usage first
       await aiService.generateContent({
         type: 'article',
@@ -301,15 +301,15 @@ describe('AIService', () => {
       expect(metrics.tokensUsed).toBe(0);
     });
 
-    it('should clear cache', () => {
+    it('should clear cache', _() => {
       aiService.clearCache();
       // No direct way to test cache clearing, but should not throw
       expect(true).toBe(true);
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle AI service errors gracefully', async () => {
+  describe('Error Handling', _() => {
+    it('should handle AI service errors gracefully', async() => {
       mockAI.run.mockRejectedValueOnce(new Error('AI service unavailable'));
 
       const request: ContentGenerationRequest = {
@@ -323,7 +323,7 @@ describe('AIService', () => {
       await expect(aiService.generateContent(request)).rejects.toThrow('Content generation failed');
     });
 
-    it('should handle malformed AI responses', async () => {
+    it('should handle malformed AI responses', async() => {
       mockAI.run.mockResolvedValueOnce(null);
 
       const request: ContentGenerationRequest = {
@@ -339,8 +339,8 @@ describe('AIService', () => {
     });
   });
 
-  describe('Validation', () => {
-    it('should handle empty content gracefully', async () => {
+  describe('Validation', _() => {
+    it('should handle empty content gracefully', async() => {
       const request: ContentAnalysisRequest = {
         content: '',
         type: 'article'
@@ -350,7 +350,7 @@ describe('AIService', () => {
       expect(result.metrics.wordCount).toBe(0);
     });
 
-    it('should handle very long content', async () => {
+    it('should handle very long content', async() => {
       const longContent = 'word '.repeat(10000); // 50,000 characters
       const request: ContentAnalysisRequest = {
         content: longContent,
@@ -364,7 +364,7 @@ describe('AIService', () => {
 });
 
 // Integration tests with real AI responses (if AI binding is available)
-describe('AIService Integration', () => {
+describe('AIService Integration', _() => {
   it.skip('should work with real Cloudflare AI (integration test)', async () => {
     // This test should only run in environments with real AI binding
     // Mark as skip for unit tests

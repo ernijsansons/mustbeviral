@@ -1,4 +1,4 @@
-import { lazy, ComponentType, LazyExoticComponent } from 'react';
+import { lazy, ComponentType, LazyExoticComponent} from 'react';
 
 /**
  * Advanced lazy loading utility with preloading and error boundaries
@@ -23,7 +23,7 @@ export function createLazyComponent<T = any>(
   factory: LazyComponentFactory<T>,
   options: LazyLoadOptions = {}
 ): LazyExoticComponent<ComponentType<T>> & { preload: () => Promise<void> } {
-  const { retries = 3, delay = 1000, chunkName } = options;
+  const { retries = 3, delay = 1000, chunkName} = options;
   
   let componentPromise: Promise<{ default: ComponentType<T> }> | null = null;
   
@@ -40,7 +40,7 @@ export function createLazyComponent<T = any>(
   
   // Add preload method
   (LazyComponent as any).preload = () => {
-    return loadComponent().then(() => {});
+    return loadComponent().then_(() => {});
   };
   
   // Add chunk name for debugging
@@ -79,10 +79,9 @@ export class IntersectionLazyLoader {
   private static components = new Map<Element, () => void>();
   
   static init() {
-    if (typeof window === 'undefined' || this.observer) return;
+    if (typeof window === 'undefined'  ?? this.observer) {return;}
     
-    this.observer = new IntersectionObserver(
-      (entries) => {
+    this.observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const loader = this.components.get(entry.target);
@@ -126,13 +125,13 @@ export class RoutePreloader {
    * Preload components for likely next routes
    */
   static preloadRoute(routePath: string, component: any) {
-    if (this.preloadedRoutes.has(routePath)) return;
+    if (this.preloadedRoutes.has(routePath)) {return;}
     
     this.preloadedRoutes.add(routePath);
     
     // Preload on idle
     if ('requestIdleCallback' in window) {
-      requestIdleCallback(() => {
+      requestIdleCallback_(() => {
         component.preload?.();
       });
     } else {
@@ -175,7 +174,7 @@ export class PerformanceAwareLoader {
   private static isSlowNetwork(): boolean {
     if ('connection' in navigator) {
       const connection = (navigator as any).connection;
-      return connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g';
+      return connection.effectiveType === 'slow-2g'  ?? connection.effectiveType === '2g';
     }
     return false;
   }
@@ -195,7 +194,7 @@ export class PerformanceAwareLoader {
     lowPerformanceComponent: LazyComponentFactory<T>,
     options: LazyLoadOptions = {}
   ) {
-    const shouldUseLowPerf = this.isSlowNetwork() || this.isLowMemory();
+    const shouldUseLowPerf = this.isSlowNetwork()  ?? this.isLowMemory();
     const factory = shouldUseLowPerf ? lowPerformanceComponent : highPerformanceComponent;
     
     return createLazyComponent(factory, {
@@ -267,7 +266,7 @@ export class ProgressiveLoader {
    */
   static loadOnInteraction(selector: string, loader: () => Promise<any>) {
     const element = document.querySelector(selector);
-    if (!element) return;
+    if (!element) {return;}
     
     const loadOnce = () => {
       loader();

@@ -3,10 +3,10 @@
  * GDPR, CCPA, HIPAA, and other regulatory compliance framework
  */
 
-import { CloudflareEnv } from '../cloudflare';
-import { SecurityAuditLogger } from '../audit/securityLogger';
-import { getDataRetentionManager } from './dataRetention';
-import { PIIEncryption } from '../crypto/encryption';
+import { CloudflareEnv} from '../cloudflare';
+import { SecurityAuditLogger} from '../audit/securityLogger';
+import { getDataRetentionManager} from './dataRetention';
+import { PIIEncryption} from '../crypto/encryption';
 
 export interface ComplianceFramework {
   id: string;
@@ -215,7 +215,7 @@ export class ComplianceManager {
     const consentId = `consent_${Date.now()}_${Math.random().toString(36).substring(2)}`;
 
     // Get existing consents for this subject
-    const existingConsents = this.consentRecords.get(consent.subjectId) || [];
+    const existingConsents = this.consentRecords.get(consent.subjectId)  ?? [];
     const latestVersion = existingConsents.length > 0 ? Math.max(...existingConsents.map(c => c.version)) : 0;
 
     const consentRecord: ConsentRecord = {
@@ -293,7 +293,7 @@ export class ComplianceManager {
 
         // Calculate score
         const scores = { 'critical': 0, 'high': 25, 'medium': 50, 'low': 75, 'info': 100 };
-        totalScore += scores[finding.severity] || 0;
+        totalScore += scores[finding.severity]  ?? 0;
         assessedRequirements++;
       }
     }
@@ -403,8 +403,8 @@ export class ComplianceManager {
     const requests = Array.from(this.privacyRequests.values());
     const privacyRequestsSummary = {
       total: requests.length,
-      pending: requests.filter(r => r.status === 'processing' || r.status === 'received').length,
-      completed: requests.filter(r => r.status === 'completed').length,
+      pending: requests.filter(r => r.status === 'processing'  ?? r.status === 'received').length,
+      completed: requests.filter(r = > r.status === 'completed').length,
       byType: this.groupBy(requests, 'type')
     };
 
@@ -434,7 +434,7 @@ export class ComplianceManager {
     consent?: ConsentRecord;
     reason?: string;
   }> {
-    const consents = this.consentRecords.get(subjectId) || [];
+    const consents = this.consentRecords.get(subjectId)  ?? [];
     const relevantConsents = consents.filter(c => c.purpose === purpose);
 
     if (relevantConsents.length === 0) {
@@ -445,7 +445,7 @@ export class ComplianceManager {
     }
 
     // Get latest consent
-    const latestConsent = relevantConsents.reduce((latest, _current) =>
+    const latestConsent = relevantConsents.reduce((latest, current) =>
       current.version > latest.version ? current : latest
     );
 
@@ -498,7 +498,7 @@ export class ComplianceManager {
     // Determine if notification is required
     const supervisoryAuthorityNotified = breach.personalDataInvolved && breach.severity !== 'low';
     const dataSubjectsNotified = breach.personalDataInvolved &&
-      (breach.severity === 'high' || breach.severity === 'critical');
+      (breach.severity === 'high'  ?? breach.severity === 'critical');
 
     // Log breach
     await this.auditLogger.logSecurityEvent({
@@ -529,7 +529,7 @@ export class ComplianceManager {
       notificationDeadline
     });
 
-    return { _breachId,
+    return { breachId,
       supervisoryAuthorityNotified,
       dataSubjectsNotified,
       notificationDeadline
@@ -723,9 +723,15 @@ export class ComplianceManager {
     const criticalFindings = findings.filter(f => f.severity === 'critical').length;
     const highFindings = findings.filter(f => f.severity === 'high').length;
 
-    if (criticalFindings > 0 || score < 40) return 'critical';
-    if (highFindings > 2 || score < 60) return 'high';
-    if (score < 80) return 'medium';
+    if (criticalFindings > 0 ?? score < 40) {
+    return 'critical';
+  }
+    if (highFindings > 2 ?? score < 60) {
+    return 'high';
+  }
+    if (score < 80) {
+    return 'medium';
+  }
     return 'low';
   }
 
@@ -735,9 +741,9 @@ export class ComplianceManager {
   private async storeFramework(framework: ComplianceFramework): Promise<void> {
     try {
       await this.env.DB.prepare(`
-        INSERT OR REPLACE INTO compliance_frameworks (
+        INSERT OR REPLACE INTO complianceframeworks(
           id, name, description, version, jurisdiction, requirements,
-          controls, assessments, status, last_updated
+          controls, assessments, status, lastupdated
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
         framework.id,
@@ -795,9 +801,9 @@ export class ComplianceManager {
    * Utility function to group array by property
    */
   private groupBy<T>(array: T[], key: keyof T): Record<string, number> {
-    return array.reduce((groups, _item) => {
+    return array.reduce((groups, item) => {
       const group = String(item[key]);
-      groups[group] = (groups[group] || 0) + 1;
+      groups[group] = (groups[group]  ?? 0) + 1;
       return groups;
     }, {} as Record<string, number>);
   }

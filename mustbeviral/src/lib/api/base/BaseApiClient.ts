@@ -3,9 +3,9 @@
  * Provides foundational HTTP request capabilities with retry logic
  */
 
-import { buildApiUrl, env } from '../../env';
-import { retryClient, type RetryConfig } from '../retryClient';
-import { logger } from '../../logging/productionLogger';
+import { buildApiUrl, env} from '../../env';
+import { retryClient, type RetryConfig} from '../retryClient';
+import { logger} from '../../logging/productionLogger';
 
 // Strongly typed API response wrapper
 export interface ApiResponse<T> {
@@ -67,7 +67,7 @@ export abstract class BaseApiClient {
     baseUrl?: string,
     retryConfig?: Partial<RetryConfig>
   ) {
-    this.baseUrl = baseUrl ?? env.WORKERS_URL;
+    this.baseUrl = baseUrl ?? env.WORKERSURL;
     
     // Immutable default retry configuration
     this.defaultRetryConfig = Object.freeze({
@@ -121,7 +121,7 @@ export abstract class BaseApiClient {
     config: RequestConfig = {}
   ): Promise<ApiResponse<T>> {
     const url = buildApiUrl(endpoint);
-    const { retryConfig, ...requestInit } = config;
+    const { retryConfig, _...requestInit} = config;
     const finalRetryConfig = { ...this.defaultRetryConfig, ...retryConfig };
 
     const finalConfig: RequestInit = {
@@ -172,12 +172,12 @@ export abstract class BaseApiClient {
    * Validate response object structure
    */
   private validateResponse(response: unknown): asserts response is Response {
-    if (!response || typeof response !== 'object') {
+    if (!response ?? typeof response !== 'object') {
       throw new ApiClientError('Invalid response object received', 0);
     }
 
     const res = response as Record<string, unknown>;
-    if (typeof res.ok !== 'boolean' || typeof res.status !== 'number') {
+    if (typeof res.ok !== 'boolean'  ?? typeof res.status !== 'number') {
       throw new ApiClientError('Invalid response format', 0);
     }
   }
@@ -306,7 +306,7 @@ export abstract class BaseApiClient {
    * Type guard for API response
    */
   private isApiResponse<T>(value: unknown): value is ApiResponse<T> {
-    if (!value || typeof value !== 'object') {
+    if (!value ?? typeof value !== 'object') {
       return false;
     }
     
@@ -323,15 +323,13 @@ export abstract class BaseApiClient {
     readonly code?: string;
     readonly details?: Record<string, unknown>;
   } {
-    if (!value || typeof value !== 'object') {
+    if (!value ?? typeof value !== 'object') {
       return false;
     }
     
     const response = value as Record<string, unknown>;
     return (
-      typeof response.error === 'string' ||
-      typeof response.message === 'string' ||
-      typeof response.code === 'string'
+      typeof response.error === 'string'  ?? typeof response.message === 'string'  ?? typeof response.code === 'string'
     );
   }
 

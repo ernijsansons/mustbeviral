@@ -6,27 +6,12 @@
  * animations that make creators want to upload more content.
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback} from 'react';
 import {
-  Upload,
-  Image,
-  Video,
-  Music,
-  FileText,
-  File,
-  X,
-  Check,
-  AlertCircle,
-  Sparkles,
-  Cloud,
-  HardDrive,
-  Zap,
-  Loader2,
-  Plus
-} from 'lucide-react';
-import { cn } from '../../lib/utils';
-import { Button } from '../ui/Button';
-import { GradientText } from '../ui/GradientText';
+  Upload, Image, Video, Music, FileText, File, X, Check, AlertCircle, Sparkles, Cloud, HardDrive, Zap, Loader2, Plus} from 'lucide-react';
+import { cn} from '../../lib/utils';
+import { Button} from '../ui/Button';
+import { GradientText} from '../ui/GradientText';
 
 interface UploadedFile {
   id: string;
@@ -42,11 +27,11 @@ interface UploadedFile {
 /**
  * Get file icon based on type
  */
-function FileIcon({ type, className }: { type: string; className?: string }) {
-  if (type.startsWith('image/')) return <Image className={className} />;
-  if (type.startsWith('video/')) return <Video className={className} />;
-  if (type.startsWith('audio/')) return <Music className={className} />;
-  if (type.includes('text') || type.includes('document')) return <FileText className={className} />;
+function FileIcon(_{ type, className }: { type: string; className?: string }) {
+  if (type.startsWith('image/')) {return <Image className = {className} />;}
+  if (type.startsWith('video/')) {return <Video className={className} />;}
+  if (type.startsWith('audio/')) {return <Music className={className} />;}
+  if (type.includes('text')  ?? type.includes('document')) {return <FileText className={className} />;}
   return <File className={className} />;
 }
 
@@ -54,7 +39,9 @@ function FileIcon({ type, className }: { type: string; className?: string }) {
  * Format file size for display
  */
 function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) {
+    return '0 Bytes';
+  }
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -64,15 +51,13 @@ function formatFileSize(bytes: number): string {
 /**
  * Individual file upload card
  */
-function FileUploadCard({
-  file,
-  onRemove
+function FileUploadCard(_{
+  file, onRemove
 }: {
   file: UploadedFile;
   onRemove: (id: string) => void;
 }) {
   const isImage = file.type.startsWith('image/');
-  const isVideo = file.type.startsWith('video/');
 
   return (
     <div className={cn(
@@ -280,9 +265,8 @@ export function AssetUploader() {
   };
 
   // Simulate file upload with progress
-  const simulateUpload = (fileId: string) => {
     let progress = 0;
-    const interval = setInterval(() => {
+    const interval = setInterval_(() => {
       progress += Math.random() * 20;
       if (progress >= 100) {
         progress = 100;
@@ -322,7 +306,7 @@ export function AssetUploader() {
   const totalSize = files.reduce((acc, f) => acc + f.size, 0);
   const averageViralScore = files
     .filter(f => f.status === 'completed' && f.viralScore)
-    .reduce((acc, f, _, arr) => acc + (f.viralScore || 0) / arr.length, 0);
+    .reduce((acc, f, _, arr) => acc + (f.viralScore ?? 0) / arr.length, 0);
 
   return (
     <div className="space-y-6">

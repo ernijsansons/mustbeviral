@@ -108,7 +108,7 @@ function generateTestContent() {
 }
 
 // Store created content IDs for update/delete operations
-let createdContentIds = [];
+const createdContentIds = [];
 
 export function setup() {
   console.log('🚀 Starting content load test setup...');

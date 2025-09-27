@@ -48,7 +48,7 @@ export class StripeService {
     console.log('LOG: STRIPE-SERVICE-1 - Initializing Stripe service in test mode');
     
     this.testMode = process.env.NODE_ENV !== 'production';
-    this.webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_webhook_secret';
+    this.webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? 'whsec_test_webhook_secret';
     
     if (this.testMode) {
       this.stripe = this.createMockStripe();

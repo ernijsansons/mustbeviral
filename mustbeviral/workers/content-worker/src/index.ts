@@ -57,16 +57,15 @@ export interface Env {
 }
 
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
     // Initialize services
     const logger = new Logger(env.SERVICE_NAME, env.LOG_LEVEL);
     const metrics = new MetricsCollector(env.SERVICE_NAME);
     const security = new SecurityMiddleware(env);
     const auth = new AuthMiddleware(env.AUTH_SERVICE);
-    const validation = new ValidationMiddleware();
+    const _validation = new ValidationMiddleware();
 
     // Start request tracking
-    const requestId = crypto.randomUUID();
     const startTime = Date.now();
 
     logger.info('Request received', { _requestId,
@@ -100,11 +99,11 @@ export default {
       // Public routes (no auth required)
       router.get('/health', () => HealthCheck.check(env));
       router.get('/metrics', () => metrics.export());
-      router.get('/api/content/public/:id', (req, _params) => contentController.getPublicContent(req, params.id));
-      router.get('/api/trends/public', (_req) => trendsController.getPublicTrends(req));
+      router.get('/api/content/public/:id', (req, params) => contentController.getPublicContent(req, params.id));
+      router.get('/api/trends/public', (req) => trendsController.getPublicTrends(req));
 
       // Protected routes (auth required)
-      const authRequired = async (handler: Function) => {
+      const authRequired = async (_handler: Function) => {
         return async (req: Request, params?: unknown) => {
           const authResult = await auth.authenticate(req);
           if (!authResult.valid) {
@@ -119,31 +118,31 @@ export default {
       };
 
       // Content management routes
-      router.get('/api/content', authRequired((_req) => contentController.listContent(req)));
-      router.post('/api/content', authRequired((_req) => contentController.createContent(req)));
-      router.get('/api/content/:id', authRequired((req, _params) => contentController.getContent(req, params.id)));
-      router.put('/api/content/:id', authRequired((req, _params) => contentController.updateContent(req, params.id)));
-      router.delete('/api/content/:id', authRequired((req, _params) => contentController.deleteContent(req, params.id)));
-      router.post('/api/content/:id/publish', authRequired((req, _params) => contentController.publishContent(req, params.id)));
-      router.post('/api/content/:id/schedule', authRequired((req, _params) => contentController.scheduleContent(req, params.id)));
-      router.post('/api/content/:id/duplicate', authRequired((req, _params) => contentController.duplicateContent(req, params.id)));
+      router.get('/api/content', authRequired((req) => contentController.listContent(req)));
+      router.post('/api/content', authRequired((req) => contentController.createContent(req)));
+      router.get('/api/content/:id', authRequired((req, params) => contentController.getContent(req, params.id)));
+      router.put('/api/content/:id', authRequired((req, params) => contentController.updateContent(req, params.id)));
+      router.delete('/api/content/:id', authRequired((req, params) => contentController.deleteContent(req, params.id)));
+      router.post('/api/content/:id/publish', authRequired((req, params) => contentController.publishContent(req, params.id)));
+      router.post('/api/content/:id/schedule', authRequired((req, params) => contentController.scheduleContent(req, params.id)));
+      router.post('/api/content/:id/duplicate', authRequired((req, params) => contentController.duplicateContent(req, params.id)));
 
       // Content collaboration routes
-      router.get('/api/content/:id/collaborate', authRequired((req, _params) => contentController.getCollaborationSession(req, params.id)));
-      router.post('/api/content/:id/collaborate/join', authRequired((req, _params) => contentController.joinCollaboration(req, params.id)));
-      router.post('/api/content/:id/collaborate/leave', authRequired((req, _params) => contentController.leaveCollaboration(req, params.id)));
+      router.get('/api/content/:id/collaborate', authRequired((req, params) => contentController.getCollaborationSession(req, params.id)));
+      router.post('/api/content/:id/collaborate/join', authRequired((req, params) => contentController.joinCollaboration(req, params.id)));
+      router.post('/api/content/:id/collaborate/leave', authRequired((req, params) => contentController.leaveCollaboration(req, params.id)));
 
       // Media management routes
-      router.get('/api/media', authRequired((_req) => mediaController.listMedia(req)));
-      router.post('/api/media/upload', authRequired((_req) => mediaController.uploadMedia(req)));
-      router.get('/api/media/:id', authRequired((req, _params) => mediaController.getMedia(req, params.id)));
-      router.put('/api/media/:id', authRequired((req, _params) => mediaController.updateMedia(req, params.id)));
-      router.delete('/api/media/:id', authRequired((req, _params) => mediaController.deleteMedia(req, params.id)));
-      router.post('/api/media/:id/optimize', authRequired((req, _params) => mediaController.optimizeMedia(req, params.id)));
+      router.get('/api/media', authRequired((req) => mediaController.listMedia(req)));
+      router.post('/api/media/upload', authRequired((req) => mediaController.uploadMedia(req)));
+      router.get('/api/media/:id', authRequired((req, params) => mediaController.getMedia(req, params.id)));
+      router.put('/api/media/:id', authRequired((req, params) => mediaController.updateMedia(req, params.id)));
+      router.delete('/api/media/:id', authRequired((req, params) => mediaController.deleteMedia(req, params.id)));
+      router.post('/api/media/:id/optimize', authRequired((req, params) => mediaController.optimizeMedia(req, params.id)));
 
       // AI enhancement routes
-      router.post('/api/ai/enhance', authRequired((_req) => aiController.enhanceContent(req)));
-      router.post('/api/ai/generate', authRequired((_req) => aiController.generateContent(req)));
+      router.post('/api/ai/enhance', authRequired((req) => aiController.enhanceContent(req)));
+      router.post('/api/ai/generate', authRequired((req) => aiController.generateContent(req)));
       router.post('/api/ai/suggestions', authRequired((_req) => aiController.getSuggestions(req)));
       router.post('/api/ai/analyze', authRequired((_req) => aiController.analyzeContent(req)));
       router.post('/api/ai/optimize-seo', authRequired((_req) => aiController.optimizeSEO(req)));

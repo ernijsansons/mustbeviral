@@ -1,10 +1,10 @@
 // OAuth Controller for Cloudflare Workers
 // Handles Google and Twitter/X OAuth authentication flows
 
-import { CloudflareEnv } from '../lib/cloudflare';
-import { DatabaseService } from '../lib/db';
-import { JWTManager } from '../lib/auth/jwtManager';
-import { logger, log } from '../lib/monitoring/logger';
+import { CloudflareEnv} from '../lib/cloudflare';
+import { DatabaseService} from '../lib/db';
+import { JWTManager} from '../lib/auth/jwtManager';
+import { logger, log} from '../lib/monitoring/logger';
 
 interface OAuthState {
   state: string;
@@ -22,7 +22,7 @@ export class OAuthController {
     crypto.getRandomValues(array);
     return btoa(String.fromCharCode.apply(null, Array.from(array)))
       .replace(/\+/g, '-')
-      .replace(/\//g, '_')
+      .replace(/\//g, '')
       .replace(/=/g, '');
   }
 
@@ -32,7 +32,7 @@ export class OAuthController {
     const digest = await crypto.subtle.digest('SHA-256', data);
     return btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(digest))))
       .replace(/\+/g, '-')
-      .replace(/\//g, '_')
+      .replace(/\//g, '')
       .replace(/=/g, '');
   }
 
@@ -51,7 +51,9 @@ export class OAuthController {
   ): Promise<OAuthState | null> {
     const key = `oauth_state:${state}`;
     const data = await env.KV_NAMESPACE.get(key);
-    if (!data) return null;
+    if (!data) {
+    return null;
+  }
 
     // Delete state after retrieval (single use)
     await env.KV_NAMESPACE.delete(key);
@@ -70,7 +72,7 @@ export class OAuthController {
     log.info('Initiating Google OAuth', { action: 'oauth_google_init' });
 
     try {
-      const googleClientId = env.GOOGLE_CLIENT_ID;
+      const googleClientId = env.GOOGLECLIENTID;
       if (!googleClientId) {
         log.error('Google OAuth not configured', new Error('Missing GOOGLE_CLIENT_ID'), {
           component: 'oauth',
@@ -83,11 +85,10 @@ export class OAuthController {
       }
 
       const state = this.generateSecureState();
-      const baseUrl = env.APP_BASE_URL || 'http://localhost:5173';
-      const redirectUri = `${env.WORKERS_URL || 'http://localhost:8787'}/api/oauth/google/callback`;
+      const redirectUri = `${env.WORKERS_URL ?? 'http://localhost:8787'}/api/oauth/google/callback`;
 
       // Store state in KV for CSRF protection
-      await this.storeOAuthState(env, state, { _state,
+      await this.storeOAuthState(env, state, { state,
         timestamp: Date.now()
       });
 
@@ -137,7 +138,7 @@ export class OAuthController {
           component: 'oauth',
           action: 'google_callback'
         });
-        return Response.redirect(`${env.APP_BASE_URL}/onboard?error=oauth_failed`, 302);
+        return Response.redirect(`${env.APPBASEURL}/onboard?error=oauth_failed`, 302);
       }
 
       if (!state) {
@@ -145,21 +146,21 @@ export class OAuthController {
           component: 'oauth',
           action: 'google_callback'
         });
-        return Response.redirect(`${env.APP_BASE_URL}/onboard?error=oauth_failed`, 302);
+        return Response.redirect(`${env.APPBASEURL}/onboard?error=oauth_failed`, 302);
       }
 
       // Validate state to prevent CSRF attacks
       const storedState = await this.getOAuthState(env, state);
-      if (!storedState || storedState.state !== state) {
+      if (!storedState ?? storedState.state !== state) {
         log.error('Invalid OAuth state parameter', new Error('CSRF validation failed'), {
           component: 'oauth',
           action: 'google_callback'
         });
-        return Response.redirect(`${env.APP_BASE_URL}/onboard?error=oauth_failed`, 302);
+        return Response.redirect(`${env.APPBASEURL}/onboard?error=oauth_failed`, 302);
       }
 
       // Exchange code for access token
-      const redirectUri = `${env.WORKERS_URL || 'http://localhost:8787'}/api/oauth/google/callback`;
+      const redirectUri = `${env.WORKERS_URL ?? 'http://localhost:8787'}/api/oauth/google/callback`;
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -174,17 +175,17 @@ export class OAuthController {
 
       const tokenData = await tokenResponse.json() as unknown;
 
-      if (!tokenData.access_token) {
+      if (!tokenData.accesstoken) {
         log.error('Failed to get access token from Google', new Error('Token exchange failed'), {
           component: 'oauth',
           action: 'google_callback'
         });
-        return Response.redirect(`${env.APP_BASE_URL}/onboard?error=oauth_failed`, 302);
+        return Response.redirect(`${env.APPBASEURL}/onboard?error=oauth_failed`, 302);
       }
 
       // Get user profile from Google
       const profileResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-        headers: { Authorization: `Bearer ${tokenData.access_token}` }
+        headers: { Authorization: `Bearer ${tokenData.accesstoken}` }
       });
 
       const profile = await profileResponse.json() as unknown;
@@ -194,7 +195,7 @@ export class OAuthController {
           component: 'oauth',
           action: 'google_callback'
         });
-        return Response.redirect(`${env.APP_BASE_URL}/onboard?error=oauth_failed`, 302);
+        return Response.redirect(`${env.APPBASEURL}/onboard?error=oauth_failed`, 302);
       }
 
       // Check if user exists
@@ -212,7 +213,7 @@ export class OAuthController {
 
         const userData = {
           email: profile.email,
-          username: profile.name || profile.email.split('@')[0],
+          username: profile.name ?? profile.email.split('@')[0],
           password_hash: '', // No password for OAuth users
           role: 'creator' as const, // Default role
           profile_data: JSON.stringify(profileData),
@@ -255,8 +256,8 @@ export class OAuthController {
 
       // Create response with redirect
       const redirectUrl = user.onboarding_completed
-        ? `${env.APP_BASE_URL}/dashboard`
-        : `${env.APP_BASE_URL}/onboard?step=profile`;
+        ? `${env.APPBASEURL}/dashboard`
+        : `${env.APPBASEURL}/onboard?step=profile`;
 
       // Create HTML response that sets token and redirects
       const html = `
@@ -290,7 +291,7 @@ export class OAuthController {
         component: 'oauth',
         action: 'google_callback'
       });
-      return Response.redirect(`${env.APP_BASE_URL}/onboard?error=oauth_failed`, 302);
+      return Response.redirect(`${env.APPBASEURL}/onboard?error=oauth_failed`, 302);
     }
   }
 
@@ -301,7 +302,7 @@ export class OAuthController {
     log.info('Initiating Twitter OAuth', { action: 'oauth_twitter_init' });
 
     try {
-      const twitterClientId = env.TWITTER_CLIENT_ID;
+      const twitterClientId = env.TWITTERCLIENTID;
       if (!twitterClientId) {
         log.error('Twitter OAuth not configured', new Error('Missing TWITTER_CLIENT_ID'), {
           component: 'oauth',
@@ -316,10 +317,10 @@ export class OAuthController {
       const state = this.generateSecureState();
       const codeVerifier = this.generateCodeVerifier();
       const codeChallenge = await this.generateCodeChallenge(codeVerifier);
-      const redirectUri = `${env.WORKERS_URL || 'http://localhost:8787'}/api/oauth/x/callback`;
+      const redirectUri = `${env.WORKERS_URL ?? 'http://localhost:8787'}/api/oauth/x/callback`;
 
       // Store state and code verifier in KV for PKCE
-      await this.storeOAuthState(env, state, { _state,
+      await this.storeOAuthState(env, state, { state,
         codeVerifier,
         timestamp: Date.now()
       });
@@ -372,7 +373,7 @@ export class OAuthController {
           component: 'oauth',
           action: 'twitter_callback'
         });
-        return Response.redirect(`${env.APP_BASE_URL}/onboard?error=oauth_failed`, 302);
+        return Response.redirect(`${env.APPBASEURL}/onboard?error=oauth_failed`, 302);
       }
 
       if (!state) {
@@ -380,21 +381,21 @@ export class OAuthController {
           component: 'oauth',
           action: 'twitter_callback'
         });
-        return Response.redirect(`${env.APP_BASE_URL}/onboard?error=oauth_failed`, 302);
+        return Response.redirect(`${env.APPBASEURL}/onboard?error=oauth_failed`, 302);
       }
 
       // Validate state and get code verifier
       const storedState = await this.getOAuthState(env, state);
-      if (!storedState || storedState.state !== state || !storedState.codeVerifier) {
+      if (!storedState ?? storedState.state !== state ?? !storedState.codeVerifier) {
         log.error('Invalid OAuth state parameter or missing code verifier', new Error('CSRF/PKCE validation failed'), {
           component: 'oauth',
           action: 'twitter_callback'
         });
-        return Response.redirect(`${env.APP_BASE_URL}/onboard?error=oauth_failed`, 302);
+        return Response.redirect(`${env.APPBASEURL}/onboard?error=oauth_failed`, 302);
       }
 
       // Exchange code for access token
-      const redirectUri = `${env.WORKERS_URL || 'http://localhost:8787'}/api/oauth/x/callback`;
+      const redirectUri = `${env.WORKERS_URL ?? 'http://localhost:8787'}/api/oauth/x/callback`;
       const tokenResponse = await fetch('https://api.twitter.com/2/oauth2/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -409,28 +410,28 @@ export class OAuthController {
 
       const tokenData = await tokenResponse.json() as unknown;
 
-      if (!tokenData.access_token) {
+      if (!tokenData.accesstoken) {
         log.error('Failed to get access token from Twitter', new Error('Token exchange failed'), {
           component: 'oauth',
           action: 'twitter_callback'
         });
-        return Response.redirect(`${env.APP_BASE_URL}/onboard?error=oauth_failed`, 302);
+        return Response.redirect(`${env.APPBASEURL}/onboard?error=oauth_failed`, 302);
       }
 
       // Get user profile from Twitter
       const profileResponse = await fetch('https://api.twitter.com/2/users/me?user.fields=profile_image_url', {
-        headers: { Authorization: `Bearer ${tokenData.access_token}` }
+        headers: { Authorization: `Bearer ${tokenData.accesstoken}` }
       });
 
       const profileData = await profileResponse.json() as unknown;
       const profile = profileData.data;
 
-      if (!profile || !profile.username) {
+      if (!profile ?? !profile.username) {
         log.error('No profile data from Twitter', new Error('Missing profile'), {
           component: 'oauth',
           action: 'twitter_callback'
         });
-        return Response.redirect(`${env.APP_BASE_URL}/onboard?error=oauth_failed`, 302);
+        return Response.redirect(`${env.APPBASEURL}/onboard?error=oauth_failed`, 302);
       }
 
       // For Twitter, use username@twitter.local as email since Twitter doesn't provide email
@@ -444,12 +445,12 @@ export class OAuthController {
         const userProfileData = {
           provider: 'twitter',
           providerId: profile.id,
-          avatar: profile.profile_image_url,
+          avatar: profile.profileimageurl,
           twitterUsername: profile.username,
           onboardingCompletedAt: new Date().toISOString()
         };
 
-        const userData = { _email,
+        const userData = { email,
           username: profile.username,
           password_hash: '', // No password for OAuth users
           role: 'creator' as const, // Default role
@@ -493,8 +494,8 @@ export class OAuthController {
 
       // Create response with redirect
       const redirectUrl = user.onboarding_completed
-        ? `${env.APP_BASE_URL}/dashboard`
-        : `${env.APP_BASE_URL}/onboard?step=profile`;
+        ? `${env.APPBASEURL}/dashboard`
+        : `${env.APPBASEURL}/onboard?step=profile`;
 
       // Create HTML response that sets token and redirects
       const html = `
@@ -528,7 +529,7 @@ export class OAuthController {
         component: 'oauth',
         action: 'twitter_callback'
       });
-      return Response.redirect(`${env.APP_BASE_URL}/onboard?error=oauth_failed`, 302);
+      return Response.redirect(`${env.APPBASEURL}/onboard?error=oauth_failed`, 302);
     }
   }
 }

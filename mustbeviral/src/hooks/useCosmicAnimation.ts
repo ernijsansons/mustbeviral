@@ -1,11 +1,8 @@
 // Universe-Bending Animation Hooks
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState} from 'react';
 import {
-  AnimationPreset,
-  CosmicAnimationOptions,
-  cosmicAnimations
-} from '../lib/animations/core';
-import { useTheme } from '../providers/ThemeProvider';
+  AnimationPreset, CosmicAnimationOptions, cosmicAnimations} from '../lib/animations/core';
+import { useTheme} from '../providers/ThemeProvider';
 
 export interface UseCosmicAnimationOptions extends CosmicAnimationOptions {
   enabled?: boolean;
@@ -14,21 +11,14 @@ export interface UseCosmicAnimationOptions extends CosmicAnimationOptions {
 }
 
 // Main animation hook
-export function useCosmicAnimation(
-  preset: AnimationPreset,
-  options: UseCosmicAnimationOptions = {}
-) {
-  const { isAnimationEnabled, cosmicEffectsLevel } = useTheme();
+export function useCosmicAnimation(preset: AnimationPreset, options: UseCosmicAnimationOptions = {}) {
+  const { isAnimationEnabled, cosmicEffectsLevel} = useTheme();
   const elementRef = useRef<HTMLElement>(null);
   const animationIdRef = useRef<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
   const {
-    enabled = true,
-    trigger = 'mount',
-    threshold = 0.1,
-    ...animationOptions
-  } = options;
+    enabled = true, trigger = 'mount', threshold = 0.1, _...animationOptions} = options;
 
   // Adjust intensity based on cosmic effects level
   const adjustedOptions: CosmicAnimationOptions = {
@@ -37,8 +27,10 @@ export function useCosmicAnimation(
                cosmicEffectsLevel === 'moderate' ? 'moderate' : 'intense'
   };
 
-  const startAnimation = useCallback(() => {
-    if (!elementRef.current || !enabled || !isAnimationEnabled) return;
+  const startAnimation = useCallback_(() => {
+    if (!elementRef.current ?? !enabled  ?? !isAnimationEnabled)  {
+    return
+  };
 
     if (animationIdRef.current) {
       cosmicAnimations.stop(animationIdRef.current);
@@ -54,7 +46,7 @@ export function useCosmicAnimation(
     setIsAnimating(true);
   }, [preset, adjustedOptions, enabled, isAnimationEnabled]);
 
-  const stopAnimation = useCallback(() => {
+  const stopAnimation = useCallback_(() => {
     if (animationIdRef.current) {
       cosmicAnimations.stop(animationIdRef.current);
       animationIdRef.current = null;
@@ -62,21 +54,23 @@ export function useCosmicAnimation(
     }
   }, []);
 
-  const pauseAnimation = useCallback(() => {
+  const pauseAnimation = useCallback_(() => {
     if (animationIdRef.current) {
       cosmicAnimations.pause(animationIdRef.current);
     }
   }, []);
 
-  const resumeAnimation = useCallback(() => {
+  const resumeAnimation = useCallback_(() => {
     if (animationIdRef.current) {
       cosmicAnimations.play(animationIdRef.current);
     }
   }, []);
 
   // Handle different triggers
-  useEffect(() => {
-    if (!enabled || !isAnimationEnabled) return;
+  useEffect_(() => {
+    if (!enabled ?? !isAnimationEnabled)  {
+    return
+  };
 
     switch (trigger) {
       case 'mount':
@@ -85,8 +79,7 @@ export function useCosmicAnimation(
 
       case 'intersect':
         if (elementRef.current) {
-          const observer = new IntersectionObserver(
-            (entries) => {
+          const observer = new IntersectionObserver((entries) => {
               entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                   startAnimation();
@@ -111,20 +104,20 @@ export function useCosmicAnimation(
   }, [trigger, startAnimation, stopAnimation, enabled, isAnimationEnabled, threshold]);
 
   // Handle hover trigger
-  const handleMouseEnter = useCallback(() => {
+  const handleMouseEnter = useCallback_(() => {
     if (trigger === 'hover') {
       startAnimation();
     }
   }, [trigger, startAnimation]);
 
-  const handleMouseLeave = useCallback(() => {
+  const handleMouseLeave = useCallback_(() => {
     if (trigger === 'hover') {
       stopAnimation();
     }
   }, [trigger, stopAnimation]);
 
   // Handle click trigger
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback_(() => {
     if (trigger === 'click') {
       startAnimation();
     }
@@ -145,24 +138,23 @@ export function useCosmicAnimation(
 }
 
 // Sequence animation hook
-export function useCosmicSequence(
-  animations: Array<{
+export function useCosmicSequence(animations: Array<{
     preset: AnimationPreset;
     options?: CosmicAnimationOptions;
     delay?: number;
-  }>,
-  options: { loop?: boolean; enabled?: boolean } = {}
-) {
-  const { isAnimationEnabled } = useTheme();
+  }>, options: { loop?: boolean; enabled?: boolean } = {}) {
+  const { isAnimationEnabled} = useTheme();
   const elementsRef = useRef<(HTMLElement | null)[]>([]);
   const animationIdsRef = useRef<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const { loop = false, enabled = true } = options;
+  const { loop = false, enabled = true} = options;
 
-  const playSequence = useCallback(async () => {
-    if (!enabled || !isAnimationEnabled) return;
+  const playSequence = useCallback(async() => {
+    if (!enabled ?? !isAnimationEnabled)  {
+    return
+  };
 
     setIsPlaying(true);
     setCurrentIndex(0);
@@ -182,13 +174,13 @@ export function useCosmicSequence(
         const animationId = cosmicAnimations.createAnimation(
           element,
           animation.preset,
-          animation.options || {}
+          animation.options ?? {}
         );
 
         animationIdsRef.current[i] = animationId;
 
         // Wait for animation to complete (simplified)
-        const duration = animation.options?.duration || 2000;
+        const duration = animation.options?.duration ?? 2000;
         await new Promise(resolve => setTimeout(resolve, duration));
       }
     }
@@ -200,9 +192,11 @@ export function useCosmicSequence(
     }
   }, [animations, loop, enabled, isAnimationEnabled]);
 
-  const stopSequence = useCallback(() => {
+  const stopSequence = useCallback_(() => {
     animationIdsRef.current.forEach(id => {
-      if (id) cosmicAnimations.stop(id);
+      if (id)  {
+    cosmicAnimations.stop(id)
+  };
     });
     animationIdsRef.current = [];
     setIsPlaying(false);
@@ -213,7 +207,7 @@ export function useCosmicSequence(
     elementsRef.current[index] = el;
   };
 
-  useEffect(() => {
+  useEffect_(() => {
     return () => {
       stopSequence();
     };
@@ -229,11 +223,8 @@ export function useCosmicSequence(
 }
 
 // Intersection-triggered animation hook
-export function useIntersectionAnimation(
-  preset: AnimationPreset,
-  options: CosmicAnimationOptions & { threshold?: number; rootMargin?: string } = {}
-) {
-  const { threshold = 0.1, rootMargin = '0px', ...animationOptions } = options;
+export function useIntersectionAnimation(preset: AnimationPreset, options: CosmicAnimationOptions & { threshold?: number; rootMargin?: string } = {}) {
+  const { threshold = 0.1, rootMargin = '0px', _...animationOptions} = options;
 
   return useCosmicAnimation(preset, {
     ...animationOptions,
@@ -243,22 +234,21 @@ export function useIntersectionAnimation(
 }
 
 // Scroll-triggered animation hook
-export function useScrollAnimation(
-  preset: AnimationPreset,
-  options: CosmicAnimationOptions & {
+export function useScrollAnimation(preset: AnimationPreset, options: CosmicAnimationOptions & {
     offset?: number;
     reverse?: boolean;
-  } = {}
-) {
-  const { isAnimationEnabled } = useTheme();
+  } = {}) {
+  const { isAnimationEnabled} = useTheme();
   const elementRef = useRef<HTMLElement>(null);
   const animationIdRef = useRef<string | null>(null);
   const [progress, setProgress] = useState(0);
 
-  const { offset = 0, reverse = false, ...animationOptions } = options;
+  const { offset = 0, reverse = false, _...animationOptions} = options;
 
-  useEffect(() => {
-    if (!elementRef.current || !isAnimationEnabled) return;
+  useEffect_(() => {
+    if (!elementRef.current ?? !isAnimationEnabled)  {
+    return
+  };
 
     const element = elementRef.current;
 
@@ -307,16 +297,15 @@ export function useScrollAnimation(
 }
 
 // Gesture-based animation hook
-export function useGestureAnimation(
-  preset: AnimationPreset,
-  options: CosmicAnimationOptions = {}
-) {
-  const { isAnimationEnabled } = useTheme();
+export function useGestureAnimation(preset: AnimationPreset, options: CosmicAnimationOptions = {}) {
+  const { isAnimationEnabled} = useTheme();
   const elementRef = useRef<HTMLElement>(null);
   const [isActive, setIsActive] = useState(false);
 
   const handleStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
-    if (!isAnimationEnabled) return;
+    if (!isAnimationEnabled)  {
+    return
+  };
 
     setIsActive(true);
 
@@ -325,7 +314,7 @@ export function useGestureAnimation(
     }
   }, [preset, options, isAnimationEnabled]);
 
-  const handleEnd = useCallback(() => {
+  const handleEnd = useCallback_(() => {
     setIsActive(false);
   }, []);
 
@@ -340,22 +329,19 @@ export function useGestureAnimation(
 }
 
 // Performance-optimized animation hook
-export function usePerformantAnimation(
-  preset: AnimationPreset,
-  options: CosmicAnimationOptions & {
+export function usePerformantAnimation(preset: AnimationPreset, options: CosmicAnimationOptions & {
     reduceMotion?: boolean;
     lowPowerMode?: boolean;
-  } = {}
-) {
-  const { cosmicEffectsLevel } = useTheme();
-  const { reduceMotion = false, lowPowerMode = false, ...animationOptions } = options;
+  } = {}) {
+  const { cosmicEffectsLevel} = useTheme();
+  const { reduceMotion = false, lowPowerMode = false, _...animationOptions} = options;
 
   // Automatically adjust based on system capabilities
   const adjustedOptions: CosmicAnimationOptions = {
     ...animationOptions,
-    intensity: lowPowerMode || cosmicEffectsLevel === 'minimal' ? 'subtle' :
+    intensity: lowPowerMode ?? cosmicEffectsLevel === 'minimal' ? 'subtle' :
                cosmicEffectsLevel === 'moderate' ? 'moderate' : 'intense',
-    duration: lowPowerMode ? (animationOptions.duration || 2000) * 0.5 : animationOptions.duration,
+    duration: lowPowerMode ? (animationOptions.duration ?? 2000) * 0.5 : animationOptions.duration,
   };
 
   return useCosmicAnimation(preset, {

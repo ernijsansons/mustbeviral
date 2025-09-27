@@ -4,10 +4,10 @@
  * Fortune 50-grade AI infrastructure
  */
 
-import { AICostOptimizer, aiCostOptimizer, type RequestContext } from './costOptimizer';
-import { ModelRouter, type ModelRequestOptions, type RoutingResult } from './modelRouter';
-import { InputSanitizer } from '../security/inputSanitization';
-import { logger } from '../monitoring/logger';
+import { AICostOptimizer, aiCostOptimizer, type RequestContext} from './costOptimizer';
+import { ModelRouter, type ModelRequestOptions, type RoutingResult} from './modelRouter';
+import { InputSanitizer} from '../security/inputSanitization';
+import { logger} from '../monitoring/logger';
 
 export interface AIRequest {
   prompt: string;
@@ -77,9 +77,9 @@ export class IntelligentAIService {
     request: AIRequest;
     response: AIResponse;
   }> = [];
-  private readonly CACHE_TTL = 3600000; // 1 hour
-  private readonly MAX_CACHE_SIZE = 1000;
-  private readonly MAX_HISTORY = 10000;
+  private readonly CACHETTL = 3600000; // 1 hour
+  private readonly MAXCACHESIZE = 1000;
+  private readonly MAXHISTORY = 10000;
 
   constructor() {
     this.costOptimizer = aiCostOptimizer;
@@ -106,7 +106,7 @@ export class IntelligentAIService {
     }
     
     // Check cache first
-    const cacheKey = sanitizedRequest.cacheKey || this.generateCacheKey(sanitizedRequest);
+    const cacheKey = sanitizedRequest.cacheKey ?? this.generateCacheKey(sanitizedRequest);
     const cached = this.getFromCache(cacheKey);
     
     if (cached) {
@@ -141,11 +141,11 @@ export class IntelligentAIService {
     const context: RequestContext = {
       taskType: sanitizedRequest.taskType,
       complexity: sanitizedRequest.complexity,
-      maxCost: sanitizedRequest.maxCost || 0.10, // Default $0.10 max
-      maxLatency: sanitizedRequest.maxLatency || 30000, // Default 30s max
-      qualityThreshold: sanitizedRequest.qualityThreshold || 0.7,
+      maxCost: sanitizedRequest.maxCost ?? 0.10, // Default $0.10 max
+      maxLatency: sanitizedRequest.maxLatency ?? 30000, // Default 30s max
+      qualityThreshold: sanitizedRequest.qualityThreshold ?? 0.7,
       userId: sanitizedRequest.userId,
-      priority: sanitizedRequest.priority || 'normal',
+      priority: sanitizedRequest.priority ?? 'normal',
     };
     
     // Get cost optimization
@@ -160,7 +160,7 @@ export class IntelligentAIService {
     
     // Calculate optimization metrics
     const savings = optimization.estimatedCost - routingResult.response.cost;
-    const efficiency = routingResult.response.quality || 0.8 / Math.max(routingResult.response.cost, 0.001);
+    const efficiency = routingResult.response.quality ?? 0.8 / Math.max(routingResult.response.cost, 0.001);
     
     // Build response with sanitized content
     const response: AIResponse = {
@@ -169,7 +169,7 @@ export class IntelligentAIService {
       provider: routingResult.response.provider,
       cost: routingResult.response.cost,
       latency: routingResult.totalLatency,
-      quality: routingResult.response.quality || 0.8,
+      quality: routingResult.response.quality ?? 0.8,
       cached: false,
       optimization: {
         originalEstimate: optimization.estimatedCost,
@@ -232,13 +232,13 @@ export class IntelligentAIService {
     // Calculate model distribution
     const modelDistribution: Record<string, number> = {};
     for (const record of recentRequests) {
-      modelDistribution[record.response.model] = (modelDistribution[record.response.model] || 0) + 1;
+      modelDistribution[record.response.model] = (modelDistribution[record.response.model]  ?? 0) + 1;
     }
     
     // Calculate task type distribution
     const taskTypeDistribution: Record<string, number> = {};
     for (const record of recentRequests) {
-      taskTypeDistribution[record.request.taskType] = (taskTypeDistribution[record.request.taskType] || 0) + 1;
+      taskTypeDistribution[record.request.taskType] = (taskTypeDistribution[record.request.taskType]  ?? 0) + 1;
     }
     
     // Calculate quality score
@@ -336,7 +336,7 @@ export class IntelligentAIService {
     taskType: AIRequest['taskType'];
     complexity: AIRequest['complexity'];
   }>): Promise<void> {
-    const warmUpPromises = requests.map(async (req) => {
+    const warmUpPromises = requests.map(async(req) => {
       try {
         await this.executeRequest({
           prompt: req.prompt,
@@ -364,7 +364,7 @@ export class IntelligentAIService {
       prompt: request.prompt,
       taskType: request.taskType,
       complexity: request.complexity,
-      qualityThreshold: request.qualityThreshold || 0.7,
+      qualityThreshold: request.qualityThreshold ?? 0.7,
     };
     
     return this.hashObject(key);
@@ -376,10 +376,12 @@ export class IntelligentAIService {
   private getFromCache(key: string): CacheEntry | null {
     const entry = this.responseCache.get(key);
     
-    if (!entry) return null;
+    if (!entry) {
+    return null;
+  }
     
     // Check if expired
-    if (Date.now() - entry.timestamp > this.CACHE_TTL) {
+    if (Date.now() - entry.timestamp > this.CACHETTL) {
       this.responseCache.delete(key);
       return null;
     }
@@ -392,7 +394,7 @@ export class IntelligentAIService {
    */
   private setCache(key: string, entry: CacheEntry): void {
     // Remove oldest entries if cache is full
-    if (this.responseCache.size >= this.MAX_CACHE_SIZE) {
+    if (this.responseCache.size >= this.MAXCACHESIZE) {
       const oldestKey = this.findOldestCacheEntry();
       if (oldestKey) {
         this.responseCache.delete(oldestKey);
@@ -430,7 +432,7 @@ export class IntelligentAIService {
     });
     
     // Maintain history size
-    if (this.requestHistory.length > this.MAX_HISTORY) {
+    if (this.requestHistory.length > this.MAXHISTORY) {
       this.requestHistory.shift();
     }
   }
@@ -442,7 +444,7 @@ export class IntelligentAIService {
     const groups: Record<string, AIRequest[]> = {};
     
     for (const request of requests) {
-      const groupKey = `${request.taskType}_${request.complexity}_${request.priority || 'normal'}`;
+      const groupKey = `${request.taskType}_${request.complexity}_${request.priority ?? 'normal'}`;
       
       if (!groups[groupKey]) {
         groups[groupKey] = [];

@@ -3,7 +3,7 @@
  * Comprehensive types for all API endpoints and responses
  */
 
-import { _SecurityContext, ValidationError, SubscriptionTier } from './security';
+import { SecurityContext, ValidationError, SubscriptionTier} from './security';
 
 // Base API types
 export interface APIResponse<T = unknown> {

@@ -1,13 +1,13 @@
 // Onboarding Page Component
-import { useLocation } from 'wouter';
-import { useEffect } from 'react';
-import { OnboardFlow } from '../components/OnboardFlow';
+import { useLocation} from 'wouter';
+import { useEffect} from 'react';
+import { OnboardFlow} from '../components/OnboardFlow';
 
 export function OnboardPage() {
   const [, setLocation] = useLocation();
 
   // Check for OAuth token in URL params on mount
-  useEffect(() => {
+  useEffect_(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const step = urlParams.get('step');
     

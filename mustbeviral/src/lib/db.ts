@@ -1,7 +1,7 @@
 // Database connection and utilities for Cloudflare D1
 // LOG: DB-INIT-1 - Initialize database connection
 
-import { CloudflareService, CloudflareEnv } from './cloudflare';
+import { CloudflareService, CloudflareEnv} from './cloudflare';
 
 export interface User {
   readonly id: string;
@@ -113,7 +113,7 @@ export class DatabaseService {
     if (cloudflareEnv) {
       this.cfService = new CloudflareService(cloudflareEnv);
     }
-    console.log('LOG: DB-INIT-2 - Database service initialized', {
+    console.warn('LOG: DB-INIT-2 - Database service initialized', {
       hasCloudflareEnv: !!cloudflareEnv,
       timestamp: new Date().toISOString()
     });
@@ -135,34 +135,34 @@ export class DatabaseService {
   // User operations with enhanced type safety
   async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
     // Validate input data
-    if (!userData.email || !userData.username || !userData.password_hash) {
+    if (!userData.email || !userData.username || !userData.passwordhash) {
       throw new Error('Missing required user data: email, username, and password_hash are required');
     }
     
-    console.log('LOG: DB-USER-1 - Creating new user:', userData.email);
+    console.warn('LOG: DB-USER-1 - Creating new user:', userData.email);
     
     this.assertInitialized();
     
     try {
       const result = await this.cfService.db.fetchOne<User>(`
-        INSERT INTO users (email, username, password_hash, role, profile_data, ai_preference_level, onboarding_completed)
+        INSERT INTO users (email, username, passwordhash, role, profiledata, aipreferencelevel, onboardingcompleted)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         RETURNING *
       `, [
         userData.email,
         userData.username,
-        userData.password_hash,
+        userData.passwordhash,
         userData.role,
-        userData.profile_data,
-        userData.ai_preference_level,
-        userData.onboarding_completed
+        userData.profiledata,
+        userData.aipreferencelevel,
+        userData.onboardingcompleted
       ]);
 
       if (!result) {
         throw new Error('Failed to create user - no result returned');
       }
 
-      console.log('LOG: DB-USER-2 - User created successfully:', result.id);
+      console.warn('LOG: DB-USER-2 - User created successfully:', result.id);
       return result;
     } catch (error) {
       console.error('LOG: DB-USER-ERROR-1 - Failed to create user:', error);
@@ -175,7 +175,7 @@ export class DatabaseService {
       throw new Error('Valid email string is required');
     }
     
-    console.log('LOG: DB-USER-3 - Fetching user by email:', email);
+    console.warn('LOG: DB-USER-3 - Fetching user by email:', email);
     
     this.assertInitialized();
     
@@ -196,13 +196,13 @@ export class DatabaseService {
       throw new Error('Valid userId string is required');
     }
     
-    console.log('LOG: DB-USER-4 - Updating user onboarding:', userId, completed);
+    console.warn('LOG: DB-USER-4 - Updating user onboarding:', userId, completed);
     
     this.assertInitialized();
     
     try {
       await this.cfService.db.executeQuery(`
-        UPDATE users SET onboarding_completed = ? WHERE id = ?
+        UPDATE users SET onboardingcompleted = ? WHERE id = ?
       `, [completed ? 1 : 0, userId]);
 
       console.log('LOG: DB-USER-5 - Onboarding status updated successfully');
@@ -214,10 +214,10 @@ export class DatabaseService {
 
   // Session management with KV
   async cacheUserSession(userId: string, sessionData: Record<string, unknown>, ttlSeconds: number = 86400): Promise<void> {
-    console.log('LOG: DB-SESSION-1 - Caching user session:', userId);
+    console.warn('LOG: DB-SESSION-1 - Caching user session:', userId);
     
     if (!this.cfService?.kv) {
-      console.log('LOG: DB-SESSION-WARN-1 - KV not available, skipping session cache');
+      console.warn('LOG: DB-SESSION-WARN-1 - KV not available, skipping session cache');
       return;
     }
     
@@ -225,7 +225,7 @@ export class DatabaseService {
       await this.cfService.kv.putJSON(`session:${userId}`, sessionData, {
         expirationTtl: ttlSeconds
       });
-      console.log('LOG: DB-SESSION-2 - User session cached successfully');
+      console.warn('LOG: DB-SESSION-2 - User session cached successfully');
     } catch (error) {
       console.error('LOG: DB-SESSION-ERROR-1 - Failed to cache session:', error);
       // Don't throw - session caching is not critical
@@ -252,28 +252,28 @@ export class DatabaseService {
   async createContent(contentData: Omit<Content, 'id' | 'created_at' | 'updated_at'>): Promise<Content> {
     // Validate required content data
     if (!contentData.user_id || !contentData.title || !contentData.body) {
-      throw new Error('Missing required content data: user_id, title, and body are required');
+      throw new Error('Missing required content data: userid, title, and body are required');
     }
     
-    console.log('LOG: DB-CONTENT-1 - Creating new content:', contentData.title);
+    console.warn('LOG: DB-CONTENT-1 - Creating new content:', contentData.title);
     
     this.assertInitialized();
     
     try {
       const result = await this.cfService.db.fetchOne<Content>(`
-        INSERT INTO content (user_id, title, body, image_url, status, type, generated_by_ai, ai_model_used, ethics_check_status, metadata)
+        INSERT INTO content (userid, title, body, imageurl, status, type, generatedbyai, aimodelused, ethicscheckstatus, metadata)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         RETURNING *
       `, [
-        contentData.user_id,
+        contentData.userid,
         contentData.title,
         contentData.body,
-        contentData.image_url,
+        contentData.imageurl,
         contentData.status,
         contentData.type,
-        contentData.generated_by_ai,
-        contentData.ai_model_used,
-        contentData.ethics_check_status,
+        contentData.generatedbyai,
+        contentData.aimodelused,
+        contentData.ethicscheckstatus,
         contentData.metadata
       ]);
 
@@ -281,7 +281,7 @@ export class DatabaseService {
         throw new Error('Failed to create content - no result returned');
       }
 
-      console.log('LOG: DB-CONTENT-2 - Content created successfully:', result.id);
+      console.warn('LOG: DB-CONTENT-2 - Content created successfully:', result.id);
       return result;
     } catch (error) {
       console.error('LOG: DB-CONTENT-ERROR-1 - Failed to create content:', error);
@@ -294,13 +294,13 @@ export class DatabaseService {
       throw new Error('Valid userId string is required');
     }
     
-    console.log('LOG: DB-CONTENT-3 - Fetching content for user:', userId);
+    console.warn('LOG: DB-CONTENT-3 - Fetching content for user:', userId);
     
     this.assertInitialized();
     
     try {
       const results = await this.cfService.db.fetchAll<Content>(`
-        SELECT * FROM content WHERE user_id = ? ORDER BY created_at DESC
+        SELECT * FROM content WHERE userid = ? ORDER BY created_at DESC
       `, [userId]);
 
       return results;

@@ -3,8 +3,8 @@
  * Provides secure encryption for sensitive data fields
  */
 
-import { secretManager } from '../../config/secrets';
-import { ValidationError } from '../../middleware/validation';
+import { secretManager} from '../../config/secrets';
+import { ValidationError} from '../../middleware/validation';
 
 export interface EncryptionResult {
   encrypted: string;
@@ -29,9 +29,9 @@ export interface EncryptedField {
 
 export class FieldEncryption {
   private static readonly ALGORITHM = 'AES-GCM';
-  private static readonly KEY_LENGTH = 256;
-  private static readonly IV_LENGTH = 12; // 96 bits for GCM
-  private static readonly TAG_LENGTH = 16; // 128 bits for GCM
+  private static readonly KEYLENGTH = 256;
+  private static readonly IVLENGTH = 12; // 96 bits for GCM
+  private static readonly TAGLENGTH = 16; // 128 bits for GCM
   private static encryptionKey: CryptoKey;
   private static keyVersion = 'v1';
   private static initialized = false;
@@ -40,7 +40,7 @@ export class FieldEncryption {
    * Initialize the encryption service
    */
   static async initialize(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {return;}
 
     try {
       const encryptionSecret = secretManager.getSecret('ENCRYPTION_KEY');
@@ -81,7 +81,7 @@ export class FieldEncryption {
     }
 
     try {
-      const iv = crypto.getRandomValues(new Uint8Array(this.IV_LENGTH));
+      const iv = crypto.getRandomValues(new Uint8Array(this.IVLENGTH));
       const data = new TextEncoder().encode(value);
 
       // Add field name to additional data for authentication
@@ -142,8 +142,8 @@ export class FieldEncryption {
       );
 
       // Extract IV and encrypted data
-      const iv = combined.slice(0, this.IV_LENGTH);
-      const encryptedData = combined.slice(this.IV_LENGTH);
+      const iv = combined.slice(0, this.IVLENGTH);
+      const encryptedData = combined.slice(this.IVLENGTH);
 
       // Add field name to additional data for authentication
       const additionalData = fieldName ? new TextEncoder().encode(fieldName) : undefined;
@@ -230,7 +230,7 @@ export class FieldEncryption {
   static async hashForSearch(value: string, salt?: string): Promise<string> {
     try {
       const encoder = new TextEncoder();
-      const data = encoder.encode(value + (salt || ''));
+      const data = encoder.encode(value + (salt ?? ''));
       const hashBuffer = await crypto.subtle.digest('SHA-256', data);
       const hashArray = new Uint8Array(hashBuffer);
       return btoa(String.fromCharCode(...hashArray));
@@ -322,7 +322,7 @@ export class FieldEncryption {
  * PII (Personally Identifiable Information) Encryption Helper
  */
 export class PIIEncryption {
-  private static readonly PII_FIELDS = new Set([
+  private static readonly PIIFIELDS = new Set([
     'email',
     'phone',
     'ssn',
@@ -341,7 +341,7 @@ export class PIIEncryption {
    */
   static async encryptPII<T extends Record<string, unknown>>(data: T): Promise<T> {
     const fieldsToEncrypt = Object.keys(data).filter(key =>
-      this.PII_FIELDS.has(key) || this.isPIIField(key, data[key])
+      this.PII_FIELDS.has(key)  ?? this.isPIIField(key, data[key])
     );
 
     return await FieldEncryption.encryptFields(data, fieldsToEncrypt);
@@ -362,19 +362,21 @@ export class PIIEncryption {
    * Check if a field contains PII based on content analysis
    */
   private static isPIIField(fieldName: string, value: unknown): boolean {
-    if (typeof value !== 'string') return false;
+    if (typeof value !== 'string') {
+    return false;
+  }
 
     // Email pattern
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return true;
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {return true;}
 
     // Phone number pattern
-    if (/^\+?[\d\s-\(\)]{10,}$/.test(value)) return true;
+    if (/^\+?[\d\s-\(\)]{10,}$/.test(value)) {return true;}
 
     // Credit card pattern (simplified)
-    if (/^\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}$/.test(value)) return true;
+    if (/^\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}$/.test(value)) {return true;}
 
     // SSN pattern
-    if (/^\d{3}-?\d{2}-?\d{4}$/.test(value)) return true;
+    if (/^\d{3}-?\d{2}-?\d{4}$/.test(value)) {return true;}
 
     return false;
   }

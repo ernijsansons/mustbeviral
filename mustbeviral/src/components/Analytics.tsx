@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, Users, Eye, Share2, MousePointer, Activity, Calendar } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Eye, Share2, MousePointer, Activity, Calendar} from 'lucide-react';
 
 interface AnalyticsData {
   overview: {
@@ -45,14 +45,13 @@ export function Analytics() {
 
   console.log('LOG: COMPONENT-ANALYTICS-2 - Analytics component rendered');
 
-  useEffect(() => {
+  useEffect_(() => {
     initializeAnalytics();
     return () => {
       // Cleanup on unmount
     };
   }, []);
 
-  const initializeAnalytics = async () => {
     console.log('LOG: COMPONENT-ANALYTICS-3 - Initializing analytics');
     
     try {
@@ -67,7 +66,6 @@ export function Analytics() {
     }
   };
 
-  const loadAnalyticsData = async () => {
     console.log('LOG: COMPONENT-ANALYTICS-4 - Loading analytics data');
     
     try {
@@ -85,7 +83,6 @@ export function Analytics() {
     }
   };
 
-  const setupSSEConnection = () => {
     console.log('LOG: COMPONENT-ANALYTICS-6 - Setting up SSE connection');
     
     const eventSource = new EventSource('/api/analytics-stream');
@@ -112,7 +109,6 @@ export function Analytics() {
     return eventSource;
   };
 
-  const handleSSEMessage = (message: { type: string; data: any }) => {
     console.log('LOG: COMPONENT-ANALYTICS-8 - Received SSE message:', message.type);
     
     switch (message.type) {
@@ -129,16 +125,17 @@ export function Analytics() {
     }
   };
 
-  const updateRealTimeMetrics = (event: unknown) => {
-    if (!analyticsData) return;
+    if (!analyticsData) {return;}
     
     setAnalyticsData(prev => {
-      if (!prev) return prev;
+      if (!prev) {
+    return prev;
+  }
       
       return {
         ...prev,
         real_time_metrics: {
-          ...prev.real_time_metrics,
+          ...prev.realtimemetrics,
           recent_events: [event, ...prev.real_time_metrics.recent_events.slice(0, 9)]
         }
       };
@@ -146,8 +143,12 @@ export function Analytics() {
   };
 
   const formatNumber = (num: number): string => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`;
+  }
+    if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}K`;
+  }
     return num.toString();
   };
 
@@ -248,7 +249,7 @@ export function Analytics() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Content</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {analyticsData.overview.total_content}
+                  {analyticsData.overview.totalcontent}
                 </p>
               </div>
             </div>
@@ -262,7 +263,7 @@ export function Analytics() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Views</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatNumber(analyticsData.overview.total_views)}
+                  {formatNumber(analyticsData.overview.totalviews)}
                 </p>
               </div>
             </div>
@@ -276,7 +277,7 @@ export function Analytics() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Engagement</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatNumber(analyticsData.overview.total_engagement)}
+                  {formatNumber(analyticsData.overview.totalengagement)}
                 </p>
               </div>
             </div>
@@ -304,14 +305,14 @@ export function Analytics() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Content</h3>
           <div className="space-y-4">
             {analyticsData.top_content.map((content, index) => (
-              <div key={content.content_id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+              <div key={content.contentid} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full font-semibold">
                     {index + 1}
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">{content.title}</h4>
-                    <p className="text-sm text-gray-500">ID: {content.content_id}</p>
+                    <p className="text-sm text-gray-500">ID: {content.contentid}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -340,13 +341,13 @@ export function Analytics() {
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Active Users</span>
                 <span className="text-2xl font-bold text-green-600">
-                  {analyticsData.real_time_metrics.active_users}
+                  {analyticsData.real_time_metrics.activeusers}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Current Views</span>
                 <span className="text-2xl font-bold text-blue-600">
-                  {analyticsData.real_time_metrics.current_views}
+                  {analyticsData.real_time_metrics.currentviews}
                 </span>
               </div>
             </div>
@@ -360,10 +361,10 @@ export function Analytics() {
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {analyticsData.real_time_metrics.recent_events.map((event) => (
                 <div key={event.id} className="flex items-center space-x-3 p-2 bg-gray-50 rounded">
-                  {getEventIcon(event.event_type)}
+                  {getEventIcon(event.eventtype)}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900 truncate">
-                      {event.event_type} on {event.content_id}
+                      {event.eventtype} on {event.contentid}
                     </p>
                     <p className="text-xs text-gray-500">
                       {new Date(event.timestamp).toLocaleTimeString()}

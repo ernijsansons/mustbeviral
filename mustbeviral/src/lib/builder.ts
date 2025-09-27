@@ -6,11 +6,11 @@
  */
 
 // Builder.io API Key - You'll need to get this from your Builder.io account
-export const BUILDER_API_KEY = import.meta.env.VITE_BUILDER_API_KEY || 'your-builder-api-key-here';
+export const BUILDERAPIKEY = import.meta.env.VITE_BUILDER_API_KEY ?? 'your-builder-api-key-here';
 
 // Builder.io configuration
 export const builderConfig = {
-  apiKey: BUILDER_API_KEY,
+  apiKey: BUILDERAPIKEY,
   // Enable preview mode for development
   preview: import.meta.env.DEV,
   // Cache settings for performance
@@ -25,7 +25,7 @@ export const builderConfig = {
 };
 
 // Builder.io model names for different content types
-export const BUILDER_MODELS = {
+export const BUILDERMODELS = {
   PAGE: 'page',
   HERO: 'hero-section',
   FEATURE: 'feature-section',
@@ -36,7 +36,7 @@ export const BUILDER_MODELS = {
 } as const;
 
 // Builder.io component registry
-export const BUILDER_COMPONENTS = {
+export const BUILDERCOMPONENTS = {
   // Custom components that Builder.io can use
   VIRAL_HERO: 'ViralHero',
   AI_TOOLS_SECTION: 'AIToolsSection',
@@ -53,11 +53,11 @@ export const BUILDER_COMPONENTS = {
 export async function getBuilderContent(model: string, url?: string) {
   try {
     // Dynamic import to avoid build issues
-    const { builder } = await import('@builder.io/react');
+    const { builder} = await import('@builder.io/react');
     
     const content = await builder
       .get(model, {
-        url: url || window.location.pathname,
+        url: url ?? window.location.pathname,
         ...builderConfig,
       })
       .toPromise();
@@ -72,7 +72,7 @@ export async function getBuilderContent(model: string, url?: string) {
 // Helper function to get multiple Builder.io entries
 export async function getBuilderEntries(model: string, limit = 10) {
   try {
-    const { builder } = await import('@builder.io/react');
+    const { builder} = await import('@builder.io/react');
     
     const entries = await builder
       .getAll(model, {

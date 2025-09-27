@@ -1,9 +1,9 @@
 // Enhanced Monitoring Dashboard
 // Provides comprehensive observability and metrics collection
 
-import { log } from './logger';
-import { getTelemetry } from '../tracing/telemetry';
-import { telemetryConfig } from '../tracing/config';
+import { log} from './logger';
+import { getTelemetry} from '../tracing/telemetry';
+import { telemetryConfig} from '../tracing/config';
 
 export interface MetricData {
   name: string;
@@ -94,7 +94,7 @@ class MonitoringDashboard {
 
   // Record a metric
   recordMetric(metric: MetricData): void {
-    const key = `${metric.name}_${JSON.stringify(metric.labels || {})}`;
+    const key = `${metric.name}_${JSON.stringify(metric.labels ?? {})}`;
 
     if (!this.metrics.has(key)) {
       this.metrics.set(key, []);
@@ -167,8 +167,8 @@ class MonitoringDashboard {
     timeRange: number = 3600000, // 1 hour default
     labels?: Record<string, string>
   ): MetricData[] {
-    const key = `${name}_${JSON.stringify(labels || {})}`;
-    const metrics = this.metrics.get(key) || [];
+    const key = `${name}_${JSON.stringify(labels ?? {})}`;
+    const metrics = this.metrics.get(key)  ?? [];
     const cutoff = Date.now() - timeRange;
 
     return metrics.filter(m => m.timestamp > cutoff);
@@ -183,7 +183,9 @@ class MonitoringDashboard {
   ): number {
     const metrics = this.getMetrics(name, timeRange, labels);
 
-    if (metrics.length === 0) return 0;
+    if (metrics.length === 0) {
+    return 0;
+  }
 
     switch (aggregation) {
       case 'sum':
@@ -470,7 +472,7 @@ class MonitoringDashboard {
   }
 
   // Get recent alerts
-  private getRecentAlerts(limit: number = 10): unknown[] {
+  private getRecentAlerts(_limit: number = 10): unknown[] {
     // This would typically query an alerts storage system
     // For now, return empty array
     return [];
@@ -538,9 +540,11 @@ class MonitoringDashboard {
   private exportPrometheusMetrics(): string {
     const lines: string[] = [];
 
-    for (const [key, metricArray] of this.metrics.entries()) {
+    for (const [_key, metricArray] of this.metrics.entries()) {
       const latest = metricArray[metricArray.length - 1];
-      if (!latest) continue;
+      if (!latest) {
+    continue;
+  }
 
       const labels = latest.labels
         ? Object.entries(latest.labels).map(([k, v]) => `${k}="${v}"`).join(',')
@@ -574,7 +578,7 @@ class MonitoringDashboard {
 
     for (const metricArray of this.metrics.values()) {
       for (const metric of metricArray) {
-        const labelsStr = JSON.stringify(metric.labels || {});
+        const labelsStr = JSON.stringify(metric.labels ?? {});
         lines.push(`${metric.timestamp},${metric.name},${metric.value},${metric.type},"${labelsStr}"`);
       }
     }
@@ -585,7 +589,7 @@ class MonitoringDashboard {
   // Start periodic metrics collection
   private startMetricsCollection(): void {
     // Update system metrics every 30 seconds
-    setInterval(() => {
+    setInterval_(() => {
       this.updateSystemMetrics();
     }, 30000);
 

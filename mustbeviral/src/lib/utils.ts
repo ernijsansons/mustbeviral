@@ -1,6 +1,6 @@
 // Utility functions for the universe-bending design system
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { clsx, type ClassValue} from 'clsx';
+import { twMerge} from 'tailwind-merge';
 
 /**
  * Combine and merge Tailwind CSS classes with proper conflict resolution
@@ -74,7 +74,9 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
  */
 export function formatFileSize(bytes: number): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) {
+    return '0 Bytes';
+  }
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
 }
@@ -135,11 +137,7 @@ export function getContrastRatio(color1: string, color2: string): number {
 /**
  * Check if contrast ratio meets WCAG guidelines
  */
-export function meetsWCAGContrast(
-  color1: string,
-  color2: string,
-  level: 'AA' | 'AAA' = 'AA'
-): boolean {
+export function meetsWCAGContrast(color1: string, color2: string, level: 'AA' | 'AAA' = 'AA'): boolean {
   const ratio = getContrastRatio(color1, color2);
   return level === 'AA' ? ratio >= 4.5 : ratio >= 7;
 }
@@ -161,24 +159,14 @@ export function lerp(start: number, end: number, factor: number): number {
 /**
  * Map a value from one range to another
  */
-export function mapRange(
-  value: number,
-  inMin: number,
-  inMax: number,
-  outMin: number,
-  outMax: number
-): number {
+export function mapRange(value: number, inMin: number, inMax: number, outMin: number, outMax: number): number {
   return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
 }
 
 /**
  * Generate a random color in HSL format
  */
-export function randomColor(
-  hue?: [number, number],
-  saturation?: [number, number],
-  lightness?: [number, number]
-): string {
+export function randomColor(hue?: [number, _number], saturation?: [number, _number], lightness?: [number, _number]): string {
   const h = hue ? Math.random() * (hue[1] - hue[0]) + hue[0] : Math.random() * 360;
   const s = saturation ? Math.random() * (saturation[1] - saturation[0]) + saturation[0] : Math.random() * 50 + 50;
   const l = lightness ? Math.random() * (lightness[1] - lightness[0]) + lightness[0] : Math.random() * 30 + 35;

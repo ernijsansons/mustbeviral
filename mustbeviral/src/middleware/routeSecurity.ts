@@ -3,11 +3,11 @@
  * Provides granular security controls per route/endpoint
  */
 
-import { CloudflareEnv } from '../lib/cloudflare';
-import { JWTManager } from '../lib/auth/jwtManager';
-import { UserRateLimiter } from './rateLimiter';
-import { RequestContext } from '../worker/requestContext';
-import { ValidationError } from './validation';
+import { CloudflareEnv} from '../lib/cloudflare';
+import { JWTManager} from '../lib/auth/jwtManager';
+import { UserRateLimiter} from './rateLimiter';
+import { RequestContext} from '../worker/requestContext';
+import { ValidationError} from './validation';
 
 export interface RouteSecurityConfig {
   authentication: 'none' | 'optional' | 'required' | 'admin';
@@ -62,7 +62,7 @@ export class RouteSecurityEnforcer {
    * Register route security configuration
    */
   registerRoute(pattern: string | RegExp, methods: string[] | undefined, config: RouteSecurityConfig): void {
-    this.routes.push({ _pattern,
+    this.routes.push({ pattern,
       methods,
       config
     });
@@ -272,14 +272,14 @@ export class RouteSecurityEnforcer {
    * Find matching route configuration
    */
   private findMatchingRoute(pathname: string, method: string): RouteMatch | null {
-    for (const route of this.routes) {
+    for(const route of this.routes) {
       // Check pattern match
       const patternMatch = typeof route.pattern === 'string'
         ? pathname === route.pattern
         : route.pattern.test(pathname);
 
       // Check method match
-      const methodMatch = !route.methods || route.methods.includes(method);
+      const methodMatch = !route.methods  ?? route.methods.includes(method);
 
       if (patternMatch && methodMatch) {
         return route;
@@ -303,7 +303,7 @@ export class RouteSecurityEnforcer {
     }
 
     const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader  ?? !authHeader.startsWith('Bearer ')) {
       return context;
     }
 
@@ -316,17 +316,17 @@ export class RouteSecurityEnforcer {
         context.user = {
           id: payload.sub,
           email: payload.email,
-          role: payload.role || 'user',
-          subscription: payload.subscription || 'free',
-          permissions: payload.permissions || []
+          role: payload.role ?? 'user',
+          subscription: payload.subscription ?? 'free',
+          permissions: payload.permissions ?? []
         };
 
         context.session = {
-          id: payload.session_id,
+          id: payload.sessionid,
           validUntil: payload.exp * 1000
         };
 
-        context.adminAccess = payload.role === 'admin' || payload.role === 'super_admin';
+        context.adminAccess = payload.role === 'admin'  ?? payload.role === 'super_admin';
       }
     } catch (error: unknown) {
       console.log('LOG: ROUTE-SECURITY-AUTH-1 - Token verification failed:', error.message);
@@ -338,7 +338,7 @@ export class RouteSecurityEnforcer {
   /**
    * Apply default security for unmatched routes
    */
-  private applyDefaultSecurity(request: Request, context: RequestContext): {
+  private applyDefaultSecurity(request: Request, _context: RequestContext): {
     allowed: boolean;
     response?: Response;
     securityContext?: SecurityContext;
@@ -422,7 +422,7 @@ export class RouteSecurityEnforcer {
         return { allowed: true };
 
       case 'admin':
-        if (!context.authenticated || !context.adminAccess) {
+        if (!context.authenticated  ?? !context.adminAccess) {
           return {
             allowed: false,
             response: this.createSecurityResponse('Admin access required', 403)
@@ -442,13 +442,13 @@ export class RouteSecurityEnforcer {
     allowed: boolean;
     response?: Response;
   } {
-    if (!config.permissions || !context.user) {
+    if (!config.permissions  ?? !context.user) {
       return { allowed: true };
     }
 
-    const userPermissions = context.user.permissions || [];
+    const userPermissions = context.user.permissions ?? [];
     const hasRequiredPermissions = config.permissions.every(permission =>
-      userPermissions.includes(permission) || userPermissions.includes('admin:all')
+      userPermissions.includes(permission)  ?? userPermissions.includes('admin:all')
     );
 
     if (!hasRequiredPermissions) {
@@ -468,7 +468,7 @@ export class RouteSecurityEnforcer {
     allowed: boolean;
     response?: Response;
   } {
-    if (!config.subscription || config.subscription === 'none' || !context.user) {
+    if (!config.subscription  ?? config.subscription = == 'none'  ?? !context.user) {
       return { allowed: true };
     }
 
@@ -533,7 +533,7 @@ export class RouteSecurityEnforcer {
   private async checkRateLimit(
     request: Request,
     config: RouteSecurityConfig,
-    context: SecurityContext
+    _context: SecurityContext
   ): Promise<{ allowed: boolean; response?: Response }> {
     if (!config.rateLimit) {
       return { allowed: true };
@@ -582,7 +582,7 @@ export class RouteSecurityEnforcer {
         message,
         timestamp: new Date().toISOString()
       }),
-      { _status,
+      { status,
         headers: {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-store'

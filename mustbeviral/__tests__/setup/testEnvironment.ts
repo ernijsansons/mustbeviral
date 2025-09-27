@@ -123,7 +123,7 @@ export class MockKVNamespace {
 
   async get(key: string, options?: unknown) {
     const value = this.store.get(key);
-    if (!value) return null;
+    if (!value) {return null;}
 
     if (options?.type === 'json') {
       return JSON.parse(value);

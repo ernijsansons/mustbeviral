@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../../lib/utils';
+import { motion, AnimatePresence} from 'framer-motion';
+import { cn} from '../../lib/utils';
 
 interface BriefBuilderProps {
   onComplete?: (brief: ContentBrief) => void;
@@ -90,7 +90,7 @@ const toneOptions = [
   { id: 'professional', label: 'Professional', emoji: '💼' }
 ];
 
-export function BriefBuilder({ onComplete, className }: BriefBuilderProps) {
+export function BriefBuilder(_{ onComplete, className }: BriefBuilderProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [brief, setBrief] = useState<ContentBrief>({
     title: '',
@@ -156,7 +156,7 @@ export function BriefBuilder({ onComplete, className }: BriefBuilderProps) {
       const deliverable: Deliverable = {
         id: Date.now().toString(),
         type: newDeliverable.type,
-        quantity: newDeliverable.quantity || 1,
+        quantity: newDeliverable.quantity ?? 1,
         description: newDeliverable.description
       };
       updateBrief('deliverables', [...brief.deliverables, deliverable]);
@@ -635,7 +635,7 @@ export function BriefBuilder({ onComplete, className }: BriefBuilderProps) {
               <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-lg p-6 space-y-4">
                 <div>
                   <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Title</span>
-                  <p className="font-bold text-slate-900 dark:text-white">{brief.title || 'Untitled Campaign'}</p>
+                  <p className="font-bold text-slate-900 dark:text-white">{brief.title ?? 'Untitled Campaign'}</p>
                 </div>
                 <div>
                   <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Budget</span>

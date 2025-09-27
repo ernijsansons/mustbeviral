@@ -4,7 +4,7 @@
  * Fortune 50-grade security implementation
  */
 
-import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
+import { SignJWT, jwtVerify, type JWTPayload} from 'jose';
 import type { AuthUser } from '../auth';
 
 export interface CookieOptions {
@@ -25,10 +25,10 @@ export interface AuthTokenPayload extends JWTPayload {
 }
 
 export class SecureCookieAuth {
-  private static readonly COOKIE_NAME = 'auth_token';
-  private static readonly REFRESH_COOKIE_NAME = 'refresh_token';
-  private static readonly ACCESS_TOKEN_EXPIRY = '15m'; // Short-lived access token
-  private static readonly REFRESH_TOKEN_EXPIRY = '7d'; // Long-lived refresh token
+  private static readonly COOKIENAME = 'auth_token';
+  private static readonly REFRESHCOOKIENAME = 'refresh_token';
+  private static readonly ACCESSTOKENEXPIRY = '15m'; // Short-lived access token
+  private static readonly REFRESHTOKENEXPIRY = '7d'; // Long-lived refresh token
   private static jwtSecret: Uint8Array;
 
   /**
@@ -74,7 +74,7 @@ export class SecureCookieAuth {
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime(this.ACCESS_TOKEN_EXPIRY)
+      .setExpirationTime(this.ACCESSTOKENEXPIRY)
       .setJti(crypto.randomUUID())
       .sign(this.jwtSecret);
 
@@ -86,7 +86,7 @@ export class SecureCookieAuth {
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime(this.REFRESH_TOKEN_EXPIRY)
+      .setExpirationTime(this.REFRESHTOKENEXPIRY)
       .setJti(crypto.randomUUID())
       .sign(this.jwtSecret);
 
@@ -103,7 +103,7 @@ export class SecureCookieAuth {
    */
   static async verifyToken(token: string): Promise<AuthTokenPayload | null> {
     try {
-      const { payload } = await jwtVerify(token, this.jwtSecret);
+      const { payload} = await jwtVerify(token, this.jwtSecret);
       return payload as AuthTokenPayload;
     } catch (error) {
       console.error('Token verification failed:', error);
@@ -123,14 +123,14 @@ export class SecureCookieAuth {
 
     // Access token cookie
     headers.append('Set-Cookie', this.serializeCookie(
-      this.COOKIE_NAME,
+      this.COOKIENAME,
       tokens.accessToken,
       { ...options, maxAge: 15 * 60 * 1000 } // 15 minutes
     ));
 
     // Refresh token cookie (separate, more restrictive)
     headers.append('Set-Cookie', this.serializeCookie(
-      this.REFRESH_COOKIE_NAME,
+      this.REFRESHCOOKIENAME,
       tokens.refreshToken,
       { ...options, maxAge: 7 * 24 * 60 * 60 * 1000 } // 7 days
     ));
@@ -155,9 +155,9 @@ export class SecureCookieAuth {
     const headers = new Headers();
 
     // Clear all auth-related cookies
-    headers.append('Set-Cookie', `${this.COOKIE_NAME}=; Max-Age=0; Path=/`);
-    headers.append('Set-Cookie', `${this.REFRESH_COOKIE_NAME}=; Max-Age=0; Path=/`);
-    headers.append('Set-Cookie', `csrf_token=; Max-Age=0; Path=/`);
+    headers.append('Set-Cookie', `${this.COOKIENAME}=; Max-Age=0; Path=/`);
+    headers.append('Set-Cookie', `${this.REFRESHCOOKIENAME}=; Max-Age=0; Path=/`);
+    headers.append('Set-Cookie', `csrftoken=; Max-Age=0; Path=/`);
 
     return headers;
   }
@@ -170,13 +170,15 @@ export class SecureCookieAuth {
     refreshToken?: string;
     csrfToken?: string;
   } {
-    if (!cookieHeader) return {};
+    if (!cookieHeader) {
+    return {};
+  }
 
     const cookies = this.parseCookies(cookieHeader);
 
     return {
-      accessToken: cookies[this.COOKIE_NAME],
-      refreshToken: cookies[this.REFRESH_COOKIE_NAME],
+      accessToken: cookies[this.COOKIENAME],
+      refreshToken: cookies[this.REFRESHCOOKIENAME],
       csrfToken: cookies['csrf_token']
     };
   }
@@ -190,7 +192,7 @@ export class SecureCookieAuth {
   } | null> {
     const payload = await this.verifyToken(refreshToken);
 
-    if (!payload || payload.type !== 'refresh') {
+    if (!payload ?? payload.type !== 'refresh') {
       return null;
     }
 
@@ -202,7 +204,7 @@ export class SecureCookieAuth {
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime(this.ACCESS_TOKEN_EXPIRY)
+      .setExpirationTime(this.ACCESSTOKENEXPIRY)
       .setJti(crypto.randomUUID())
       .sign(this.jwtSecret);
 
@@ -230,7 +232,7 @@ export class SecureCookieAuth {
       cookie += `; Domain=${options.domain}`;
     }
 
-    cookie += `; Path=${options.path || '/'}`;
+    cookie += `; Path=${options.path ?? '/'}`;
 
     if (options.httpOnly) {
       cookie += '; HttpOnly';
@@ -256,15 +258,15 @@ export class SecureCookieAuth {
     try {
       cookieHeader.split(';').forEach(cookie => {
         const trimmedCookie = cookie.trim();
-        if (!trimmedCookie) return;
+        if (!trimmedCookie) {return;}
         
         const separatorIndex = trimmedCookie.indexOf('=');
-        if (separatorIndex === -1) return;
+        if (separatorIndex === -1) {return;}
         
         const name = trimmedCookie.substring(0, separatorIndex).trim();
         const value = trimmedCookie.substring(separatorIndex + 1).trim();
         
-        if (!name || !value) return;
+        if (!name ?? !value) {return;}
         
         // Validate cookie name (prevent header injection)
         if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
@@ -293,7 +295,7 @@ export class SecureCookieAuth {
     cookieCsrfToken: string | undefined,
     headerCsrfToken: string | undefined
   ): boolean {
-    if (!cookieCsrfToken || !headerCsrfToken) {
+    if (!cookieCsrfToken ?? !headerCsrfToken) {
       return false;
     }
 

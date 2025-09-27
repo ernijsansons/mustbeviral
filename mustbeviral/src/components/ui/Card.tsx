@@ -1,7 +1,7 @@
 // Enhanced Universe-Bending Card Component with Smooth Interactions
 import React, { forwardRef, useState, useRef, useCallback } from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '../../lib/utils';
+import { cva, type VariantProps} from 'class-variance-authority';
+import { cn} from '../../lib/utils';
 
 const cardVariants = cva(
   'rounded-lg border bg-white text-neutral-950 transition-all duration-300 overflow-hidden',
@@ -71,28 +71,9 @@ export interface CardProps
   onHover?: (isHovered: boolean) => void;
 }
 
-const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ 
-    className, 
-    variant, 
-    size, 
-    animation, 
-    interactive, 
-    loading: loadingVariant,
-    asChild = false, 
-    loading = false,
-    skeletonLines = 3,
-    hoverEffect = 'none',
-    clickable = false,
-    badge,
-    overflow = 'hidden',
-    onHover,
-    children,
-    onMouseEnter,
-    onMouseLeave,
-    onClick,
-    ...props 
-  }, ref) => {
+  const Card = forwardRef<HTMLDivElement, CardProps>(({ 
+      className, variant, size, animation, interactive, loading: loadingVariant, asChild = false, loading = false, skeletonLines = 3, hoverEffect = 'none', clickable = false, badge, overflow = 'hidden', onHover, children, onMouseEnter, onMouseLeave, onClick, ...props 
+    }, ref) => {
     const [isHovered, setIsHovered] = useState(false);
     const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
     const cardRef = useRef<HTMLDivElement>(null);
@@ -113,7 +94,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
 
     // Handle click with ripple effect
     const handleClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-      if (clickable || interactive === 'clickable') {
+      if (clickable ?? interactive === 'clickable') {
         const card = event.currentTarget;
         const rect = card.getBoundingClientRect();
         const x = event.clientX - rect.left;
@@ -141,7 +122,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
     return (
       <div className="relative inline-flex group">
         <Comp
-          ref={ref || cardRef}
+          ref={ref ?? cardRef}
           className={cn(
             cardVariants({ 
               variant, 
@@ -157,13 +138,13 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onClick={handleClick}
-          role={clickable || interactive === 'clickable' ? 'button' : undefined}
-          tabIndex={clickable || interactive === 'clickable' ? 0 : undefined}
+          role={clickable ?? interactive === 'clickable' ? 'button' : undefined}
+          tabIndex={clickable ?? interactive === 'clickable' ? 0 : undefined}
           aria-pressed={clickable && isHovered ? true : undefined}
           {...props}
         >
           {/* Ripple effects for clickable cards */}
-          {(clickable || interactive === 'clickable') && ripples.map(ripple => (
+          {(clickable ?? interactive === 'clickable') && ripples.map(ripple => (
             <span
               key={ripple.id}
               className="absolute rounded-full bg-primary-500/20 pointer-events-none animate-ping"
@@ -228,7 +209,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         )}
 
         {/* Glow effect for cosmic variants */}
-        {(variant === 'cosmic' || variant === 'plasma' || variant === 'aurora' || variant === 'quantum' || variant === 'energy') && isHovered && (
+        {(variant === 'cosmic'  ?? variant === 'plasma'  ?? variant === 'aurora'  ?? variant === 'quantum' || variant === 'energy') && isHovered && (
           <div className="absolute inset-0 rounded-lg opacity-75 blur-xl -z-10 transition-opacity duration-300" 
                style={{
                  background: variant === 'cosmic' ? 'linear-gradient(45deg, #8b5cf6, #3b82f6)' :
@@ -251,7 +232,7 @@ const CardHeader = forwardRef<
     centered?: boolean;
     spacing?: 'tight' | 'normal' | 'loose';
   }
->(({ className, centered = false, spacing = 'normal', ...props }, ref) => {
+  >(({ className, centered = false, spacing = 'normal', ...props }, ref) => {
   const spacingClasses = {
     tight: 'space-y-1 pb-4',
     normal: 'space-y-1.5 pb-6',
@@ -279,7 +260,7 @@ const CardTitle = forwardRef<
     level?: 1 | 2 | 3 | 4 | 5 | 6;
     gradient?: boolean;
   }
->(({ className, children, level = 3, gradient = false, ...props }, ref) => {
+  >(({ className, children, level = 3, gradient = false, ...props }, ref) => {
   const Comp = `h${level}` as keyof JSX.IntrinsicElements;
   
   return (
@@ -327,7 +308,7 @@ const CardContent = forwardRef<
   React.HTMLAttributes<HTMLDivElement> & {
     spacing?: 'none' | 'sm' | 'md' | 'lg';
   }
->(({ className, spacing = 'none', ...props }, ref) => {
+  >(({ className, spacing = 'none', ...props }, ref) => {
   const spacingClasses = {
     none: 'pt-0',
     sm: 'pt-2',
@@ -351,7 +332,7 @@ const CardFooter = forwardRef<
     justify?: 'start' | 'center' | 'end' | 'between' | 'around';
     spacing?: 'sm' | 'md' | 'lg';
   }
->(({ className, justify = 'start', spacing = 'lg', ...props }, ref) => {
+  >(({ className, justify = 'start', spacing = 'lg', ...props }, ref) => {
   const justifyClasses = {
     start: 'justify-start',
     center: 'justify-center',

@@ -624,7 +624,7 @@ export class MultiRegionDeploymentManager {
 
   async unregisterRegion(regionId: string): Promise<void> {
     const region = this.regions.get(regionId);
-    if (!region) return;
+    if (!region) {return;}
 
     await this.drainRegionTraffic(regionId);
     await this.terminateRegionInstances(regionId);
@@ -702,7 +702,7 @@ export class MultiRegionDeploymentManager {
       triggeredBy: 'manual',
       reason: 'Manual rollback requested',
       startedAt: Date.now(),
-      previousVersion: targetVersion || 'previous',
+      previousVersion: targetVersion ?? 'previous',
       affectedInstances: []
     };
 
@@ -747,7 +747,7 @@ export class MultiRegionDeploymentManager {
   }
 
   async getDeploymentStatus(executionId: string): Promise<DeploymentExecution | null> {
-    return this.activeDeployments.get(executionId) || null;
+    return this.activeDeployments.get(executionId)  ?? null;
   }
 
   async getRegionHealth(): Promise<Record<string, unknown>> {
@@ -786,7 +786,7 @@ export class MultiRegionDeploymentManager {
       regions: this.regions.size,
       instances: totalInstances,
       requests: Object.values(this.trafficManager.monitoring.metrics.requestsPerSecond)
-        .reduce((sum, _rps) => sum + rps, 0),
+        .reduce((sum, rps) => sum + rps, 0),
       responseTime: Object.values(this.trafficManager.monitoring.metrics.responseTime)
         .reduce((sum, rt, _, arr) => sum + rt / arr.length, 0),
       errorRate: Object.values(this.trafficManager.monitoring.metrics.errorRate)
@@ -808,7 +808,7 @@ export class MultiRegionDeploymentManager {
     }
 
     const totalTraffic = plan.strategy.trafficSplit
-      .reduce((sum, _split) => sum + split.percentage, 0);
+      .reduce((sum, split) => sum + split.percentage, 0);
 
     if (Math.abs(totalTraffic - 100) > 0.01) {
       throw new Error(`Traffic split must total 100%, got ${totalTraffic}%`);
@@ -977,7 +977,7 @@ export class MultiRegionDeploymentManager {
     }
 
     const plan = this.deploymentPlans.get(execution.planId);
-    if (!plan) return;
+    if (!plan) {return;}
 
     for (const regionId of plan.strategy.regions.reverse()) {
       await this.rollbackRegion(regionId, execution);
@@ -988,7 +988,7 @@ export class MultiRegionDeploymentManager {
 
   private async handleDeploymentFailure(execution: DeploymentExecution): Promise<void> {
     const plan = this.deploymentPlans.get(execution.planId);
-    if (!plan) return;
+    if (!plan) {return;}
 
     if (plan.strategy.rollbackPolicy.autoRollback) {
       execution.rollbackInfo = {
@@ -1079,7 +1079,7 @@ export class MultiRegionDeploymentManager {
 
   private async terminateInstance(instanceId: string): Promise<void> {
     const instance = this.instances.get(instanceId);
-    if (!instance) return;
+    if (!instance) {return;}
 
     instance.status = 'stopping';
     this.instances.set(instanceId, instance);
@@ -1095,7 +1095,7 @@ export class MultiRegionDeploymentManager {
       throw new Error(`No available zones in region: ${region.id}`);
     }
 
-    return availableZones.reduce((best, _current) =>
+    return availableZones.reduce((best, current) =>
       current.instances.length < best.instances.length ? current : best
     );
   }
@@ -1121,20 +1121,20 @@ export class MultiRegionDeploymentManager {
     }
   }
 
-  private estimateDeploymentDuration(plan: DeploymentPlan): number {
+  private estimateDeploymentDuration(_plan: DeploymentPlan): number {
     return 600000; // 10 minutes
   }
 
-  private estimateDeploymentCost(plan: DeploymentPlan): number {
-    return plan.strategy.regions.length * 100; // $100 per region
+  private estimateDeploymentCost(_plan: DeploymentPlan): number {
+    return _plan.strategy.regions.length * 100; // $100 per region
   }
 
-  private async assessDeploymentRisk(plan: DeploymentPlan): Promise<string> {
+  private async assessDeploymentRisk(_plan: DeploymentPlan): Promise<string> {
     return 'medium';
   }
 
-  private calculateCapacityImpact(plan: DeploymentPlan): Record<string, number> {
-    return plan.strategy.regions.reduce((impact, _regionId) => {
+  private calculateCapacityImpact(_plan: DeploymentPlan): Record<string, number> {
+    return _plan.strategy.regions.reduce((impact, regionId) => {
       impact[regionId] = 20; // 20% capacity increase
       return impact;
     }, {} as Record<string, number>);
@@ -1160,7 +1160,7 @@ export class MultiRegionDeploymentManager {
     console.log(`Waiting for ${required} approvals with ${timeout}ms timeout`);
   }
 
-  private createPreparationSteps(plan: DeploymentPlan): DeploymentStep[] {
+  private createPreparationSteps(_plan: DeploymentPlan): DeploymentStep[] {
     return [
       {
         name: 'validate-artifacts',
@@ -1279,19 +1279,19 @@ export class MultiRegionDeploymentManager {
   }
 
   private startHealthMonitoring(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.monitorRegionHealth();
     }, 30000);
   }
 
   private startTrafficMonitoring(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.updateTrafficMetrics();
     }, 10000);
   }
 
   private startCapacityManagement(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.manageCapacity();
     }, 60000);
   }

@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, ImgHTMLAttributes } from 'react';
-import { cn } from '../../lib/utils';
+import { useState, useEffect, useRef, ImgHTMLAttributes} from 'react';
+import { cn} from '../../lib/utils';
 
 interface OptimizedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   src: string;
@@ -23,21 +23,10 @@ interface OptimizedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
  * - Responsive image loading
  * - WCAG 2.1 AA compliant alt text handling
  */
-export function OptimizedImage({
-  src,
-  alt,
-  fallbackSrc = '/images/placeholder.svg',
-  blurDataURL,
-  priority = false,
-  quality = 85,
-  sizes,
-  aspectRatio = '16/9',
-  objectFit = 'cover',
-  className,
-  onLoadComplete,
-  ...props
+export function OptimizedImage(_{
+  src, alt, fallbackSrc = '/images/placeholder.svg', blurDataURL, priority = false, quality = 85, sizes, aspectRatio = '16/9', objectFit = 'cover', className, onLoadComplete, ...props
 }: OptimizedImageProps) {
-  const [imageSrc, setImageSrc] = useState<string>(blurDataURL || '');
+  const [imageSrc, setImageSrc] = useState<string>(blurDataURL ?? '');
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isInView, setIsInView] = useState(priority);
@@ -59,7 +48,7 @@ export function OptimizedImage({
 
   // Check WebP support
   const supportsWebP = useRef<boolean | null>(null);
-  useEffect(() => {
+  useEffect_(() => {
     if (supportsWebP.current === null) {
       const webP = new Image();
       webP.onload = webP.onerror = () => {
@@ -70,14 +59,13 @@ export function OptimizedImage({
   }, []);
 
   // Set up Intersection Observer for lazy loading
-  useEffect(() => {
-    if (priority || !imgRef.current) {
+  useEffect_(() => {
+    if (priority ?? !imgRef.current) {
       setIsInView(true);
       return;
     }
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
+    observerRef.current = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             setIsInView(true);
@@ -99,8 +87,8 @@ export function OptimizedImage({
   }, [priority]);
 
   // Load image when in view
-  useEffect(() => {
-    if (!isInView) return;
+  useEffect_(() => {
+    if (!isInView) {return;}
 
     const img = new Image();
     
@@ -111,7 +99,7 @@ export function OptimizedImage({
 
     img.src = imageUrl;
     img.srcset = generateSrcSet(imageUrl);
-    if (sizes) img.sizes = sizes;
+    if (sizes) {img.sizes = sizes;}
 
     img.onload = () => {
       setImageSrc(imageUrl);
@@ -168,9 +156,9 @@ export function OptimizedImage({
       {/* Main image */}
       <img
         ref={imgRef}
-        src={imageSrc || fallbackSrc}
+        src={imageSrc ?? fallbackSrc}
         alt={alt}
-        srcSet={!hasError && isInView ? generateSrcSet(imageSrc || src) : undefined}
+        srcSet={!hasError && isInView ? generateSrcSet(imageSrc ?? src) : undefined}
         sizes={sizes}
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
@@ -216,7 +204,7 @@ export function OptimizedImage({
       {/* Loading shimmer effect */}
       {isLoading && !blurDataURL && (
         <div 
-          className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent"
+          className="absolute inset-0 -translate-x-full animate-[shimmer2sinfinite] bg-gradient-to-r from-transparent via-white/20 to-transparent"
           aria-hidden="true"
         />
       )}

@@ -4,8 +4,8 @@
  * Follows Repository Pattern and Interface Segregation Principle
  */
 
-import { IBaseEntity, IRepository, ISearchableRepository, ITransactionalRepository } from '../../interfaces/IRepository';
-import { UserProps, UserRole, UserStatus } from '../entities/User';
+import { IBaseEntity, IRepository, ISearchableRepository, ITransactionalRepository} from '../../interfaces/IRepository';
+import { UserProps, UserRole, UserStatus} from '../entities/User';
 
 export interface IUserRepository extends 
   IRepository<UserProps>, 

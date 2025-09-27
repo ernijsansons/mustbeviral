@@ -1,7 +1,7 @@
 // Advanced Rate Limiting Service for Cloudflare Workers
 // Protects against brute force attacks and API abuse
 
-import { CloudflareEnv } from '../lib/cloudflare';
+import { CloudflareEnv} from '../lib/cloudflare';
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -50,8 +50,7 @@ export class RateLimiter {
   /**
    * Check rate limit for authentication endpoints
    */
-  static async checkAuthRateLimit(
-    identifier: string,
+  static async checkAuthRateLimit(identifier: string,
     env: CloudflareEnv
   ): Promise<RateLimitResult> {
     return this.checkRateLimit('auth', identifier, env);
@@ -191,11 +190,9 @@ export class RateLimiter {
    * Extract identifier from request (IP + User-Agent for better uniqueness)
    */
   static getIdentifier(request: Request): string {
-    const ip = request.headers.get('cf-connecting-ip') ||
-                request.headers.get('x-forwarded-for') ||
-                'unknown';
+    const ip = request.headers.get('cf-connecting-ip')  ?? request.headers.get('x-forwarded-for')  ?? 'unknown';
 
-    const userAgent = request.headers.get('user-agent') || 'unknown';
+    const userAgent = request.headers.get('user-agent')  ?? 'unknown';
 
     // Create a hash of IP + User-Agent for better fingerprinting
     return this.hashString(`${ip}:${userAgent.substring(0, 50)}`);

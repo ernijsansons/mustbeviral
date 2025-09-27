@@ -180,11 +180,14 @@
 
   /* WCAG 2.1 AA compliant focus styles */
   *:focus-visible {
-    @apply outline-none ring-2 ring-offset-2;
-    ring-color: var(--color-primary-500);
-    /* High contrast mode support */
-    @media (prefers-contrast: high) {
-      @apply ring-4 ring-offset-4;
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-primary-500), 0 0 0 4px rgba(99, 102, 241, 0.1);
+  }
+  
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    *:focus-visible {
+      box-shadow: 0 0 0 4px var(--color-primary-500), 0 0 0 8px rgba(99, 102, 241, 0.2);
     }
   }
   

@@ -185,7 +185,7 @@ export class RealTimeAnalytics {
   }
 
   identify(userId: string, traits: Record<string, unknown>, sessionId: string): void {
-    this.track({ _userId,
+    this.track({ userId,
       sessionId,
       eventType: 'identify',
       eventName: 'user_identified',
@@ -302,11 +302,13 @@ export class RealTimeAnalytics {
   }
 
   getEventsByType(eventType: string, timeRange?: TimeRange): AnalyticsEvent[] {
-    const events = this.events.get(eventType) || [];
+    const events = this.events.get(eventType)  ?? [];
 
-    if (!timeRange) return events;
+    if (!timeRange) {
+    return events;
+  }
 
-    return events.filter(e =>
+    return events.filter(e = >
       e.timestamp >= timeRange.start && e.timestamp <= timeRange.end
     );
   }
@@ -321,14 +323,14 @@ export class RealTimeAnalytics {
       );
     }
 
-    return userEvents.sort((a, _b) => a.timestamp - b.timestamp);
+    return userEvents.sort((a, b) => a.timestamp - b.timestamp);
   }
 
   getSessionEvents(sessionId: string): AnalyticsEvent[] {
     const allEvents = Array.from(this.events.values()).flat();
     return allEvents
       .filter(e => e.sessionId === sessionId)
-      .sort((a, _b) => a.timestamp - b.timestamp);
+      .sort((a, b) => a.timestamp - b.timestamp);
   }
 
   getFunnelAnalysis(steps: string[], timeRange: TimeRange): {
@@ -349,15 +351,15 @@ export class RealTimeAnalytics {
       );
     });
 
-    const totalUsers = usersByStep[0]?.size || 0;
+    const totalUsers = usersByStep[0]?.size ?? 0;
 
-    return steps.map((step, _index) => {
-      const users = usersByStep[index]?.size || 0;
+    return steps.map((step, index) => {
+      const users = usersByStep[index]?.size ?? 0;
       const conversionRate = totalUsers > 0 ? (users / totalUsers) * 100 : 0;
-      const previousStepUsers = index > 0 ? usersByStep[index - 1]?.size || 0 : totalUsers;
+      const previousStepUsers = index > 0 ? usersByStep[index - 1]?.size ?? 0 : totalUsers;
       const dropOffRate = previousStepUsers > 0 ? ((previousStepUsers - users) / previousStepUsers) * 100 : 0;
 
-      return { _step,
+      return { step,
         users,
         conversionRate,
         dropOffRate
@@ -431,7 +433,7 @@ export class RealTimeAnalytics {
   }
 
   private updateRealTimeMetrics(event: AnalyticsEvent): void {
-    this.metrics.forEach((metric, _name) => {
+    this.metrics.forEach((metric, name) => {
       if (this.eventMatchesMetric(event, metric)) {
         this.updateMetricAggregation(name, event, metric);
       }
@@ -474,13 +476,13 @@ export class RealTimeAnalytics {
   private createDataPoint(event: AnalyticsEvent, metric: MetricDefinition, timestamp: number): DataPoint {
     const dimensions: Record<string, string> = {};
     metric.dimensions.forEach(dim => {
-      dimensions[dim] = this.getEventValue(event, dim)?.toString() || 'unknown';
+      dimensions[dim] = this.getEventValue(event, dim)?.toString()  ?? 'unknown';
     });
 
     const metrics: Record<string, number> = {};
     metrics[metric.name] = this.getMetricValue(event, metric);
 
-    return { _timestamp,
+    return { timestamp,
       dimensions,
       metrics
     };
@@ -488,7 +490,7 @@ export class RealTimeAnalytics {
 
   private aggregateDataPoint(dataPoint: DataPoint, event: AnalyticsEvent, metric: MetricDefinition): void {
     const value = this.getMetricValue(event, metric);
-    const currentValue = dataPoint.metrics[metric.name] || 0;
+    const currentValue = dataPoint.metrics[metric.name]  ?? 0;
 
     switch (metric.aggregation) {
       case 'sum':
@@ -512,11 +514,11 @@ export class RealTimeAnalytics {
       case 'counter':
         return 1;
       case 'gauge':
-        return this.getEventValue(event, 'properties.value') || 0;
+        return this.getEventValue(event, 'properties.value')  ?? 0;
       case 'timer':
-        return this.getEventValue(event, 'properties.duration') || 0;
+        return this.getEventValue(event, 'properties.duration')  ?? 0;
       case 'histogram':
-        return this.getEventValue(event, 'properties.value') || 0;
+        return this.getEventValue(event, 'properties.value')  ?? 0;
       default:
         return 1;
     }
@@ -527,11 +529,13 @@ export class RealTimeAnalytics {
 
     for (const metricName of query.metrics) {
       const metricData = this.aggregatedData.get(metricName);
-      if (!metricData) continue;
+      if (!metricData) {
+    continue;
+  }
 
       for (const [timestamp, dataPoint] of metricData.entries()) {
         if (timestamp >= query.timeRange.start && timestamp <= query.timeRange.end) {
-          if (this.dataPointMatchesFilters(dataPoint, query.filters || [])) {
+          if (this.dataPointMatchesFilters(dataPoint, query.filters ?? [])) {
             results.push(dataPoint);
           }
         }
@@ -568,7 +572,7 @@ export class RealTimeAnalytics {
       case 'lte': return value <= filterValue;
       case 'in': return Array.isArray(filterValue) && filterValue.includes(value);
       case 'nin': return Array.isArray(filterValue) && !filterValue.includes(value);
-      case 'contains': return value && value.toString().includes(filterValue);
+      case 'contains': return value?.toString().includes(filterValue);
       case 'regex': return new RegExp(filterValue).test(value);
       default: return true;
     }
@@ -576,7 +580,7 @@ export class RealTimeAnalytics {
 
   private sortAndLimitResults(results: DataPoint[], query: AnalyticsQuery): DataPoint[] {
     if (query.orderBy) {
-      results.sort((a, _b) => {
+      results.sort((a, b) => {
         for (const order of query.orderBy!) {
           const aValue = this.getDataPointValue(a, order.field);
           const bValue = this.getDataPointValue(b, order.field);
@@ -638,13 +642,13 @@ export class RealTimeAnalytics {
   }
 
   private startAggregationEngine(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.cleanupOldData();
     }, 60000); // Clean up every minute
   }
 
   private startAlertEngine(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.evaluateAlerts();
     }, 30000); // Check alerts every 30 seconds
   }
@@ -652,12 +656,12 @@ export class RealTimeAnalytics {
   private cleanupOldData(): void {
     const cutoff = Date.now() - (24 * 60 * 60 * 1000); // 24 hours
 
-    this.events.forEach((events, _eventType) => {
+    this.events.forEach((events, eventType) => {
       this.events.set(eventType, events.filter(e => e.timestamp > cutoff));
     });
 
-    this.aggregatedData.forEach((data, _metricName) => {
-      data.forEach((value, _timestamp) => {
+    this.aggregatedData.forEach((data, metricName) => {
+      data.forEach((value, timestamp) => {
         if (timestamp < cutoff) {
           data.delete(timestamp);
         }
@@ -669,17 +673,17 @@ export class RealTimeAnalytics {
     const now = Date.now();
 
     this.alertRules.forEach(rule => {
-      if (!rule.enabled) return;
-      if (rule.lastTriggered && (now - rule.lastTriggered) < rule.cooldown) return;
+      if (!rule.enabled) {return;}
+      if (rule.lastTriggered && (now - rule.lastTriggered) < rule.cooldown) {return;}
 
       const metricData = this.aggregatedData.get(rule.metric);
-      if (!metricData) return;
+      if (!metricData) {return;}
 
       const recentData = Array.from(metricData.entries())
         .filter(([timestamp]) => timestamp > now - rule.timeWindow)
-        .map(([, dataPoint]) => dataPoint.metrics[rule.metric] || 0);
+        .map(([, dataPoint]) => dataPoint.metrics[rule.metric]  ?? 0);
 
-      if (recentData.length === 0) return;
+      if (recentData.length = == 0) {return;}
 
       const aggregatedValue = this.aggregateValues(recentData, rule.condition.aggregation);
       const breaches = this.evaluateCondition(aggregatedValue, rule.condition.operator, rule.threshold);
@@ -692,8 +696,8 @@ export class RealTimeAnalytics {
 
   private aggregateValues(values: number[], aggregation: string): number {
     switch (aggregation) {
-      case 'avg': return values.reduce((sum, _v) => sum + v, 0) / values.length;
-      case 'sum': return values.reduce((sum, _v) => sum + v, 0);
+      case 'avg': return values.reduce((sum, v) => sum + v, 0) / values.length;
+      case 'sum': return values.reduce((sum, v) => sum + v, 0);
       case 'min': return Math.min(...values);
       case 'max': return Math.max(...values);
       case 'count': return values.length;
@@ -736,7 +740,7 @@ export class RealTimeAnalytics {
         await fetch(action.target, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ _rule, value, message, severity: action.severity })
+          body: JSON.stringify({ rule, value, message, severity: action.severity })
         });
         break;
       // Add other action types as needed
@@ -749,12 +753,12 @@ export class RealTimeAnalytics {
     Array.from(this.events.values()).flat()
       .filter(e => e.timestamp > since)
       .forEach(e => {
-        eventCounts.set(e.eventName, (eventCounts.get(e.eventName) || 0) + 1);
+        eventCounts.set(e.eventName, (eventCounts.get(e.eventName)  ?? 0) + 1);
       });
 
     return Array.from(eventCounts.entries())
-      .map(([eventName, count]) => ({ _eventName, count }))
-      .sort((a, _b) => b.count - a.count)
+      .map(([eventName, count]) => ({ eventName, count }))
+      .sort((a, b) => b.count - a.count)
       .slice(0, 10);
   }
 
@@ -783,12 +787,12 @@ export class RealTimeAnalytics {
       });
 
     const durations = Array.from(sessionEvents.values()).map(events => {
-      events.sort((a, _b) => a.timestamp - b.timestamp);
+      events.sort((a, b) => a.timestamp - b.timestamp);
       return events[events.length - 1].timestamp - events[0].timestamp;
     });
 
     return durations.length > 0
-      ? durations.reduce((sum, _d) => sum + d, 0) / durations.length
+      ? durations.reduce((sum, d) => sum + d, 0) / durations.length
       : 0;
   }
 }

@@ -1,11 +1,11 @@
 // Content Controller - Handles content generation and management
-import { CloudflareEnv } from '../lib/cloudflare';
-import { DatabaseService } from '../lib/db';
-import { ValidationError } from '../lib/errors';
-import { logger } from '../lib/monitoring/logger';
-import { PlatformAgentCoordinator } from '../lib/ai/agents/PlatformAgentCoordinator';
-import { JWTManager } from '../lib/auth/jwtManager';
-import { v4 as uuidv4 } from 'uuid';
+import { CloudflareEnv} from '../lib/cloudflare';
+import { DatabaseService} from '../lib/db';
+import { ValidationError} from '../lib/errors';
+import { logger} from '../lib/monitoring/logger';
+import { PlatformAgentCoordinator} from '../lib/ai/agents/PlatformAgentCoordinator';
+import { JWTManager} from '../lib/auth/jwtManager';
+import { v4 as uuidv4} from 'uuid';
 
 
 export interface ContentRequest {
@@ -43,7 +43,7 @@ export class ContentController {
     try {
       // Extract user from JWT token
       const authHeader = request.headers.get('Authorization');
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' }
@@ -53,7 +53,7 @@ export class ContentController {
       const token = authHeader.substring(7);
       const validation = await JWTManager.verifyAccessToken(token);
 
-      if (!validation.valid || !validation.claims) {
+      if (!validation.valid ?? !validation.claims) {
         return new Response(JSON.stringify({ error: 'Invalid token' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' }
@@ -64,7 +64,7 @@ export class ContentController {
       const body = await request.json() as ContentRequest;
 
       // Validate request
-      if (!body.topic || !body.platforms || body.platforms.length === 0) {
+      if (!body.topic ?? !body.platforms ?? body.platforms.length === 0) {
         return new Response(JSON.stringify({ error: 'Topic and platforms are required' }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' }
@@ -79,7 +79,7 @@ export class ContentController {
       // Initialize AI Agent Coordinator
       const agentCoordinator = new PlatformAgentCoordinator(env.AI, env, {
         database: dbService,
-        kv: env.TRENDS_CACHE,
+        kv: env.TRENDSCACHE,
         analytics: undefined
       });
 
@@ -92,8 +92,8 @@ export class ContentController {
           const result = await agentCoordinator.generateUniversalContent({
             topic: body.topic,
             platforms: [platform],
-            tone: body.tone || 'professional',
-            targetAudience: body.targetAudience || 'general',
+            tone: body.tone ?? 'professional',
+            targetAudience: body.targetAudience ?? 'general',
             maxLength: platform === 'twitter' ? 280 : 2000,
             includeTrends: true,
             optimizeForVirality: true
@@ -105,15 +105,15 @@ export class ContentController {
             const contentData = {
               id: contentId,
               user_id: userId,
-              title: body.title || `${body.topic} - ${platform}`,
+              title: body.title ?? `${body.topic} - ${platform}`,
               body: result.content,
               status: 'draft' as const,
-              type: body.contentType || 'social_post',
+              type: body.contentType ?? 'social_post',
               generated_by_ai: true,
               ai_model_used: 'claude-3',
               metadata: JSON.stringify({ platform,
                 analysis: result.analysis,
-                optimizationScore: result.analysis?.viralityScore || 0,
+                optimizationScore: result.analysis?.viralityScore ?? 0,
                 tone: body.tone,
                 targetAudience: body.targetAudience
               })
@@ -132,7 +132,7 @@ export class ContentController {
               aiModelUsed: 'claude-3',
               metadata: {
                 analysis: result.analysis,
-                optimizationScore: result.analysis?.viralityScore || 0
+                optimizationScore: result.analysis?.viralityScore ?? 0
               },
               createdAt: new Date().toISOString()
             });
@@ -185,7 +185,7 @@ export class ContentController {
     try {
       // Extract user from JWT token
       const authHeader = request.headers.get('Authorization');
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' }
@@ -195,7 +195,7 @@ export class ContentController {
       const token = authHeader.substring(7);
       const validation = await JWTManager.verifyAccessToken(token);
 
-      if (!validation.valid || !validation.claims) {
+      if (!validation.valid ?? !validation.claims) {
         return new Response(JSON.stringify({ error: 'Invalid token' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' }
@@ -208,8 +208,8 @@ export class ContentController {
       const url = new URL(request.url);
       const status = url.searchParams.get('status');
       const type = url.searchParams.get('type');
-      const limit = parseInt(url.searchParams.get('limit') || '50');
-      const offset = parseInt(url.searchParams.get('offset') || '0');
+      const limit = parseInt(url.searchParams.get('limit')  ?? '50');
+      const offset = parseInt(url.searchParams.get('offset')  ?? '0');
 
       // Fetch content from database
       const content = await dbService.getUserContent(userId, { status,
@@ -254,7 +254,7 @@ export class ContentController {
     try {
       // Extract user from JWT token
       const authHeader = request.headers.get('Authorization');
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' }
@@ -264,7 +264,7 @@ export class ContentController {
       const token = authHeader.substring(7);
       const validation = await JWTManager.verifyAccessToken(token);
 
-      if (!validation.valid || !validation.claims) {
+      if (!validation.valid ?? !validation.claims) {
         return new Response(JSON.stringify({ error: 'Invalid token' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' }
@@ -353,7 +353,7 @@ export class ContentController {
     try {
       // Extract user from JWT token
       const authHeader = request.headers.get('Authorization');
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (!authHeader ?? !authHeader.startsWith('Bearer ')) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' }
@@ -363,7 +363,7 @@ export class ContentController {
       const token = authHeader.substring(7);
       const validation = await JWTManager.verifyAccessToken(token);
 
-      if (!validation.valid || !validation.claims) {
+      if (!validation.valid ?? !validation.claims) {
         return new Response(JSON.stringify({ error: 'Invalid token' }), {
           status: 401,
           headers: { 'Content-Type': 'application/json' }

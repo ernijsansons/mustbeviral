@@ -4,7 +4,7 @@
  * Fortune 50-grade AI infrastructure patterns
  */
 
-import { AICostOptimizer, type ModelConfig, type RequestContext, type OptimizationResult } from './costOptimizer';
+import { AICostOptimizer, type ModelConfig, type RequestContext, type OptimizationResult} from './costOptimizer';
 
 export interface ModelProvider {
   name: string;
@@ -59,9 +59,9 @@ export class ModelRouter {
   private providers: Map<string, ModelProvider> = new Map();
   private circuitBreakers: Map<string, CircuitBreakerState> = new Map();
   private healthCache: Map<string, { healthy: boolean; timestamp: number }> = new Map();
-  private readonly CIRCUIT_BREAKER_THRESHOLD = 5;
-  private readonly CIRCUIT_BREAKER_TIMEOUT = 60000; // 1 minute
-  private readonly HEALTH_CACHE_TTL = 30000; // 30 seconds
+  private readonly CIRCUITBREAKERTHRESHOLD = 5;
+  private readonly CIRCUITBREAKERTIMEOUT = 60000; // 1 minute
+  private readonly HEALTHCACHETTL = 30000; // 30 seconds
 
   constructor(costOptimizer: AICostOptimizer) {
     this.costOptimizer = costOptimizer;
@@ -125,7 +125,7 @@ export class ModelRouter {
           response.cost,
           response.latency,
           true,
-          response.quality || 0.8
+          response.quality ?? 0.8
         );
         
         return {
@@ -172,8 +172,8 @@ export class ModelRouter {
     options?: ModelRequestOptions,
     maxLatency?: number
   ): Promise<ModelResponse> {
-    const timeout = Math.min(options?.timeout || 30000, maxLatency || 30000);
-    const retries = options?.retries || 2;
+    const timeout = Math.min(options?.timeout ?? 30000, maxLatency ?? 30000);
+    const retries = options?.retries ?? 2;
     
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
@@ -213,7 +213,7 @@ export class ModelRouter {
     const cached = this.healthCache.get(provider.name);
     const now = Date.now();
     
-    if (cached && now - cached.timestamp < this.HEALTH_CACHE_TTL) {
+    if (cached && now - cached.timestamp < this.HEALTHCACHETTL) {
       return cached.healthy;
     }
     
@@ -233,7 +233,9 @@ export class ModelRouter {
    */
   private isCircuitBreakerOpen(modelName: string): boolean {
     const breaker = this.circuitBreakers.get(modelName);
-    if (!breaker) return false;
+    if (!breaker) {
+    return false;
+  }
     
     const now = Date.now();
     
@@ -284,9 +286,9 @@ export class ModelRouter {
     breaker.failures++;
     breaker.lastFailure = now;
     
-    if (breaker.failures >= this.CIRCUIT_BREAKER_THRESHOLD) {
+    if (breaker.failures >= this.CIRCUITBREAKERTHRESHOLD) {
       breaker.state = 'open';
-      breaker.nextAttempt = now + this.CIRCUIT_BREAKER_TIMEOUT;
+      breaker.nextAttempt = now + this.CIRCUITBREAKERTIMEOUT;
       console.log(`Circuit breaker opened for ${modelName}`);
     }
   }
@@ -428,7 +430,7 @@ class OpenAIProvider implements ModelProvider {
       'gpt-4o': 0.00003,
       'gpt-4o-mini': 0.00000015,
     };
-    return tokens * (rates[model] || 0.00001);
+    return tokens * (rates[model]  ?? 0.00001);
   }
 }
 
@@ -495,7 +497,7 @@ class AnthropicProvider implements ModelProvider {
       'claude-3-5-sonnet': 0.000015,
       'claude-3-haiku': 0.00000025,
     };
-    return tokens * (rates[model] || 0.000005);
+    return tokens * (rates[model]  ?? 0.000005);
   }
 }
 
@@ -562,7 +564,7 @@ class GoogleProvider implements ModelProvider {
       'gemini-1.5-pro': 0.00000125,
       'gemini-1.5-flash': 0.000000075,
     };
-    return tokens * (rates[model] || 0.000001);
+    return tokens * (rates[model]  ?? 0.000001);
   }
 }
 

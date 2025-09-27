@@ -6,12 +6,12 @@
  * first impression that sets the tone for the entire platform.
  */
 
-import { ReactNode, useEffect, useState, useMemo } from 'react';
-import { Link } from 'wouter';
-import { ArrowLeft, Sparkles, Heart, Zap, Star, Rocket } from 'lucide-react';
-import { cn } from '../../lib/utils';
-import { Button } from '../ui/Button';
-import { GradientText } from '../ui/GradientText';
+import { ReactNode, useEffect, useState, useMemo} from 'react';
+import { Link} from 'wouter';
+import { ArrowLeft, Sparkles, Heart, Zap, Star, Rocket} from 'lucide-react';
+import { cn} from '../../lib/utils';
+import { Button} from '../ui/Button';
+import { GradientText} from '../ui/GradientText';
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -57,7 +57,7 @@ function FloatingEmojis({ variant = 'cosmic', density = 'medium' }: {
   };
 
   // Generate floating emojis
-  useEffect(() => {
+  useEffect_(() => {
     const emojiPool = emojiSets[variant];
     const count = densityMap[density];
 
@@ -75,7 +75,9 @@ function FloatingEmojis({ variant = 'cosmic', density = 'medium' }: {
     setEmojis(newEmojis);
   }, [variant, density]);
 
-  if (variant === 'minimal') return null;
+  if (variant === 'minimal') {
+    return null;
+  }
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
@@ -128,8 +130,8 @@ function AuthSidebar({ variant }: { variant: string }) {
     }
   ];
 
-  useEffect(() => {
-    const timer = setInterval(() => {
+  useEffect_(() => {
+    const timer = setInterval_(() => {
       setCurrentTestimonial(prev => (prev + 1) % testimonials.length);
     }, 4000);
     return () => clearInterval(timer);
@@ -145,7 +147,7 @@ function AuthSidebar({ variant }: { variant: string }) {
   return (
     <div className={cn(
       'hidden lg:flex lg:w-1/2 relative overflow-hidden',
-      backgroundClasses[variant as keyof typeof backgroundClasses] || backgroundClasses.cosmic
+      backgroundClasses[variant as keyof typeof backgroundClasses]  ?? backgroundClasses.cosmic
     )}>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
@@ -232,17 +234,12 @@ function AuthSidebar({ variant }: { variant: string }) {
 /**
  * Main Auth Layout Component
  */
-export function AuthLayout({
-  children,
-  title,
-  subtitle,
-  showBackButton = false,
-  backgroundVariant = 'cosmic',
-  className
+export function AuthLayout(_{
+  children, title, subtitle, showBackButton = false, backgroundVariant = 'cosmic', className
 }: AuthLayoutProps) {
   const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => {
+  useEffect_(() => {
     // Trigger entrance animation
     const timer = setTimeout(() => setIsLoaded(true), 100);
     return () => clearTimeout(timer);
@@ -270,7 +267,7 @@ export function AuthLayout({
       {/* Main Auth Content */}
       <div className="flex-1 flex flex-col relative z-10">
         {/* Header */}
-        {(title || showBackButton) && (
+        {(title ?? showBackButton) && (
           <header className="p-6 lg:p-8">
             <div className="flex items-center justify-between">
               {showBackButton && (
@@ -303,7 +300,7 @@ export function AuthLayout({
               : 'opacity-0 translate-y-8'
           )}>
             {/* Content Header */}
-            {(title || subtitle) && (
+            {(title ?? subtitle) && (
               <div className="text-center mb-8">
                 {title && (
                   <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white mb-2">

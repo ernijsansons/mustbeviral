@@ -305,7 +305,7 @@ export class ServiceMesh {
     services: ServiceInfo[];
     connections: ServiceConnection[];
   }> {
-    const services = Array.from(this.services.entries()).map(([name, registry]) => ({ _name,
+    const services = Array.from(this.services.entries()).map(([name, registry]) => ({ name,
       endpoints: registry.endpoints.length,
       healthyEndpoints: registry.endpoints.filter(e =>
         this.endpointHealth.get(e.id)
@@ -317,7 +317,7 @@ export class ServiceMesh {
 
     const connections = this.discoverConnections();
 
-    return { _services, connections };
+    return { services, connections };
   }
 
   getMetrics(): MeshMetrics {
@@ -328,7 +328,7 @@ export class ServiceMesh {
     serviceName: string,
     fault: FaultInjection
   ): Promise<void> {
-    const policy = this.trafficPolicies.get(serviceName) || { _serviceName,
+    const policy = this.trafficPolicies.get(serviceName)  ?? { serviceName,
       rules: []
     };
 
@@ -357,13 +357,17 @@ export class ServiceMesh {
     request: unknown
   ): Promise<ServiceEndpoint | null> {
     const registry = this.services.get(serviceName);
-    if (!registry) return null;
+    if (!registry) {
+    return null;
+  }
 
     const healthyEndpoints = registry.endpoints.filter(endpoint =>
       this.endpointHealth.get(endpoint.id) === true
     );
 
-    if (healthyEndpoints.length === 0) return null;
+    if (healthyEndpoints.length === 0) {
+    return null;
+  }
 
     const policy = this.trafficPolicies.get(serviceName);
     if (policy) {
@@ -402,7 +406,9 @@ export class ServiceMesh {
     if (match.headers) {
       for (const [key, pattern] of Object.entries(match.headers)) {
         const headerValue = request.headers?.[key];
-        if (!headerValue) return false;
+        if (!headerValue) {
+    return false;
+  }
 
         const headerPattern = typeof pattern === 'string'
           ? new RegExp(pattern)
@@ -420,14 +426,14 @@ export class ServiceMesh {
     endpoints: ServiceEndpoint[],
     routes: RouteDestination[]
   ): ServiceEndpoint | null {
-    const totalWeight = routes.reduce((sum, _route) => sum + route.weight, 0);
+    const totalWeight = routes.reduce((sum, route) => sum + route.weight, 0);
     const random = Math.random() * totalWeight;
 
     let currentWeight = 0;
     for (const route of routes) {
       currentWeight += route.weight;
       if (random <= currentWeight) {
-        return endpoints.find(e => e.host === route.host) || null;
+        return endpoints.find(e => e.host === route.host)  ?? null;
       }
     }
 
@@ -438,7 +444,9 @@ export class ServiceMesh {
     endpoints: ServiceEndpoint[],
     strategy: LoadBalancingStrategy
   ): ServiceEndpoint | null {
-    if (endpoints.length === 0) return null;
+    if (endpoints.length === 0) {
+      return null;
+    }
 
     switch (strategy.type) {
       case 'round_robin':
@@ -451,7 +459,7 @@ export class ServiceMesh {
         return endpoints[Math.floor(Math.random() * endpoints.length)];
       case 'ip_hash':
       case 'consistent_hash':
-        return this.selectByHash(endpoints, strategy.consistentHashKey || 'default');
+        return this.selectByHash(endpoints, strategy.consistentHashKey ?? 'default');
       default:
         return endpoints[0];
     }
@@ -463,7 +471,7 @@ export class ServiceMesh {
   }
 
   private selectWeightedRoundRobin(endpoints: ServiceEndpoint[]): ServiceEndpoint {
-    const totalWeight = endpoints.reduce((sum, _ep) => sum + ep.weight, 0);
+    const totalWeight = endpoints.reduce((sum, ep) => sum + ep.weight, 0);
     const random = Math.random() * totalWeight;
 
     let currentWeight = 0;
@@ -478,12 +486,12 @@ export class ServiceMesh {
   }
 
   private selectLeastConnections(endpoints: ServiceEndpoint[]): ServiceEndpoint {
-    return endpoints.reduce((least, _current) => {
+    return endpoints.reduce((least, current) => {
       const leastPool = this.connectionPools.get(least.id);
       const currentPool = this.connectionPools.get(current.id);
 
-      const leastConnections = leastPool?.getActiveConnections() || 0;
-      const currentConnections = currentPool?.getActiveConnections() || 0;
+      const leastConnections = leastPool?.getActiveConnections()  ?? 0;
+      const currentConnections = currentPool?.getActiveConnections()  ?? 0;
 
       return currentConnections < leastConnections ? current : least;
     });
@@ -510,7 +518,7 @@ export class ServiceMesh {
     request: unknown,
     retryPolicy?: RetryPolicy
   ): Promise<unknown> {
-    const policy = retryPolicy || {
+    const policy = retryPolicy ?? {
       maxAttempts: 1,
       backoffStrategy: 'exponential',
       baseDelay: 100,
@@ -549,7 +557,7 @@ export class ServiceMesh {
       throw new Error(`No connection pool for endpoint: ${endpoint.id}`);
     }
 
-    return pool.execute(async () => {
+    return pool.execute(async() => {
       const url = `${endpoint.protocol}://${endpoint.host}:${endpoint.port}${request.path}`;
 
       const response = await fetch(url, {
@@ -598,13 +606,13 @@ export class ServiceMesh {
   }
 
   private startHealthChecking(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.performHealthChecks();
     }, 30000); // Every 30 seconds
   }
 
   private startMetricsCollection(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.updateMetrics();
     }, 10000); // Every 10 seconds
   }
@@ -654,14 +662,14 @@ export class ServiceMesh {
 
     const responseTimes = allEndpoints.map(e => e.responseTime).filter(Boolean);
     if (responseTimes.length > 0) {
-      responseTimes.sort((a, _b) => a - b);
+      responseTimes.sort((a, b) => a - b);
       this.metrics.p50Latency = responseTimes[Math.floor(responseTimes.length * 0.5)];
       this.metrics.p95Latency = responseTimes[Math.floor(responseTimes.length * 0.95)];
       this.metrics.p99Latency = responseTimes[Math.floor(responseTimes.length * 0.99)];
     }
 
     this.metrics.activeConnections = Array.from(this.connectionPools.values())
-      .reduce((sum, _pool) => sum + pool.getActiveConnections(), 0);
+      .reduce((sum, pool) => sum + pool.getActiveConnections(), 0);
 
     this.metrics.errorRate = this.metrics.totalRequests > 0
       ? (this.metrics.totalErrors / this.metrics.totalRequests) * 100
@@ -674,12 +682,12 @@ export class ServiceMesh {
 
   private calculateAvgResponseTime(endpoints: ServiceEndpoint[]): number {
     const times = endpoints.map(e => e.responseTime).filter(Boolean);
-    return times.length > 0 ? times.reduce((sum, _t) => sum + t, 0) / times.length : 0;
+    return times.length > 0 ? times.reduce((sum, t) => sum + t, 0) / times.length : 0;
   }
 
   private calculateErrorRate(endpoints: ServiceEndpoint[]): number {
     const rates = endpoints.map(e => e.errorRate).filter(Boolean);
-    return rates.length > 0 ? rates.reduce((sum, _r) => sum + r, 0) / rates.length : 0;
+    return rates.length > 0 ? rates.reduce((sum, r) => sum + r, 0) / rates.length : 0;
   }
 
   private discoverConnections(): ServiceConnection[] {

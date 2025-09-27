@@ -2,27 +2,11 @@
 // Type-safe React Query hooks with optimistic updates and error handling
 
 import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  UseQueryOptions,
-  UseMutationOptions,
-} from '@tanstack/react-query';
-import { logger } from '../lib/logging/productionLogger';
+  useQuery, useMutation, useQueryClient, UseQueryOptions, UseMutationOptions, } from '@tanstack/react-query';
+import { logger} from '../lib/logging/productionLogger';
 
 import {
-  auth,
-  content,
-  analytics,
-  apiClient,
-  User,
-  Content,
-  AnalyticsData,
-  LoginCredentials,
-  RegisterData,
-  ApiResponse,
-  ApiClientError,
-} from '../lib/api';
+  auth, content, analytics, apiClient, User, Content, AnalyticsData, LoginCredentials, RegisterData, ApiResponse, ApiClientError, } from '../lib/api';
 
 // Query keys factory for consistent cache management
 export const queryKeys = {
@@ -50,7 +34,7 @@ export const queryUtils = {
       queryFn: async () => {
         const response = await auth.getCurrentUser();
         if (!response.success) {
-          throw new ApiClientError(response.error || 'Failed to get user', 401);
+          throw new ApiClientError(response.error ?? 'Failed to get user', 401);
         }
         return response.data!;
       },
@@ -79,7 +63,7 @@ export function useAuth() {
     queryFn: async () => {
       const response = await auth.getCurrentUser();
       if (!response.success) {
-        throw new ApiClientError(response.error || 'Failed to get user', 401);
+        throw new ApiClientError(response.error ?? 'Failed to get user', 401);
       }
       return response.data!;
     },
@@ -89,8 +73,7 @@ export function useAuth() {
 
   // Login mutation with proper error handling
   const loginMutation = useMutation({
-    mutationFn: auth.login,
-    onSuccess: (response) => {
+    mutationFn: auth.login, onSuccess: (response) => {
       if (response.success && response.data) {
         // Update user cache optimistically
         queryClient.setQueryData(queryKeys.auth.user(), response.data.user);
@@ -117,8 +100,7 @@ export function useAuth() {
 
   // Register mutation with proper error handling
   const registerMutation = useMutation({
-    mutationFn: auth.register,
-    onSuccess: (response) => {
+    mutationFn: auth.register, onSuccess: (response) => {
       if (response.success && response.data) {
         queryClient.setQueryData(queryKeys.auth.user(), response.data.user);
         
@@ -139,8 +121,7 @@ export function useAuth() {
 
   // Logout mutation
   const logoutMutation = useMutation({
-    mutationFn: auth.logout,
-    onSuccess: () => {
+    mutationFn: auth.logout, onSuccess: () => {
       // Clear all cached data on logout
       queryClient.clear();
     },
@@ -148,8 +129,7 @@ export function useAuth() {
 
   // Complete onboarding mutation with cache invalidation
   const completeOnboardingMutation = useMutation({
-    mutationFn: auth.completeOnboarding,
-    onSuccess: (response) => {
+    mutationFn: auth.completeOnboarding, onSuccess: (response) => {
       if (response.success && response.data) {
         queryClient.setQueryData(queryKeys.auth.user(), response.data.user);
         
@@ -216,7 +196,7 @@ export function useContent() {
     queryFn: async () => {
       const response = await content.getAll();
       if (!response.success) {
-        throw new ApiClientError(response.error || 'Failed to get content', 500);
+        throw new ApiClientError(response.error ?? 'Failed to get content', 500);
       }
       return response.data!;
     },
@@ -225,8 +205,7 @@ export function useContent() {
 
   // Create content mutation
   const createContentMutation = useMutation({
-    mutationFn: content.create,
-    onMutate: async (_newContent) => {
+    mutationFn: content.create, onMutate: async (newContent) => {
       // Cancel outgoing queries
       await queryClient.cancelQueries({ queryKey: queryKeys.content.list() });
 
@@ -238,8 +217,8 @@ export function useContent() {
         const optimisticContent: Content = {
           id: `temp-${Date.now()}`,
           user_id: '',
-          title: newContent.title || 'Untitled',
-          body: newContent.body || '',
+          title: newContent.title ?? 'Untitled',
+          body: newContent.body ?? '',
           status: 'draft',
           type: 'blog_post',
           generated_by_ai: false,
@@ -272,9 +251,9 @@ export function useContent() {
 
   // Update content mutation
   const updateContentMutation = useMutation({
-    mutationFn: ({ _id, data }: { id: string; data: Partial<Content> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<Content> }) =>
       content.update(id, data),
-    onMutate: async ({ _id, data }) => {
+    onMutate: async ({ id, data }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.content.list() });
 
       const previousContent = queryClient.getQueryData<Content[]>(queryKeys.content.list());
@@ -282,7 +261,7 @@ export function useContent() {
       if (previousContent) {
         queryClient.setQueryData<Content[]>(
           queryKeys.content.list(),
-          previousContent.map((_item) =>
+          previousContent.map((item) =>
             item.id === id ? { ...item, ...data, updated_at: new Date().toISOString() } : item
           )
         );
@@ -302,8 +281,7 @@ export function useContent() {
 
   // Delete content mutation
   const deleteContentMutation = useMutation({
-    mutationFn: content.delete,
-    onMutate: async (_id) => {
+    mutationFn: content.delete, onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.content.list() });
 
       const previousContent = queryClient.getQueryData<Content[]>(queryKeys.content.list());
@@ -311,7 +289,7 @@ export function useContent() {
       if (previousContent) {
         queryClient.setQueryData<Content[]>(
           queryKeys.content.list(),
-          previousContent.filter((_item) => item.id !== id)
+          previousContent.filter((item) => item.id !== id)
         );
       }
 
@@ -329,7 +307,7 @@ export function useContent() {
 
   return {
     // Query state
-    content: contentQuery.data || [],
+    content: contentQuery.data ?? [],
     isLoading: contentQuery.isLoading,
     isError: contentQuery.isError,
     error: contentQuery.error,
@@ -364,7 +342,7 @@ export function useAnalytics(timeRange = '7d') {
     queryFn: async () => {
       const response = await analytics.getData(timeRange);
       if (!response.success) {
-        throw new ApiClientError(response.error || 'Failed to get analytics', 500);
+        throw new ApiClientError(response.error ?? 'Failed to get analytics', 500);
       }
       return response.data!;
     },
@@ -381,19 +359,21 @@ export function useRealtimeAnalytics() {
     queryKey: queryKeys.analytics.realtime(),
     queryFn: () => {
       // Return a promise that resolves with EventSource
-      return new Promise<EventSource>((_resolve) => {
+      return new Promise<EventSource>((resolve) => {
         const eventSource = apiClient.createEventSource('/api/analytics-stream');
         if (eventSource) {
           eventSource.onopen = () => resolve(eventSource);
-          eventSource.onmessage = (_event) => {
+          eventSource.onmessage = (event) => {
             try {
               const data = JSON.parse(event.data);
               // Update analytics cache with real-time data
               queryClient.setQueryData(
                 queryKeys.analytics.overview('realtime'),
                 (old: AnalyticsData | undefined) => {
-                  if (!old) return data;
-                  return { ...old, real_time_metrics: data.real_time_metrics };
+                  if (!old) {
+    return data;
+  }
+                  return { ...old, real_time_metrics: data.realtimemetrics };
                 }
               );
             } catch (error: unknown) {
@@ -422,7 +402,7 @@ export function useHealthCheck() {
     queryFn: async () => {
       const response = await apiClient.healthCheck();
       if (!response.success) {
-        throw new ApiClientError(response.error || 'Health check failed', 500);
+        throw new ApiClientError(response.error ?? 'Health check failed', 500);
       }
       return response.data!;
     },
@@ -445,15 +425,14 @@ export function useOptimisticMutation<TData, TVariables>(
     undoTimeoutMs?: number;
   }
 ) {
-  const { _onOptimisticUpdate, onUndo, undoTimeoutMs = 5000 } = options || {};
+  const { onOptimisticUpdate, onUndo, undoTimeoutMs = 5000} = options ?? {};
 
-  return useMutation({ _mutationFn,
-    onMutate: (_variables) => {
+  return useMutation({ mutationFn, onMutate: (variables) => {
       onOptimisticUpdate?.(variables);
 
       // Set up undo timeout
       if (onUndo) {
-        const undoTimeout = setTimeout(() => {
+        const undoTimeout = setTimeout_(() => {
           // Auto-commit after timeout
         }, undoTimeoutMs);
 

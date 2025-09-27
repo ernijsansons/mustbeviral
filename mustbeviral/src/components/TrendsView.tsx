@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Search, BarChart3, Zap, Globe, Calendar, Target } from 'lucide-react';
+import { TrendingUp, Search, BarChart3, Zap, Globe, Calendar, Target} from 'lucide-react';
 
 interface TrendData {
   id: string;
@@ -34,11 +34,10 @@ export function TrendsView() {
 
   console.log('LOG: COMPONENT-TRENDS-2 - TrendsView component rendered');
 
-  useEffect(() => {
+  useEffect_(() => {
     loadTrendingTopics();
   }, [selectedRegion]);
 
-  const loadTrendingTopics = async () => {
     console.log('LOG: COMPONENT-TRENDS-3 - Loading trending topics');
     setLoading(true);
     
@@ -58,7 +57,7 @@ export function TrendsView() {
   };
 
   const searchKeywords = async () => {
-    if (!searchKeyword.trim()) return;
+    if (!searchKeyword.trim()) {return;}
     
     console.log('LOG: COMPONENT-TRENDS-5 - Searching keywords:', searchKeyword);
     setLoading(true);
@@ -86,20 +85,32 @@ export function TrendsView() {
   };
 
   const getTrendIcon = (score: number) => {
-    if (score > 70) return <TrendingUp className="w-4 h-4 text-green-500" />;
-    if (score > 40) return <BarChart3 className="w-4 h-4 text-yellow-500" />;
+    if (score > 70) {
+    return <TrendingUp className="w-4 h-4 text-green-500" />;
+  }
+    if (score > 40) {
+    return <BarChart3 className="w-4 h-4 text-yellow-500" />;
+  }
     return <BarChart3 className="w-4 h-4 text-gray-400" />;
   };
 
   const getViralPotentialColor = (potential: number) => {
-    if (potential > 70) return 'text-red-600 bg-red-100';
-    if (potential > 40) return 'text-orange-600 bg-orange-100';
+    if (potential > 70) {
+    return 'text-red-600 bg-red-100';
+  }
+    if (potential > 40) {
+    return 'text-orange-600 bg-orange-100';
+  }
     return 'text-gray-600 bg-gray-100';
   };
 
   const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`;
+  }
+    if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}K`;
+  }
     return num.toString();
   };
 
@@ -143,7 +154,7 @@ export function TrendsView() {
           </div>
           <button
             onClick={searchKeywords}
-            disabled={loading || !searchKeyword.trim()}
+            disabled={loading ?? !searchKeyword.trim()}
             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Search
@@ -197,7 +208,7 @@ export function TrendsView() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
-                      {getTrendIcon(trend.trend_score)}
+                      {getTrendIcon(trend.trendscore)}
                       <h4 className="font-semibold text-gray-900">{trend.keyword}</h4>
                       <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                         {trend.category}
@@ -211,24 +222,24 @@ export function TrendsView() {
                           <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
                             <div 
                               className="bg-indigo-600 h-2 rounded-full" 
-                              style={{ width: `${trend.trend_score}%` }}
+                              style={{ width: `${trend.trendscore}%` }}
                             ></div>
                           </div>
-                          <span>{trend.trend_score}</span>
+                          <span>{trend.trendscore}</span>
                         </div>
                       </div>
                       
                       <div>
                         <span className="font-medium">Search Volume:</span>
                         <p className="text-lg font-semibold text-gray-900">
-                          {formatNumber(trend.search_volume)}
+                          {formatNumber(trend.searchvolume)}
                         </p>
                       </div>
                       
                       <div>
                         <span className="font-medium">Viral Potential:</span>
-                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getViralPotentialColor(trend.viral_potential)}`}>
-                          {Math.round(trend.viral_potential)}%
+                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getViralPotentialColor(trend.viralpotential)}`}>
+                          {Math.round(trend.viralpotential)}%
                         </span>
                       </div>
                     </div>
@@ -276,7 +287,7 @@ export function TrendsView() {
                 <div key={index} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold text-gray-900">{prediction.keyword}</h4>
-                    <span className="text-sm text-gray-500">{prediction.time_horizon} forecast</span>
+                    <span className="text-sm text-gray-500">{prediction.timehorizon} forecast</span>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
@@ -295,10 +306,10 @@ export function TrendsView() {
                         <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
                           <div 
                             className="bg-green-500 h-2 rounded-full" 
-                            style={{ width: `${prediction.confidence_level}%` }}
+                            style={{ width: `${prediction.confidencelevel}%` }}
                           ></div>
                         </div>
-                        <span className="text-sm">{Math.round(prediction.confidence_level)}%</span>
+                        <span className="text-sm">{Math.round(prediction.confidencelevel)}%</span>
                       </div>
                     </div>
                   </div>

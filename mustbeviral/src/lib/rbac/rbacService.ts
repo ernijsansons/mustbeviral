@@ -1,16 +1,9 @@
 // RBAC Service
 // Manages role-based access control operations and permission checking
 
-import { DatabaseService } from '../db';
-import { _Permission,
-  Role,
-  UserPermissions,
-  PERMISSIONS,
-  ROLES,
-  PermissionChecker,
-  PermissionValidators
-} from './permissions';
-import { log } from '../monitoring/logger';
+import { DatabaseService} from '../db';
+import { Permission, Role, UserPermissions, PERMISSIONS, ROLES, PermissionChecker, PermissionValidators} from './permissions';
+import { log} from '../monitoring/logger';
 
 export interface CustomRole {
   id: string;
@@ -44,10 +37,10 @@ export class RBACService {
       const membershipQuery = `
         SELECT
           om.role,
-          om.permissions as custom_permissions,
+          om.permissions as custompermissions,
           om.team_id
         FROM organization_members om
-        WHERE om.user_id = ? AND om.organization_id = ? AND om.status = 'active'
+        WHERE om.userid = ? AND om.organizationid = ? AND om.status = 'active'
       `;
 
       const membership = await db.prepare(membershipQuery).get(userId, organizationId);
@@ -58,22 +51,22 @@ export class RBACService {
       // Parse custom permissions
       let customPermissions: string[] = [];
       try {
-        customPermissions = JSON.parse(membership.custom_permissions || '[]');
+        customPermissions = JSON.parse(membership.custom_permissions ?? '[]');
       } catch (error: unknown) {
         log.warn('Failed to parse custom permissions', {
           action: 'parse_permissions_error',
-          metadata: { _userId, organizationId }
+          metadata: { userId, organizationId }
         });
       }
 
       // Get team permissions
       const teamPermissionsQuery = `
         SELECT
-          t.id as team_id,
+          t.id as teamid,
           t.permissions as team_permissions
         FROM teams t
-        JOIN organization_members om ON om.team_id = t.id
-        WHERE om.user_id = ? AND t.organization_id = ?
+        JOIN organization_members om ON om.teamid = t.id
+        WHERE om.userid = ? AND t.organizationid = ?
       `;
 
       const teamMemberships = await db.prepare(teamPermissionsQuery).all(userId, organizationId);
@@ -81,13 +74,13 @@ export class RBACService {
 
       for (const team of teamMemberships) {
         try {
-          teamPermissions[team.team_id] = JSON.parse(team.team_permissions || '[]');
+          teamPermissions[team.teamid] = JSON.parse(team.team_permissions ?? '[]');
         } catch (error: unknown) {
           log.warn('Failed to parse team permissions', {
             action: 'parse_team_permissions_error',
-            metadata: { _userId, organizationId, teamId: team.team_id }
+            metadata: { userId, organizationId, teamId: team.teamid }
           });
-          teamPermissions[team.team_id] = [];
+          teamPermissions[team.teamid] = [];
         }
       }
 
@@ -98,7 +91,7 @@ export class RBACService {
         teamPermissions
       );
 
-      return { _userId,
+      return { userId,
         organizationId,
         roleId: membership.role,
         customPermissions,
@@ -109,7 +102,7 @@ export class RBACService {
     } catch (error: unknown) {
       log.error('Failed to get user permissions', {
         action: 'get_user_permissions_error',
-        metadata: { _userId,
+        metadata: { userId,
           organizationId,
           error: error instanceof Error ? error.message : 'Unknown error'
         }
@@ -181,7 +174,7 @@ export class RBACService {
       // Check if role name already exists in organization
       const existingRole = await db.prepare(`
         SELECT id FROM custom_roles
-        WHERE organization_id = ? AND name = ?
+        WHERE organizationid = ? AND name = ?
       `).get(organizationId, name);
 
       if (existingRole) {
@@ -192,9 +185,9 @@ export class RBACService {
       const now = new Date().toISOString();
 
       const insertQuery = `
-        INSERT INTO custom_roles (
-          id, organization_id, name, description, permissions,
-          created_by, created_at, updated_at
+        INSERT INTO customroles(
+          id, organizationid, name, description, permissions,
+          createdby, createdat, updatedat
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
@@ -211,7 +204,7 @@ export class RBACService {
 
       log.info('Custom role created', {
         action: 'custom_role_created',
-        metadata: { _roleId,
+        metadata: { roleId,
           organizationId,
           name,
           permissionCount: permissions.length,
@@ -233,7 +226,7 @@ export class RBACService {
     } catch (error: unknown) {
       log.error('Failed to create custom role', {
         action: 'create_custom_role_error',
-        metadata: { _organizationId,
+        metadata: { organizationId,
           name,
           error: error instanceof Error ? error.message : 'Unknown error'
         }
@@ -263,7 +256,7 @@ export class RBACService {
       // Get existing role
       const existingRole = await db.prepare(`
         SELECT * FROM custom_roles
-        WHERE id = ? AND organization_id = ?
+        WHERE id = ? AND organizationid = ?
       `).get(roleId, organizationId);
 
       if (!existingRole) {
@@ -289,7 +282,7 @@ export class RBACService {
         updateValues.push(JSON.stringify(updates.permissions));
       }
 
-      updateFields.push('updated_at = ?');
+      updateFields.push('updatedat = ?');
       updateValues.push(new Date().toISOString());
 
       updateValues.push(roleId, organizationId);
@@ -297,14 +290,14 @@ export class RBACService {
       const updateQuery = `
         UPDATE custom_roles
         SET ${updateFields.join(', ')}
-        WHERE id = ? AND organization_id = ?
+        WHERE id = ? AND organizationid = ?
       `;
 
       await db.prepare(updateQuery).run(...updateValues);
 
       log.info('Custom role updated', {
         action: 'custom_role_updated',
-        metadata: { _roleId,
+        metadata: { roleId,
           organizationId,
           updatedFields: Object.keys(updates),
           updatedBy
@@ -314,24 +307,24 @@ export class RBACService {
       // Return updated role
       const updatedRole = await db.prepare(`
         SELECT * FROM custom_roles
-        WHERE id = ? AND organization_id = ?
+        WHERE id = ? AND organizationid = ?
       `).get(roleId, organizationId);
 
       return {
         id: updatedRole.id,
-        organizationId: updatedRole.organization_id,
+        organizationId: updatedRole.organizationid,
         name: updatedRole.name,
         description: updatedRole.description,
         permissions: JSON.parse(updatedRole.permissions),
-        createdBy: updatedRole.created_by,
-        createdAt: updatedRole.created_at,
-        updatedAt: updatedRole.updated_at
+        createdBy: updatedRole.createdby,
+        createdAt: updatedRole.createdat,
+        updatedAt: updatedRole.updatedat
       };
 
     } catch (error: unknown) {
       log.error('Failed to update custom role', {
         action: 'update_custom_role_error',
-        metadata: { _roleId,
+        metadata: { roleId,
           organizationId,
           error: error instanceof Error ? error.message : 'Unknown error'
         }
@@ -348,7 +341,7 @@ export class RBACService {
       // Check if role is in use
       const roleInUse = await db.prepare(`
         SELECT COUNT(*) as count FROM organization_members
-        WHERE role = ? AND organization_id = ?
+        WHERE role = ? AND organizationid = ?
       `).get(roleId, organizationId);
 
       if (roleInUse.count > 0) {
@@ -358,12 +351,12 @@ export class RBACService {
       // Delete the role
       await db.prepare(`
         DELETE FROM custom_roles
-        WHERE id = ? AND organization_id = ?
+        WHERE id = ? AND organizationid = ?
       `).run(roleId, organizationId);
 
       log.info('Custom role deleted', {
         action: 'custom_role_deleted',
-        metadata: { _roleId,
+        metadata: { roleId,
           organizationId,
           deletedBy
         }
@@ -372,7 +365,7 @@ export class RBACService {
     } catch (error: unknown) {
       log.error('Failed to delete custom role', {
         action: 'delete_custom_role_error',
-        metadata: { _roleId,
+        metadata: { roleId,
           organizationId,
           error: error instanceof Error ? error.message : 'Unknown error'
         }
@@ -389,7 +382,7 @@ export class RBACService {
       // Get custom roles
       const customRoles = await db.prepare(`
         SELECT * FROM custom_roles
-        WHERE organization_id = ?
+        WHERE organizationid = ?
         ORDER BY name
       `).all(organizationId);
 
@@ -397,13 +390,13 @@ export class RBACService {
         ...Object.values(ROLES), // System roles
         ...customRoles.map((role: unknown) => ({
           id: role.id,
-          organizationId: role.organization_id,
+          organizationId: role.organizationid,
           name: role.name,
           description: role.description,
           permissions: JSON.parse(role.permissions),
-          createdBy: role.created_by,
-          createdAt: role.created_at,
-          updatedAt: role.updated_at
+          createdBy: role.createdby,
+          createdAt: role.createdat,
+          updatedAt: role.updatedat
         }))
       ];
 
@@ -412,7 +405,7 @@ export class RBACService {
     } catch (error: unknown) {
       log.error('Failed to get organization roles', {
         action: 'get_organization_roles_error',
-        metadata: { _organizationId,
+        metadata: { organizationId,
           error: error instanceof Error ? error.message : 'Unknown error'
         }
       });
@@ -442,8 +435,8 @@ export class RBACService {
       // Update user's role in organization_members
       await db.prepare(`
         UPDATE organization_members
-        SET role = ?, permissions = ?, updated_at = ?
-        WHERE user_id = ? AND organization_id = ?
+        SET role = ?, permissions = ?, updatedat = ?
+        WHERE userid = ? AND organizationid = ?
       `).run(
         roleId,
         JSON.stringify(customPermissions),
@@ -454,7 +447,7 @@ export class RBACService {
 
       log.info('Role assigned to user', {
         action: 'role_assigned',
-        metadata: { _userId,
+        metadata: { userId,
           organizationId,
           roleId,
           customPermissionCount: customPermissions.length,
@@ -465,7 +458,7 @@ export class RBACService {
     } catch (error: unknown) {
       log.error('Failed to assign role', {
         action: 'assign_role_error',
-        metadata: { _userId,
+        metadata: { userId,
           organizationId,
           roleId,
           error: error instanceof Error ? error.message : 'Unknown error'
@@ -489,11 +482,11 @@ export class RBACService {
       const content = await db.prepare(`
         SELECT
           oc.visibility,
-          oc.team_id,
-          oc.owner_id,
+          oc.teamid,
+          oc.ownerid,
           oc.approval_status
         FROM organization_content oc
-        WHERE oc.content_id = ? AND oc.organization_id = ?
+        WHERE oc.contentid = ? AND oc.organizationid = ?
       `).get(contentId, organizationId);
 
       if (!content) {
@@ -520,14 +513,14 @@ export class RBACService {
       return PermissionValidators.validateContentAccess(
         userPermissions,
         content.visibility,
-        content.team_id,
-        content.owner_id
+        content.teamid,
+        content.ownerid
       );
 
     } catch (error: unknown) {
       log.error('Failed to validate content access', {
         action: 'validate_content_access_error',
-        metadata: { _userId,
+        metadata: { userId,
           organizationId,
           contentId,
           action,
@@ -563,7 +556,7 @@ export class RBACService {
       // Get target user's role
       const targetUser = await this.dbService.getDatabase().prepare(`
         SELECT role FROM organization_members
-        WHERE user_id = ? AND organization_id = ?
+        WHERE userid = ? AND organizationid = ?
       `).get(targetUserId, organizationId);
 
       if (!targetUser) {
@@ -575,7 +568,7 @@ export class RBACService {
     } catch (error: unknown) {
       log.error('Failed to validate user management', {
         action: 'validate_user_management_error',
-        metadata: { _managerId,
+        metadata: { managerId,
           targetUserId,
           organizationId,
           error: error instanceof Error ? error.message : 'Unknown error'
@@ -593,26 +586,26 @@ export async function initializeRBACTables(dbService: DatabaseService): Promise<
   try {
     // Create custom roles table
     await db.exec(`
-      CREATE TABLE IF NOT EXISTS custom_roles (
+      CREATE TABLE IF NOT EXISTS customroles(
         id TEXT PRIMARY KEY,
         organization_id TEXT NOT NULL,
         name TEXT NOT NULL,
         description TEXT,
         permissions TEXT NOT NULL, -- JSON array
         created_by TEXT NOT NULL,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        created_at TEXT DEFAULT CURRENTTIMESTAMP,
+        updated_at TEXT DEFAULT CURRENTTIMESTAMP,
 
-        FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
-        FOREIGN KEY (created_by) REFERENCES users(id),
-        UNIQUE(organization_id, name)
+        FOREIGN KEY (organizationid) REFERENCES organizations(id) ON DELETE CASCADE,
+        FOREIGN KEY (createdby) REFERENCES users(id),
+        UNIQUE(organizationid, name)
       );
     `);
 
     // Create indexes
     await db.exec(`
-      CREATE INDEX IF NOT EXISTS idx_custom_roles_organization_id ON custom_roles(organization_id);
-      CREATE INDEX IF NOT EXISTS idx_custom_roles_created_by ON custom_roles(created_by);
+      CREATE INDEX IF NOT EXISTS idx_custom_roles_organization_id ON customroles(organizationid);
+      CREATE INDEX IF NOT EXISTS idx_custom_roles_created_by ON customroles(createdby);
     `);
 
     log.info('RBAC tables initialized', {

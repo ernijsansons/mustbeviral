@@ -188,7 +188,7 @@ export class EventStore {
     let stream = this.streams.get(streamKey);
 
     if (!stream) {
-      stream = { _aggregateId,
+      stream = { aggregateId,
         aggregateType,
         version: 0,
         events: [],
@@ -200,7 +200,7 @@ export class EventStore {
       throw new Error(`Concurrency conflict: expected version ${expectedVersion}, actual version ${stream.version}`);
     }
 
-    const enrichedEvents = events.map((event, _index) => ({
+    const enrichedEvents = events.map((event, index) => ({
       ...event,
       id: this.generateEventId(),
       aggregateId,
@@ -225,7 +225,7 @@ export class EventStore {
     if (query.aggregateId && query.aggregateType) {
       const streamKey = `${query.aggregateType}:${query.aggregateId}`;
       const stream = this.streams.get(streamKey);
-      events = stream?.events || [];
+      events = stream?.events ?? [];
     } else if (query.aggregateType) {
       events = this.globalEventLog.filter(e =>
         e.aggregateId.startsWith(`${query.aggregateType}:`)
@@ -275,7 +275,9 @@ export class EventStore {
     const streamKey = `${aggregateType}:${aggregateId}`;
     const stream = this.streams.get(streamKey);
 
-    if (!stream) return null;
+    if (!stream) {
+    return null;
+  }
 
     let events = stream.events;
     if (toVersion !== undefined) {
@@ -299,11 +301,11 @@ export class EventStore {
 
   async createSnapshot(aggregateId: string, aggregateType: string): Promise<void> {
     const aggregate = await this.getAggregate(aggregateId, aggregateType);
-    if (!aggregate) return;
+    if (!aggregate) {return;}
 
     const streamKey = `${aggregateType}:${aggregateId}`;
     const stream = this.streams.get(streamKey);
-    if (!stream) return;
+    if (!stream) {return;}
 
     const snapshot: Snapshot = {
       id: this.generateSnapshotId(),
@@ -377,7 +379,7 @@ export class EventStore {
       id: sagaId,
       type: sagaType,
       status: 'active',
-      currentStep: steps[0]?.name || '',
+      currentStep: steps[0]?.name ?? '',
       data,
       startedAt: Date.now(),
       compensationEvents: [],
@@ -390,7 +392,7 @@ export class EventStore {
   }
 
   async getSaga(sagaId: string): Promise<Saga | null> {
-    return this.sagas.get(sagaId) || null;
+    return this.sagas.get(sagaId)  ?? null;
   }
 
   async registerEventHandler(eventType: string, handler: EventHandler): Promise<void> {
@@ -405,7 +407,7 @@ export class EventStore {
     toTimestamp?: number,
     eventTypes?: string[]
   ): Promise<void> {
-    const query: EventQuery = { _fromTimestamp,
+    const query: EventQuery = { fromTimestamp,
       toTimestamp,
       eventTypes
     };
@@ -417,10 +419,10 @@ export class EventStore {
   getMetrics(): EventStoreMetrics {
     const totalEvents = this.globalEventLog.length;
     const avgEventSize = totalEvents > 0
-      ? this.globalEventLog.reduce((sum, _e) => sum + JSON.stringify(e).length, 0) / totalEvents
+      ? this.globalEventLog.reduce((sum, e) => sum + JSON.stringify(e).length, 0) / totalEvents
       : 0;
 
-    return { _totalEvents,
+    return { totalEvents,
       eventsPerSecond: this.calculateEventsPerSecond(),
       averageEventSize: avgEventSize,
       storageSize: this.calculateStorageSize(),
@@ -434,7 +436,7 @@ export class EventStore {
 
   private async processEvents(events: DomainEvent[]): Promise<void> {
     for (const event of events) {
-      const handlers = this.eventHandlers.get(event.type) || [];
+      const handlers = this.eventHandlers.get(event.type)  ?? [];
 
       await Promise.all(handlers.map(async handler => {
         try {
@@ -472,9 +474,9 @@ export class EventStore {
     return currentStep?.command.type === event.type;
   }
 
-  private async updateSaga(saga: Saga, event: DomainEvent): Promise<void> {
+  private async updateSaga(saga: Saga, _event: DomainEvent): Promise<void> {
     const currentStepIndex = saga.steps.findIndex(s => s.name === saga.currentStep);
-    if (currentStepIndex === -1) return;
+    if (currentStepIndex === -1) {return;}
 
     const currentStep = saga.steps[currentStepIndex];
     currentStep.status = 'completed';
@@ -492,7 +494,7 @@ export class EventStore {
 
   private async executeSagaStep(saga: Saga): Promise<void> {
     const step = saga.steps.find(s => s.name === saga.currentStep);
-    if (!step) return;
+    if (!step) {return;}
 
     step.status = 'executing';
 
@@ -503,7 +505,7 @@ export class EventStore {
       } else {
         throw new Error(result.error);
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       step.status = 'failed';
       saga.status = 'failed';
 
@@ -532,7 +534,7 @@ export class EventStore {
     saga.status = 'failed';
   }
 
-  private async executeCommand(command: Command): Promise<CommandResult> {
+  private async executeCommand(_command: Command): Promise<CommandResult> {
     return {
       success: true,
       events: [],
@@ -557,30 +559,32 @@ export class EventStore {
   }
 
   private startSubscriptionProcessing(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.processSubscriptions();
     }, 1000);
   }
 
   private startSnapshotManagement(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.manageSnapshots();
     }, 60000); // Every minute
   }
 
   private startRetentionManagement(): void {
-    setInterval(() => {
+    setInterval_(() => {
       this.applyRetentionPolicy();
     }, 3600000); // Every hour
   }
 
   private async processSubscriptions(): Promise<void> {
     for (const subscription of this.subscriptions.values()) {
-      if (subscription.status !== 'active') continue;
+      if (subscription.status !== 'active') {
+    continue;
+  }
 
       try {
         await this.processSubscription(subscription);
-      } catch (error: unknown) {
+      } catch (_error: unknown) {
         subscription.errorCount++;
         if (subscription.errorCount >= subscription.maxRetries) {
           subscription.status = 'error';
@@ -668,7 +672,7 @@ export class Projection {
   ) {}
 
   async processEvent(event: DomainEvent): Promise<void> {
-    if (!this.handlesEvent(event.type)) return;
+    if (!this.handlesEvent(event.type)) {return;}
 
     const readModel = await this.projectEvent(event);
     if (readModel) {
@@ -704,7 +708,7 @@ export class Projection {
   }
 
   getReadModel(id: string): ReadModel | null {
-    return this.readModels.get(id) || null;
+    return this.readModels.get(id)  ?? null;
   }
 
   query(query: Record<string, unknown>): ReadModel[] {

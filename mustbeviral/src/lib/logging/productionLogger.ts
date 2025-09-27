@@ -1,7 +1,7 @@
 // Production-Safe Logging System
 // Replaces console statements with structured, secure logging
 
-import { log } from '../monitoring/logger';
+import { log} from '../monitoring/logger';
 
 export enum LogLevel {
   TRACE = 0,
@@ -240,7 +240,9 @@ class ProductionLogger {
   }
 
   private sanitizeContext(context?: LogContext): LogContext | undefined {
-    if (!context) return undefined;
+    if (!context) {
+    return undefined;
+  }
 
     const sanitized = { ...context };
 
@@ -286,16 +288,18 @@ class ProductionLogger {
     sanitized = sanitized.replace(/secret[=:]\s*[^\s]+/gi, 'secret=[REDACTED]');
 
     // Replace email addresses
-    sanitized = sanitized.replace(/[\w\.-]+@[\w\.-]+\.\w+/g, '[EMAIL_REDACTED]');
+    sanitized = sanitized.replace(/[\w\.-]+@[\w\.-]+\.\w+/g, '[EMAILREDACTED]');
 
     // Replace potential API keys (32+ character alphanumeric strings)
-    sanitized = sanitized.replace(/[a-zA-Z0-9]{32,}/g, '[KEY_REDACTED]');
+    sanitized = sanitized.replace(/[a-zA-Z0-9]{32,}/g, '[KEYREDACTED]');
 
     return sanitized;
   }
 
   private sanitizeStack(stack?: string): string | undefined {
-    if (!stack) return undefined;
+    if (!stack) {
+    return undefined;
+  }
 
     // Remove file paths that might contain sensitive information
     return stack.replace(/\/.*\//g, '/[PATH]/')
@@ -312,7 +316,7 @@ class ProductionLogger {
 
   private getEnvironment(): string {
     if (typeof process !== 'undefined' && process.env) {
-      return process.env.ENVIRONMENT || process.env.NODE_ENV || 'development';
+      return process.env.ENVIRONMENT ?? process.env.NODE_ENV ?? 'development';
     }
 
     // Browser environment detection

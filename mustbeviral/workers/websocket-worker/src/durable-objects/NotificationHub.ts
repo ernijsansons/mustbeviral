@@ -45,7 +45,7 @@ export class NotificationHub {
 
   constructor(private state: DurableObjectState, private env: unknown) {
     this.userId = state.id.toString();
-    this.logger = new Logger('NotificationHub', env.LOG_LEVEL || 'INFO');
+    this.logger = new Logger('NotificationHub', env.LOG_LEVEL  ?? 'INFO');
 
     // Load persisted notifications
     this.loadPersistedNotifications();
@@ -96,8 +96,8 @@ export class NotificationHub {
 
     // Extract connection info
     const url = new URL(request.url);
-    const deviceType = url.searchParams.get('deviceType') || 'web';
-    const userAgent = request.headers.get('User-Agent') || 'unknown';
+    const deviceType = url.searchParams.get('deviceType')  ?? 'web';
+    const userAgent = request.headers.get('User-Agent')  ?? 'unknown';
 
     // Create WebSocket pair
     const [client, server] = new WebSocketPair();
@@ -165,7 +165,7 @@ export class NotificationHub {
 
   async handleWebSocketMessage(connectionId: string, event: MessageEvent): Promise<void> {
     const connection = this.connections.get(connectionId);
-    if (!connection) return;
+    if (!connection) {return;}
 
     try {
       const message = JSON.parse(event.data as string);
@@ -212,7 +212,7 @@ export class NotificationHub {
 
   async handlePing(connectionId: string): Promise<void> {
     const connection = this.connections.get(connectionId);
-    if (!connection) return;
+    if (!connection) {return;}
 
     connection.websocket.send(JSON.stringify({
       type: 'pong',
@@ -278,7 +278,7 @@ export class NotificationHub {
 
   handleWebSocketClose(connectionId: string): void {
     const connection = this.connections.get(connectionId);
-    if (!connection) return;
+    if (!connection) {return;}
 
     this.connections.delete(connectionId);
 
@@ -299,12 +299,12 @@ export class NotificationHub {
 
     const notification: Notification = {
       id: crypto.randomUUID(),
-      type: notificationData.type || 'info',
-      title: notificationData.title || '',
-      message: notificationData.message || '',
+      type: notificationData.type  ?? 'info',
+      title: notificationData.title  ?? '',
+      message: notificationData.message  ?? '',
       data: notificationData.data,
-      priority: notificationData.priority || 'normal',
-      channels: notificationData.channels || ['web'],
+      priority: notificationData.priority ?? 'normal',
+      channels: notificationData.channels ?? ['web'],
       read: false,
       delivered: false,
       createdAt: Date.now(),
@@ -377,7 +377,7 @@ export class NotificationHub {
 
   async handleListNotifications(request: Request): Promise<Response> {
     const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get('limit') || '50');
+    const limit = parseInt(url.searchParams.get('limit')  ?? '50');
     const unreadOnly = url.searchParams.get('unread') === 'true';
 
     let notifications = Array.from(this.notifications.values());
@@ -394,7 +394,7 @@ export class NotificationHub {
 
     // Remove expired notifications
     const now = Date.now();
-    notifications = notifications.filter(n => !n.expiresAt || n.expiresAt > now);
+    notifications = notifications.filter(n => !n.expiresAt  ?? n.expiresAt > now);
 
     return new Response(JSON.stringify({ _notifications,
       total: this.notifications.size,
@@ -465,7 +465,7 @@ export class NotificationHub {
   private getUnreadNotifications(): Notification[] {
     const now = Date.now();
     return Array.from(this.notifications.values())
-      .filter(n => !n.read && (!n.expiresAt || n.expiresAt > now))
+      .filter(n => !n.read && (!n.expiresAt  ?? n.expiresAt > now))
       .sort((a, _b) => b.createdAt - a.createdAt);
   }
 
@@ -555,7 +555,7 @@ export class NotificationHub {
     });
 
     // Reschedule if there are still notifications or connections
-    if (this.notifications.size > 0 || this.connections.size > 0) {
+    if (this.notifications.size > 0  ?? this.connections.size > 0) {
       this.scheduleCleanup();
     }
   }
