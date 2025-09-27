@@ -74,45 +74,56 @@ export default defineConfig({
     chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
-        // Advanced chunking strategy with dynamic imports
+        // Advanced chunking strategy with dynamic imports and bundle optimization
         manualChunks: (id) => {
-          // Core vendor chunks (critical path)
+          // Core vendor chunks (critical path) - optimized for HTTP/2 parallelization
           if (id.includes('node_modules')) {
+            // React ecosystem - critical, load first
             if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor';
+              return 'react-core';
             }
+            // Query management - high priority
             if (id.includes('@tanstack/react-query')) {
-              return 'query';
+              return 'react-query';
             }
+            // Routing - high priority
             if (id.includes('wouter')) {
               return 'router';
             }
+            // Charts and visualization - lazy load
             if (id.includes('recharts') || id.includes('d3')) {
-              return 'charts';
+              return 'charts-vendor';
             }
+            // Payment processing - lazy load
             if (id.includes('stripe')) {
-              return 'payments';
+              return 'payments-vendor';
             }
+            // Cryptography - security critical
             if (id.includes('jose') || id.includes('bcrypt')) {
-              return 'crypto';
+              return 'crypto-vendor';
             }
+            // Utility libraries - medium priority
             if (id.includes('zod') || id.includes('immer')) {
-              return 'utils';
+              return 'utils-vendor';
             }
+            // Icons - lazy load, cached
             if (id.includes('lucide-react')) {
-              return 'icons';
+              return 'icons-vendor';
             }
+            // Cloudflare specific - infrastructure
             if (id.includes('@cloudflare') || id.includes('drizzle')) {
-              return 'cloudflare';
+              return 'cloudflare-vendor';
             }
+            // AI libraries - lazy load
             if (id.includes('@langchain')) {
-              return 'ai-libs';
+              return 'ai-vendor';
             }
-            if (id.includes('clsx') || id.includes('class-variance-authority')) {
-              return 'ui-utils';
+            // UI utilities - high priority
+            if (id.includes('clsx') || id.includes('class-variance-authority') || id.includes('tailwind-merge')) {
+              return 'ui-utils-vendor';
             }
-            // All other vendor deps
-            return 'vendor';
+            // All other vendor deps - lowest priority
+            return 'vendor-misc';
           }
           
           // Application code splitting (lazy-loaded chunks)

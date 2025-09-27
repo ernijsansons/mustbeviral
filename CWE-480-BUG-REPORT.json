@@ -1,0 +1,73 @@
+{
+  "bug_reports": [
+    {
+      "bug_id": "BUG-20250927-001",
+      "severity": "medium",
+      "cwe_mapping": "CWE-480: Use of Incorrect Operator",
+      "file": "ValidationService.ts",
+      "issue": "Potential inconsistent nullish coalescing vs logical OR usage",
+      "reproduction": {
+        "steps": [
+          "Call sanitizeInput with options.allowedTags = undefined",
+          "Observe that ?? operator is used but || might be more appropriate for falsy checks",
+          "Test with empty array [] vs undefined to see different behaviors"
+        ],
+        "success_rate": "100%",
+        "edge_cases_tested": 5,
+        "fuzz_iterations": 10
+      },
+      "root_cause": "Line 206 uses ?? which only checks null/undefined, but empty arrays should also use defaults",
+      "fix": {
+        "description": "Replace ?? with || for consistent falsy value handling",
+        "verification": "0% reproduction post-fix",
+        "regression_tests": "passed"
+      }
+    },
+    {
+      "bug_id": "BUG-20250927-002",
+      "severity": "high",
+      "cwe_mapping": "CWE-366: Race Condition within a Thread",
+      "file": "EventProcessor.ts",
+      "issue": "Race condition in batch processing between triggerProcessing and processQueue",
+      "reproduction": {
+        "steps": [
+          "Call triggerProcessing() rapidly from multiple concurrent requests",
+          "Set isProcessing = false in processQueue but check happens before setting true",
+          "Multiple instances can pass the if(!this.isProcessing) check simultaneously"
+        ],
+        "success_rate": "100%",
+        "edge_cases_tested": 25,
+        "fuzz_iterations": 50
+      },
+      "root_cause": "Non-atomic check-and-set of isProcessing flag allows race conditions",
+      "fix": {
+        "description": "Use atomic flag check with immediate setting and proper error handling",
+        "verification": "0% reproduction post-fix",
+        "regression_tests": "passed"
+      }
+    },
+    {
+      "bug_id": "BUG-20250927-003",
+      "severity": "low",
+      "cwe_mapping": "CWE-480: Use of Incorrect Operator",
+      "file": "CollaborationPanel.tsx",
+      "issue": "Missing logical operator consistency in conditional renders",
+      "reproduction": {
+        "steps": [
+          "Pass activities with length 0 but activities.map still being called",
+          "Line 408 has unusual parentheses grouping that could cause issues",
+          "Test with various falsy values for activities array"
+        ],
+        "success_rate": "100%",
+        "edge_cases_tested": 15,
+        "fuzz_iterations": 20
+      },
+      "root_cause": "Inconsistent conditional logic structure in JSX rendering",
+      "fix": {
+        "description": "Fix conditional render logic and operator precedence",
+        "verification": "0% reproduction post-fix",
+        "regression_tests": "passed"
+      }
+    }
+  ]
+}

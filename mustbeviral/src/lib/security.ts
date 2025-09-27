@@ -181,7 +181,7 @@ export class SecurityManager {
   }
 
   // Encryption methods
-  encryptSensitiveData(data: string, level: 'basic' | 'standard' | 'enterprise' = 'basic'): string {
+  encryptSensitiveData(sensitiveData: string, level: 'basic' | 'standard' | 'enterprise' = 'basic'): string {
     console.log('LOG: SECURITY-ENCRYPT-1 - Encrypting data with level:', level);
     
     try {
@@ -189,12 +189,12 @@ export class SecurityManager {
       const iv = randomBytes(16);
       const cipher = createCipheriv(algorithm, this.encryptionKey, iv);
       
-      let encrypted = cipher.update(data, 'utf8', 'hex');
+      let encrypted = cipher.update(sensitiveData, 'utf8', 'hex');
       encrypted += cipher.final('hex');
       
-      const result = iv.toString('hex') + ':' + encrypted;
+      const encryptedString = iv.toString('hex') + ':' + encrypted;
       console.log('LOG: SECURITY-ENCRYPT-2 - Data encrypted successfully');
-      return result;
+      return encryptedString;
     } catch (error) {
       console.error('LOG: SECURITY-ENCRYPT-ERROR-1 - Encryption failed:', error);
       throw new Error('Encryption failed');
@@ -297,25 +297,25 @@ export class SecurityManager {
       };
 
       // Basic keyword-based detection
-      result.biasscore = this.calculateKeywordBiasScore(content);
+      result.bias_score = this.calculateKeywordBiasScore(content);
       
-      if (checkLevel === 'advanced'  ?? checkLevel === 'comprehensive') {
+      if (checkLevel === 'advanced' || checkLevel === 'comprehensive') {
         // Advanced pattern detection
         const patternBias = this.detectBiasPatterns(content);
-        result.biasscore = Math.max(result.biasscore, patternBias.score);
+        result.bias_score = Math.max(result.bias_score, patternBias.score);
         result.detected_biases.push(...patternBias.types);
       }
 
       if (checkLevel === 'comprehensive') {
         // Comprehensive semantic analysis
         const semanticBias = await this.performSemanticBiasAnalysis(content);
-        result.biasscore = Math.max(result.biasscore, semanticBias.score);
+        result.bias_score = Math.max(result.bias_score, semanticBias.score);
         result.detected_biases.push(...semanticBias.types);
         result.recommendations.push(...semanticBias.recommendations);
       }
 
       result.passed = result.bias_score < this.getBiasThreshold(checkLevel);
-      result.confidence = this.calculateConfidence(result.biasscore, checkLevel);
+      result.confidence = this.calculateConfidence(result.bias_score, checkLevel);
 
       console.log('LOG: SECURITY-BIAS-4 - Bias check completed:', result.passed, 'Score:', result.biasscore);
       return result;
@@ -436,9 +436,19 @@ export class SecurityManager {
   }
 
   private calculateConfidence(biasScore: number, level: string): number {
-    const baseConfidence = level === 'comprehensive' ? 85 : level === 'advanced' ? 70 : 60;
+    const baseConfidence = this.getBaseConfidence(level);
     const scoreAdjustment = Math.min(20, biasScore * 0.5);
     return Math.max(30, baseConfidence - scoreAdjustment);
+  }
+
+  private getBaseConfidence(level: string): number {
+    if (level === 'comprehensive') {
+      return 85;
+    }
+    if (level === 'advanced') {
+      return 70;
+    }
+    return 60;
   }
 
   // Security tier management

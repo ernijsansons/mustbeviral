@@ -339,25 +339,42 @@ export class CloudflareUserRepository implements IUserRepository {
   async updateMultipleUsers(userIds: string[], updates: Partial<UserProps>): Promise<void> {
     if (userIds.length === 0) {return;}
 
-    const placeholders = userIds.map(() => '?').join(',');
+    // SECURITY: Limit batch size to prevent DoS
+    if (userIds.length > 100) {
+      throw new Error('Batch size too large. Maximum 100 users allowed.');
+    }
+
+    // SECURITY: Validate user IDs format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const validUserIds = userIds.filter(id => typeof id === 'string' && uuidRegex.test(id));
+
+    if (validUserIds.length === 0) {return;}
+
+    const allowedUpdateFields = [
+      'email', 'firstName', 'lastName', 'role', 'status', 'emailVerified',
+      'emailVerificationToken', 'passwordResetToken', 'passwordResetExpires',
+      'lastLoginAt', 'loginAttempts', 'lockedUntil', 'preferences', 'subscription'
+    ];
+
+    const placeholders = validUserIds.map(() => '?').join(',');
     const setClauses = Object.keys(updates)
-      .filter(key => key !== 'id' && key !== 'createdAt')
+      .filter(key => key !== 'id' && key !== 'createdAt' && allowedUpdateFields.includes(key))
       .map(key => `${key} = ?`)
       .join(', ');
 
     if (!setClauses) {return;}
 
     const values = [
-      ...Object.values(updates).map(value => 
-        typeof value === 'object' ? JSON.stringify(value) : value
-      ),
+      ...Object.entries(updates)
+        .filter(([key]) => allowedUpdateFields.includes(key))
+        .map(([, value]) => typeof value === 'object' ? JSON.stringify(value) : value),
       new Date().toISOString(), // updatedAt
-      ...userIds
+      ...validUserIds
     ];
 
     await this.env.DB
       .prepare(`
-        UPDATE ${this.tableName} 
+        UPDATE ${this.tableName}
         SET ${setClauses}, updatedAt = ?
         WHERE id IN (${placeholders})
       `)
@@ -365,7 +382,7 @@ export class CloudflareUserRepository implements IUserRepository {
       .run();
 
     // Invalidate caches for affected users
-    await Promise.all(userIds.map(id => this.invalidateUserCaches(id)));
+    await Promise.all(validUserIds.map(id => this.invalidateUserCaches(id)));
   }
 
   async deleteInactiveUsers(inactiveDays: number): Promise<number> {
@@ -630,11 +647,22 @@ export class CloudflareUserRepository implements IUserRepository {
   }
 
   async findByField<K extends keyof UserProps>(
-    field: K, 
+    field: K,
     value: UserProps[K]
   ): Promise<UserProps[]> {
+    // SECURITY: Validate field name against whitelist to prevent SQL injection
+    const allowedFields: (keyof UserProps)[] = [
+      'id', 'email', 'firstName', 'lastName', 'role', 'status',
+      'emailVerified', 'createdAt', 'updatedAt', 'lastLoginAt'
+    ];
+
+    if (!allowedFields.includes(field)) {
+      throw new Error(`Invalid field name: ${String(field)}`);
+    }
+
+    // SECURITY: Use parameterized query with validated field name
     const { results} = await this.env.DB
-      .prepare(`SELECT * FROM ${this.tableName} WHERE ${String(field)} = ?`)
+      .prepare(`SELECT * FROM ${this.tableName} WHERE ${String(field)} = ? LIMIT 1000`)
       .bind(value)
       .all();
 
@@ -690,11 +718,20 @@ export class CloudflareUserRepository implements IUserRepository {
 
   private buildWhereConditions(filters: Record<string, any>, bindings: any[]): string {
     const conditions: string[] = [];
+    const allowedFilterFields = [
+      'id', 'email', 'firstName', 'lastName', 'role', 'status',
+      'emailVerified', 'createdAt', 'updatedAt', 'lastLoginAt'
+    ];
 
     for (const [key, value] of Object.entries(filters)) {
-      if (value === value === undefined) {
-    continue;
-  }
+      if (value === undefined || value === null) {
+        continue;
+      }
+
+      // SECURITY: Validate field names to prevent SQL injection
+      if (!allowedFilterFields.includes(key)) {
+        continue; // Skip invalid field names
+      }
 
       conditions.push(`${key} = ?`);
       bindings.push(value);
@@ -705,18 +742,32 @@ export class CloudflareUserRepository implements IUserRepository {
 
   private buildSearchConditions(criteria: SearchCriteria<UserProps>, bindings: any[]): string {
     const conditions: string[] = [];
+    const allowedSearchFields = ['email', 'firstName', 'lastName'];
+    const allowedFilterFields = [
+      'id', 'email', 'firstName', 'lastName', 'role', 'status',
+      'emailVerified', 'createdAt', 'updatedAt', 'lastLoginAt'
+    ];
 
     if (criteria.query) {
-      conditions.push(`(email LIKE ? OR firstName LIKE ? OR lastName LIKE ?)`);
-      const searchTerm = `%${criteria.query}%`;
-      bindings.push(searchTerm, searchTerm, searchTerm);
+      // SECURITY: Sanitize search query and limit length
+      const sanitizedQuery = String(criteria.query).slice(0, 100).replace(/[<>"'&]/g, '');
+      if (sanitizedQuery.length > 0) {
+        conditions.push(`(email LIKE ? OR firstName LIKE ? OR lastName LIKE ?)`);
+        const searchTerm = `%${sanitizedQuery}%`;
+        bindings.push(searchTerm, searchTerm, searchTerm);
+      }
     }
 
     if (criteria.filters) {
       for (const [key, value] of Object.entries(criteria.filters)) {
-        if (value === value === undefined) {
-    continue;
-  }
+        if (value === undefined || value === null) {
+          continue;
+        }
+
+        // SECURITY: Validate field names to prevent SQL injection
+        if (!allowedFilterFields.includes(key)) {
+          continue; // Skip invalid field names
+        }
 
         conditions.push(`${key} = ?`);
         bindings.push(value);

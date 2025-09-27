@@ -66,7 +66,7 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
   const commentsRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll activities to bottom when new items are added
-  useEffect_(() => {
+  useEffect(() => {
     if (activeTab === 'activity' && activitiesRef.current) {
       activitiesRef.current.scrollTop = activitiesRef.current.scrollHeight;
     }
@@ -77,9 +77,9 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
   const isNearCapacity = onlineCollaborators.length >= maxConcurrentUsers * 0.8;
 
   // Handle invite user
-  const handleInviteUser = useCallback(async() => {
-    if (!onInviteUser ?? !inviteEmail.trim()) {return;}
-    
+  const handleInviteUser = useCallback(async () => {
+    if (!onInviteUser || !inviteEmail.trim()) {return;}
+
     setIsInviting(true);
     try {
       await onInviteUser(inviteEmail.trim(), inviteRole);
@@ -93,9 +93,9 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
   }, [onInviteUser, inviteEmail, inviteRole]);
 
   // Handle add comment
-  const handleAddComment = useCallback(async() => {
-    if (!onAddComment ?? !newComment.trim()) {return;}
-    
+  const handleAddComment = useCallback(async () => {
+    if (!onAddComment || !newComment.trim()) {return;}
+
     setIsAddingComment(true);
     try {
       await onAddComment(newComment.trim());
@@ -405,7 +405,8 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
                   <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No recent activity</p>
                 </div>
-              ) : (activities.map((activity) => {
+              ) : (
+                activities.map((activity) => {
                   const Icon = getActivityIcon(activity.type);
                   return (
                     <div key={activity.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50">

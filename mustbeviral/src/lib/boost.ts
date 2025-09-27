@@ -70,8 +70,8 @@ export class VisibilityBoostEngine {
       for (const keyword of searchKeywords) {
         console.log('LOG: BOOST-SEARCH-2 - Searching for keyword:', keyword);
         
-        const results = await this.queryPerplexity(keyword);
-        const processedMentions = await this.processMentionResults(results, keyword);
+        const perplexityResults = await this.queryPerplexity(keyword);
+        const processedMentions = await this.processMentionResults(perplexityResults, keyword);
         mentions.push(...processedMentions);
       }
 
@@ -121,9 +121,9 @@ export class VisibilityBoostEngine {
         throw new Error(`Perplexity API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const perplexityResponse = await response.json();
       console.log('LOG: BOOST-PERPLEXITY-3 - Perplexity API response received');
-      return data;
+      return perplexityResponse;
     } catch (error) {
       console.error('LOG: BOOST-PERPLEXITY-ERROR-1 - Perplexity API call failed:', error);
       return this.getMockPerplexityResults(query);
@@ -131,16 +131,16 @@ export class VisibilityBoostEngine {
   }
 
   // Process Perplexity results into structured mentions
-  private async processMentionResults(results: any, query: string): Promise<BrandMention[]> {
+  private async processMentionResults(perplexityResults: any, query: string): Promise<BrandMention[]> {
     console.log('LOG: BOOST-PROCESS-1 - Processing mention results');
     
     try {
       const mentions: BrandMention[] = [];
-      const content = results.choices?.[0]?.message?.content ?? '';
-      const citations = results.citations ?? [];
+      const messageContent = perplexityResults.choices?.[0]?.message?.content ?? '';
+      const citations = perplexityResults.citations ?? [];
 
       // Extract mentions from content
-      const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
+      const sentences = messageContent.split(/[.!?]+/).filter(s => s.trim().length > 20);
       
       for (let i = 0; i < Math.min(sentences.length, 5); i++) {
         const sentence = sentences[i].trim();
@@ -181,12 +181,12 @@ export class VisibilityBoostEngine {
       let positiveCount = 0;
       let negativeCount = 0;
       
-      positiveWords.forEach(word => {
-        if (lowerText.includes(word)) {positiveCount++;}
+      positiveWords.forEach(positiveWord => {
+        if (lowerText.includes(positiveWord)) {positiveCount++;}
       });
       
-      negativeWords.forEach(word => {
-        if (lowerText.includes(word)) {negativeCount++;}
+      negativeWords.forEach(negativeWord => {
+        if (lowerText.includes(negativeWord)) {negativeCount++;}
       });
       
       let sentiment: 'positive' | 'negative' | 'neutral' = 'neutral';
@@ -241,25 +241,25 @@ export class VisibilityBoostEngine {
       };
     }
 
-    const positive = mentions.filter(m => m.sentiment_score > 0.1).length;
-    const negative = mentions.filter(m => m.sentiment_score < -0.1).length;
+    const positive = mentions.filter(mention => mention.sentiment_score > 0.1).length;
+    const negative = mentions.filter(mention => mention.sentiment_score < -0.1).length;
     const neutral = mentions.length - positive - negative;
     
-    const overallSentiment = mentions.reduce((sum, m) => sum + m.sentimentscore, 0) / mentions.length;
+    const overallSentiment = mentions.reduce((sum, mention) => sum + mention.sentiment_score, 0) / mentions.length;
     const visibilityScore = Math.min(100, mentions.length * 10);
     
     // Extract trending keywords
-    const allKeywords = mentions.flatMap(m => m.snippet.split(' '))
+    const allKeywords = mentions.flatMap(mention => mention.snippet.split(' '))
       .filter(word => word.length > 4)
       .map(word => word.toLowerCase().replace(/[^\w]/g, ''));
     
-    const keywordCounts = allKeywords.reduce((acc: any, word) => {
-      acc[word] = (acc[word]  ?? 0) + 1;
-      return acc;
+    const keywordCounts = allKeywords.reduce((wordCounts: any, word) => {
+      wordCounts[word] = (wordCounts[word]  ?? 0) + 1;
+      return wordCounts;
     }, {});
     
     const trendingKeywords = Object.entries(keywordCounts)
-      .sort(([,a]: any, [,b]: unknown) => b - a)
+      .sort(([,countA]: any, [,countB]: unknown) => (countB as number) - (countA as number))
       .slice(0, 5)
       .map(([word]) => word);
 
@@ -322,7 +322,7 @@ export class VisibilityBoostEngine {
       created_at: new Date().toISOString()
     };
 
-    console.log('LOG: BOOST-SEEDING-2 - Seeding plan created:', plan.seedingstrategy, plan.priority);
+    console.log('LOG: BOOST-SEEDING-2 - Seeding plan created:', plan.seeding_strategy, plan.priority);
     return plan;
   }
 
@@ -365,7 +365,7 @@ export class VisibilityBoostEngine {
   }
 
   private determinePriority(strategy: string, metrics: ReputationMetrics): 'high' | 'medium' | 'low' {
-    if (strategy = == 'reputation_repair' && metrics.overall_sentiment < -0.5) {
+    if (strategy === 'reputation_repair' && metrics.overall_sentiment < -0.5) {
       return 'high';
     }
     if (strategy === 'visibility_boost' && metrics.visibility_score < 20) {
@@ -389,8 +389,18 @@ export class VisibilityBoostEngine {
       return sum + (basePlatformReach[platform as keyof typeof basePlatformReach]  ?? 1000);
     }, 0);
 
-    const priorityMultiplier = priority === 'high' ? 1.5 : priority === 'medium' ? 1.2 : 1.0;
+    const priorityMultiplier = this.getPriorityMultiplier(priority);
     return Math.round(totalReach * priorityMultiplier);
+  }
+
+  private getPriorityMultiplier(priority: string): number {
+    if (priority === 'high') {
+      return 1.5;
+    }
+    if (priority === 'medium') {
+      return 1.2;
+    }
+    return 1.0;
   }
 
   private calculateRelevance(text: string, query: string): number {
@@ -402,7 +412,7 @@ export class VisibilityBoostEngine {
     }
     
     const queryWords = lowerQuery.split(' ');
-    const matchingWords = queryWords.filter(word => lowerText.includes(word));
+    const matchingWords = queryWords.filter(queryWord => lowerText.includes(queryWord));
     
     return matchingWords.length / queryWords.length;
   }

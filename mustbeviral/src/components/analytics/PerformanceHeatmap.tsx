@@ -23,6 +23,30 @@ interface TimeSlot {
   isPeak: boolean;
 }
 
+// Helper functions - simple if-else instead of nested ternaries!
+function getRankingEmoji(index: number): string {
+  if (index === 0) {
+    return '🏆';
+  }
+  if (index === 1) {
+    return '🥈';
+  }
+  if (index === 2) {
+    return '🥉';
+  }
+  return '⭐';
+}
+
+function getMetricLabel(selectedMetric: string): string {
+  if (selectedMetric === 'engagement') {
+    return 'eng';
+  }
+  if (selectedMetric === 'views') {
+    return 'views';
+  }
+  return 'viral';
+}
+
 export function PerformanceHeatmap({
   data = generateMockHeatmapData(),
   metric = 'engagement',
@@ -35,7 +59,7 @@ export function PerformanceHeatmap({
   const [animationPhase, setAnimationPhase] = useState(0);
 
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const hours = Array.from({ length: 24 }, (_, index) => index);
 
   const metrics = [
     { id: 'engagement', label: 'Engagement', icon: '💬', color: 'from-purple-500 to-pink-500' },
@@ -89,7 +113,7 @@ export function PerformanceHeatmap({
   };
 
   const isPeakTime = (day: number, hour: number): boolean => {
-    return data.peaks.some(p => p.day === day && p.hour === hour);
+    return data.peaks.some(peak => peak.day === day && peak.hour === hour);
   };
 
   const getOptimalSlots = (): TimeSlot[] => {
@@ -135,19 +159,19 @@ export function PerformanceHeatmap({
 
           {/* Metric Selector */}
           <div className="flex gap-2">
-            {metrics.map((m) => (
+            {metrics.map((metric) => (
               <button
-                key={m.id}
-                onClick={() => setSelectedMetric(m.id as typeof metric)}
+                key={metric.id}
+                onClick={() => setSelectedMetric(metric.id as typeof selectedMetric))
                 className={cn(
                   "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1",
-                  selectedMetric === m.id
+                  selectedMetric === metric.id
                     ? "bg-white text-red-500 shadow-lg"
                     : "bg-white/20 text-white/80 hover:bg-white/30"
                 )}
               >
-                <span>{m.icon}</span>
-                {m.label}
+                <span>{metric.icon}</span>
+                {metric.label}
               </button>
             ))}
           </div>
@@ -212,7 +236,7 @@ export function PerformanceHeatmap({
                 const value = data.values[dayIndex][hour];
                 const isPeak = isPeakTime(dayIndex, hour);
                 const isHovered = hoveredCell?.day === dayIndex && hoveredCell?.hour === hour;
-                const isOptimal = optimalSlots.some(s => s.day === dayIndex && s.hour === hour);
+                const isOptimal = optimalSlots.some(slot => slot.day === dayIndex && slot.hour === hour);
 
                 return (
                   <motion.div
@@ -311,7 +335,7 @@ export function PerformanceHeatmap({
               whileHover={{ scale: 1.05, boxShadow: '0 10px 30px rgba(255, 200, 0, 0.3)' }}
             >
               <div className="text-2xl mb-1">
-                {index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : '⭐'}
+                {getRankingEmoji(index)}
               </div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
                 {days[slot.day].slice(0, 3)}
@@ -320,7 +344,7 @@ export function PerformanceHeatmap({
                 {formatHour(slot.hour)}
               </p>
               <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">
-                {slot.value}% {selectedMetric === 'engagement' ? 'eng' : selectedMetric === 'views' ? 'views' : 'viral'}
+                {slot.value}% {getMetricLabel(selectedMetric)}
               </p>
             </motion.div>
           ))}

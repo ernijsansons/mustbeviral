@@ -753,8 +753,8 @@ Content:`;
       suggestions.push('Expand content slightly for better algorithm performance (100-250 chars optimal)');
     }
 
-    const hashtagCount = (content.match(/#w+/g)  ?? []).length;
-    if (hashtagCount = == 0) {
+    const hashtagCount = (content.match(/#w+/g) ?? []).length;
+    if (hashtagCount === 0) {
       suggestions.push('Add 1-2 relevant hashtags for discoverability');
     } else if (hashtagCount > 3) {
       suggestions.push('Reduce hashtags to 2-3 for optimal performance');
@@ -861,8 +861,8 @@ Content:`;
       thread_format: ['🧵', 'thread', '1/']
     };
 
-    const keywords = triggerMappings[trigger]  ?? [trigger];
-    return keywords.some(keyword = > content.toLowerCase().includes(keyword.toLowerCase()));
+    const keywords = triggerMappings[trigger] ?? [trigger];
+    return keywords.some(keyword => content.toLowerCase().includes(keyword.toLowerCase()));
   }
 
   private predictEngagementSignals(content: string): number {

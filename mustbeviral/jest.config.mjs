@@ -13,6 +13,9 @@ export default {
       testMatch: [
         '<rootDir>/__tests__/unit/lib/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/__tests__/unit/middleware/**/*.test.{js,jsx,ts,tsx}',
+        '<rootDir>/__tests__/security/**/*.test.{js,jsx,ts,tsx}',
+        '<rootDir>/__tests__/refactoring/**/*.test.{js,jsx,ts,tsx}',
+        '<rootDir>/__tests__/performance/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/src/worker/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/src/lib/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/src/core/**/*.test.{js,jsx,ts,tsx}'

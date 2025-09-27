@@ -25,6 +25,17 @@ ChartJS.register(
   ArcElement
 );
 
+// Helper function for web vital scores - simple if-else!
+function getWebVitalScore(value: number, goodThreshold: number, poorThreshold: number): number {
+  if (value <= goodThreshold) {
+    return 100;
+  }
+  if (value <= poorThreshold) {
+    return 60;
+  }
+  return 20;
+}
+
 interface MonitoringStats {
   errorCount: number;
   averageResponseTime: number;
@@ -156,11 +167,11 @@ const MonitoringDashboard: React.FC = () => {
       {
         label: 'Web Vitals Score',
         data: [
-          stats.webVitals.cls <= 0.1 ? 100 : stats.webVitals.cls <= 0.25 ? 60 : 20,
-          stats.webVitals.fcp <= 1800 ? 100 : stats.webVitals.fcp <= 3000 ? 60 : 20,
-          stats.webVitals.lcp <= 2500 ? 100 : stats.webVitals.lcp <= 4000 ? 60 : 20,
-          stats.webVitals.fid <= 100 ? 100 : stats.webVitals.fid <= 300 ? 60 : 20,
-          stats.webVitals.ttfb <= 800 ? 100 : stats.webVitals.ttfb <= 1800 ? 60 : 20,
+          getWebVitalScore(stats.webVitals.cls, 0.1, 0.25),
+          getWebVitalScore(stats.webVitals.fcp, 1800, 3000),
+          getWebVitalScore(stats.webVitals.lcp, 2500, 4000),
+          getWebVitalScore(stats.webVitals.fid, 100, 300),
+          getWebVitalScore(stats.webVitals.ttfb, 800, 1800),
         ],
         backgroundColor: [
           'rgba(34, 197, 94, 0.8)',

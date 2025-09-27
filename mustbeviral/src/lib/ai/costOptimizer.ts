@@ -724,7 +724,7 @@ export class AICostOptimizer {
     }
 
     return Array.from(taskGroups.values())
-      .filter(count = > count >= 5)
+      .filter(count => count >= 5)
       .reduce((sum, count) => sum + Math.floor(count / 5), 0);
   }
 

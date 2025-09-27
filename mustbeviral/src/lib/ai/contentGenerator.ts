@@ -347,7 +347,7 @@ ${lengthInstructions[request.length]}.`;
 
     // Add provided keywords
     if (keywords) {
-      keywords.forEach(keyword = > tags.add(keyword.toLowerCase()));
+      keywords.forEach(keyword => tags.add(keyword.toLowerCase()));
     }
 
     // Simple keyword extraction (in production, use more sophisticated NLP)

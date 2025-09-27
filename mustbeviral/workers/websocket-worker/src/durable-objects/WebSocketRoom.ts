@@ -33,7 +33,7 @@ export class WebSocketRoom {
 
   constructor(private state: DurableObjectState, private env: unknown) {
     this.roomId = state.id.toString();
-    this.logger = new Logger('WebSocketRoom', env.LOG_LEVEL  ?? 'INFO');
+    this.logger = new Logger('WebSocketRoom', (env as any).LOG_LEVEL || 'INFO');
 
     // Set up cleanup alarm
     this.scheduleCleanup();
@@ -80,7 +80,7 @@ export class WebSocketRoom {
     const userId = url.searchParams.get('userId');
     const username = url.searchParams.get('username');
     const role = url.searchParams.get('role');
-    const roomType = url.searchParams.get('roomType')  ?? 'general';
+    const roomType = url.searchParams.get('roomType') || 'general';
 
     if (!userId || !username) {
       return new Response('Missing user credentials', { status: 400 });
@@ -90,7 +90,8 @@ export class WebSocketRoom {
     const userConnections = Array.from(this.connections.values())
       .filter(conn => conn.userId === userId);
 
-    if (userConnections.length >= parseInt(this.env.MAX_CONNECTIONS_PER_USER)) {
+    const maxConnectionsPerUser = parseInt((this.env as any).MAX_CONNECTIONS_PER_USER || '3');
+    if (userConnections.length >= maxConnectionsPerUser) {
       return new Response('Too many connections for user', { status: 429 });
     }
 

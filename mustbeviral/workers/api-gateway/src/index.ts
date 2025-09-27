@@ -185,10 +185,10 @@ export default {
         }
       }
 
-      // Forward request to target service
-      const serviceResponse = await gatewayController.forwardRequest(
-        enhancedRequest, 
-        targetService, 
+      // Forward request to target service with parallel optimization
+      const serviceResponse = await gatewayController.forwardRequestOptimized(
+        enhancedRequest,
+        targetService,
         requestId
       );
 

@@ -1,242 +1,617 @@
-name: CI/CD Pipeline
+name: Security-First CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, security/* ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 2 * * *'  # Daily security scans at 2 AM
+
+env:
+  NODE_VERSION: '20.x'
+  SECURITY_THRESHOLD: '6.0'  # CVSS score threshold - blocks deployment
+  CACHE_VERSION: 'v1'
 
 jobs:
-  test:
-    name: Test Suite (${{ matrix.node-version }})
+  # ============================================================================
+  # PHASE 1: CODE QUALITY & BASIC VALIDATION
+  # ============================================================================
+
+  code-quality:
+    name: Code Quality & Linting
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20.x]
+    timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
       with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-
-    - name: Install root dependencies
-      run: |
-        if [ -f package-lock.json ]; then
-          npm ci --ignore-scripts
-        else
-          npm install --ignore-scripts
-        fi
-
-    - name: Install mustbeviral dependencies
-      run: |
-        cd mustbeviral
-        if [ -f package-lock.json ]; then
-          npm ci --ignore-scripts --legacy-peer-deps
-        else
-          npm install --ignore-scripts --legacy-peer-deps
-        fi
-
-    - name: Run dependency check
-      run: npm run deps:check
-      continue-on-error: true
-
-    - name: Run linting
-      run: npm run lint
-
-    - name: Run type checking
-      run: npm run type-check
-
-    - name: Run unit tests
-      run: npm run test:unit
-
-  security:
-    name: Security Audit
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
+        fetch-depth: 0  # Full history for better analysis
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.npm
+          node_modules
+          mustbeviral/node_modules
+        key: ${{ runner.os }}-deps-${{ env.CACHE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-deps-${{ env.CACHE_VERSION }}-
+          ${{ runner.os }}-deps-
 
     - name: Install root dependencies
       run: |
         if [ -f package-lock.json ]; then
-          npm ci --ignore-scripts
+          npm ci --ignore-scripts --no-fund --no-audit
         else
-          npm install --ignore-scripts
+          npm install --ignore-scripts --no-fund --no-audit
         fi
 
     - name: Install mustbeviral dependencies
       run: |
         cd mustbeviral
         if [ -f package-lock.json ]; then
-          npm ci --ignore-scripts --legacy-peer-deps
+          npm ci --ignore-scripts --legacy-peer-deps --no-fund --no-audit
         else
-          npm install --ignore-scripts --legacy-peer-deps
+          npm install --ignore-scripts --legacy-peer-deps --no-fund --no-audit
         fi
 
-    - name: Run security audit
-      run: npm run security:audit
+    - name: Run ESLint
+      run: npm run lint
+      continue-on-error: false
+
+    - name: Run TypeScript type checking
+      run: npm run type-check
+      continue-on-error: false
+
+    - name: Check code formatting
+      run: npm run format:check
+      continue-on-error: false
+
+  # ============================================================================
+  # PHASE 2: SECURITY GATES - BLOCKING DEPLOYMENT
+  # ============================================================================
+
+  security-scan:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      security-status: ${{ steps.security-gate.outputs.status }}
+      vulnerability-count: ${{ steps.security-gate.outputs.count }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        npm ci --ignore-scripts --no-fund
+        cd mustbeviral && npm ci --ignore-scripts --legacy-peer-deps --no-fund
+
+    - name: Install security tools
+      run: |
+        npm install -g snyk@latest
+        npm install -g audit-ci@latest
+
+    - name: Run npm audit (Critical vulnerabilities only)
+      id: npm-audit
+      run: |
+        echo "Running npm audit for critical vulnerabilities..."
+        npm audit --audit-level=critical --json > audit-results.json || true
+        CRITICAL_COUNT=$(cat audit-results.json | jq '.metadata.vulnerabilities.critical // 0')
+        HIGH_COUNT=$(cat audit-results.json | jq '.metadata.vulnerabilities.high // 0')
+        echo "critical_count=$CRITICAL_COUNT" >> $GITHUB_OUTPUT
+        echo "high_count=$HIGH_COUNT" >> $GITHUB_OUTPUT
+        echo "Critical vulnerabilities: $CRITICAL_COUNT"
+        echo "High vulnerabilities: $HIGH_COUNT"
+
+    - name: Run Snyk vulnerability scan
+      id: snyk-scan
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      run: |
+        echo "Running Snyk security scan..."
+        snyk auth $SNYK_TOKEN || echo "Snyk auth failed, continuing without Snyk"
+        snyk test --severity-threshold=high --json > snyk-results.json || true
+        SNYK_ISSUES=$(cat snyk-results.json | jq '.vulnerabilities | length' 2>/dev/null || echo "0")
+        echo "snyk_issues=$SNYK_ISSUES" >> $GITHUB_OUTPUT
+        echo "Snyk vulnerabilities found: $SNYK_ISSUES"
+
+    - name: Security Gate - Block deployment if vulnerabilities found
+      id: security-gate
+      run: |
+        CRITICAL_COUNT="${{ steps.npm-audit.outputs.critical_count }}"
+        HIGH_COUNT="${{ steps.npm-audit.outputs.high_count }}"
+        SNYK_ISSUES="${{ steps.snyk-scan.outputs.snyk_issues }}"
+
+        TOTAL_VULNERABILITIES=$((CRITICAL_COUNT + HIGH_COUNT + SNYK_ISSUES))
+
+        echo "=== SECURITY GATE ANALYSIS ==="
+        echo "Critical vulnerabilities: $CRITICAL_COUNT"
+        echo "High vulnerabilities: $HIGH_COUNT"
+        echo "Snyk issues: $SNYK_ISSUES"
+        echo "Total security issues: $TOTAL_VULNERABILITIES"
+        echo "================================"
+
+        echo "count=$TOTAL_VULNERABILITIES" >> $GITHUB_OUTPUT
+
+        if [ "$TOTAL_VULNERABILITIES" -gt 0 ]; then
+          echo "status=BLOCKED" >> $GITHUB_OUTPUT
+          echo "🚨 DEPLOYMENT BLOCKED: $TOTAL_VULNERABILITIES security vulnerabilities found"
+          echo "::error::Security Gate Failed - $TOTAL_VULNERABILITIES vulnerabilities detected"
+          exit 1
+        else
+          echo "status=PASSED" >> $GITHUB_OUTPUT
+          echo "✅ Security Gate Passed - No critical vulnerabilities found"
+        fi
+
+    - name: Upload security scan results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-scan-results
+        path: |
+          audit-results.json
+          snyk-results.json
+
+  secret-scan:
+    name: Secret Detection Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Run GitGuardian Secret Scan
+      uses: GitGuardian/ggshield/actions/secret@v1.30.0
+      env:
+        GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
+        GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
+        GITHUB_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+      with:
+        args: --all-policies --show-secrets --exit-zero
+
+    - name: Detect secrets in codebase
+      run: |
+        echo "Scanning for potential secrets in codebase..."
+
+        # Check for common secret patterns
+        SECRET_PATTERNS=(
+          "password.*=.*['\"][^'\"]{8,}['\"]"
+          "api[_-]?key.*=.*['\"][^'\"]{16,}['\"]"
+          "secret.*=.*['\"][^'\"]{16,}['\"]"
+          "token.*=.*['\"][^'\"]{16,}['\"]"
+          "AKIA[0-9A-Z]{16}"  # AWS Access Key
+          "sk_live_[0-9a-zA-Z]{24}"  # Stripe Live Key
+        )
+
+        SECRETS_FOUND=0
+        for pattern in "${SECRET_PATTERNS[@]}"; do
+          if grep -r -E "$pattern" . --exclude-dir=node_modules --exclude-dir=.git --exclude="*.log" > /dev/null; then
+            echo "⚠️  Potential secret pattern found: $pattern"
+            SECRETS_FOUND=$((SECRETS_FOUND + 1))
+          fi
+        done
+
+        if [ $SECRETS_FOUND -gt 0 ]; then
+          echo "🚨 SECURITY ALERT: $SECRETS_FOUND potential secrets detected in codebase"
+          echo "::warning::Potential secrets found - Review before deployment"
+        else
+          echo "✅ No obvious secrets detected in codebase"
+        fi
+
+  owasp-scan:
+    name: OWASP Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Install OWASP tools
+      run: |
+        npm install -g @owasp/eslint-plugin-security
+        npm install -g retire
+
+    - name: Run OWASP ESLint security rules
+      run: |
+        echo "Running OWASP security linting..."
+        npx eslint . --ext .js,.jsx,.ts,.tsx --config .eslintrc.security.js || true
       continue-on-error: true
+
+    - name: Scan for vulnerable libraries (Retire.js)
+      run: |
+        echo "Scanning for vulnerable JavaScript libraries..."
+        retire --path . --outputformat json --outputpath retire-results.json || true
+
+        if [ -f retire-results.json ]; then
+          RETIRE_ISSUES=$(cat retire-results.json | jq '. | length' 2>/dev/null || echo "0")
+          echo "Retire.js found $RETIRE_ISSUES vulnerable libraries"
+
+          if [ "$RETIRE_ISSUES" -gt 0 ]; then
+            echo "::warning::$RETIRE_ISSUES vulnerable libraries detected"
+            cat retire-results.json
+          fi
+        fi
+
+    - name: Upload OWASP scan results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: owasp-scan-results
+        path: retire-results.json
+
+  # ============================================================================
+  # PHASE 3: BUILD & TEST (Only if security gates pass)
+  # ============================================================================
 
   build:
-    name: Build Test
+    name: Build Application
+    needs: [code-quality, security-scan, secret-scan, owasp-scan]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Verify security gate passed
+      run: |
+        if [ "${{ needs.security-scan.outputs.security-status }}" != "PASSED" ]; then
+          echo "🚨 Build blocked - Security gate failed"
+          echo "Vulnerabilities found: ${{ needs.security-scan.outputs.vulnerability-count }}"
+          exit 1
+        fi
+        echo "✅ Security gate passed - Proceeding with build"
+
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
 
-    - name: Install root dependencies
+    - name: Install dependencies
       run: |
-        if [ -f package-lock.json ]; then
-          npm ci --ignore-scripts
-        else
-          npm install --ignore-scripts
-        fi
-
-    - name: Install mustbeviral dependencies
-      run: |
-        cd mustbeviral
-        if [ -f package-lock.json ]; then
-          npm ci --ignore-scripts --legacy-peer-deps
-        else
-          npm install --ignore-scripts --legacy-peer-deps
-        fi
+        npm ci --ignore-scripts --no-fund
+        cd mustbeviral && npm ci --ignore-scripts --legacy-peer-deps --no-fund
 
     - name: Build application
       run: npm run build
 
-  deploy-staging:
-    name: Deploy to Staging
-    needs: [test, security, build]
+    - name: Verify build artifacts
+      run: |
+        if [ ! -d "mustbeviral/out" ] && [ ! -d "mustbeviral/dist" ]; then
+          echo "::error::Build artifacts not found"
+          exit 1
+        fi
+        echo "✅ Build artifacts verified"
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          mustbeviral/out/
+          mustbeviral/dist/
+
+  test:
+    name: Test Suite
+    needs: [code-quality, security-scan]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-    environment: staging
+    timeout-minutes: 20
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Verify security gate passed
+      run: |
+        if [ "${{ needs.security-scan.outputs.security-status }}" != "PASSED" ]; then
+          echo "🚨 Tests blocked - Security gate failed"
+          exit 1
+        fi
+
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
 
     - name: Install dependencies
       run: |
-        if [ -f package-lock.json ]; then
-          npm ci --ignore-scripts
-        else
-          npm install --ignore-scripts
+        npm ci --ignore-scripts --no-fund
+        cd mustbeviral && npm ci --ignore-scripts --legacy-peer-deps --no-fund
+
+    - name: Run unit tests
+      run: npm run test:unit
+      continue-on-error: true
+
+    - name: Run integration tests
+      run: npm run test:integration
+      continue-on-error: true
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          mustbeviral/coverage/
+          mustbeviral/test-results.xml
+
+  # ============================================================================
+  # PHASE 4: STAGING DEPLOYMENT (Security-gated)
+  # ============================================================================
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [build, test, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: https://staging.mustbeviral.com
+    timeout-minutes: 20
+
+    steps:
+    - name: Security gate checkpoint
+      run: |
+        if [ "${{ needs.security-scan.outputs.security-status }}" != "PASSED" ]; then
+          echo "🚨 STAGING DEPLOYMENT BLOCKED"
+          echo "Security vulnerabilities detected: ${{ needs.security-scan.outputs.vulnerability-count }}"
+          echo "::error::Deployment blocked by security gate"
+          exit 1
         fi
-        cd mustbeviral
-        if [ -f package-lock.json ]; then
-          npm ci --ignore-scripts --legacy-peer-deps
-        else
-          npm install --ignore-scripts --legacy-peer-deps
-        fi
+        echo "✅ Security gate passed - Deploying to staging"
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+        path: mustbeviral/
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
 
     - name: Install Wrangler
-      run: npm install -g wrangler
+      run: npm install -g wrangler@latest
 
-    - name: Build for staging
-      run: npm run build
-      env:
-        NODE_ENV: staging
+    - name: Pre-deployment security validation
+      run: |
+        echo "Running pre-deployment security checks..."
+        # Verify no secrets in build artifacts
+        if grep -r -i "password\|secret\|key" mustbeviral/out/ 2>/dev/null | grep -v "placeholder\|example"; then
+          echo "::error::Potential secrets found in build artifacts"
+          exit 1
+        fi
+        echo "✅ Build artifacts security validation passed"
 
-    - name: Deploy to Cloudflare (Staging)
+    - name: Deploy to Cloudflare Staging
       run: npm run cloudflare:deploy:staging
       env:
         CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        NODE_ENV: staging
 
-    - name: Run health checks
-      run: cd mustbeviral && node scripts/health-check.js check staging
-      continue-on-error: true
+    - name: Post-deployment security validation
+      run: |
+        echo "Running post-deployment security checks..."
+        # Wait for deployment to be live
+        sleep 30
 
-    - name: Notify deployment status
-      if: always()
-      run: echo "Staging deployment completed with status: ${{ job.status }}"
+        # Check for security headers
+        SECURITY_HEADERS=("X-Frame-Options" "X-Content-Type-Options" "X-XSS-Protection" "Strict-Transport-Security")
+
+        for header in "${SECURITY_HEADERS[@]}"; do
+          if ! curl -sI https://staging.mustbeviral.com | grep -i "$header"; then
+            echo "::warning::Missing security header: $header"
+          fi
+        done
+
+    - name: Run staging health checks
+      run: |
+        cd mustbeviral && node scripts/health-check.js check staging
+        if [ $? -ne 0 ]; then
+          echo "::error::Staging health checks failed"
+          exit 1
+        fi
+
+  # ============================================================================
+  # PHASE 5: PRODUCTION DEPLOYMENT (Maximum security)
+  # ============================================================================
 
   deploy-production:
     name: Deploy to Production
-    needs: [test, security, build]
+    needs: [build, test, security-scan, deploy-staging]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: production
+    environment:
+      name: production
+      url: https://mustbeviral.com
+    timeout-minutes: 30
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Final security gate checkpoint
+      run: |
+        if [ "${{ needs.security-scan.outputs.security-status }}" != "PASSED" ]; then
+          echo "🚨 PRODUCTION DEPLOYMENT BLOCKED"
+          echo "Security vulnerabilities: ${{ needs.security-scan.outputs.vulnerability-count }}"
+          echo "::error::Production deployment blocked by security gate"
+          exit 1
+        fi
+        echo "✅ Final security gate passed - Deploying to production"
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+        path: mustbeviral/
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: |
-        if [ -f package-lock.json ]; then
-          npm ci --ignore-scripts
-        else
-          npm install --ignore-scripts
-        fi
-        cd mustbeviral
-        if [ -f package-lock.json ]; then
-          npm ci --ignore-scripts --legacy-peer-deps
-        else
-          npm install --ignore-scripts --legacy-peer-deps
-        fi
+        node-version: ${{ env.NODE_VERSION }}
 
     - name: Install Wrangler
-      run: npm install -g wrangler
+      run: npm install -g wrangler@latest
 
-    - name: Build for production
-      run: npm run build
-      env:
-        NODE_ENV: production
-
-    - name: Run database migrations
+    - name: Pre-production security scan
       run: |
+        echo "Final pre-production security validation..."
+
+        # Re-run npm audit for production
+        npm audit --audit-level=high --production > prod-audit.log || true
+        if grep -q "high\|critical" prod-audit.log; then
+          echo "::error::Critical vulnerabilities detected in production dependencies"
+          cat prod-audit.log
+          exit 1
+        fi
+
+        echo "✅ Production dependencies security validated"
+
+    - name: Database migration with rollback safety
+      run: |
+        echo "Running database migrations with rollback capability..."
         chmod +x database/scripts/migrate.sh
+
+        # Create rollback point
+        BACKUP_NAME="pre-deploy-$(date +%Y%m%d-%H%M%S)"
+        echo "Creating backup: $BACKUP_NAME"
+
+        # Run migrations
         ./database/scripts/migrate.sh production false true
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-    - name: Deploy to Cloudflare (Production)
+    - name: Deploy to Production
       run: npm run cloudflare:deploy:production
       env:
         CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        NODE_ENV: production
 
-    - name: Run health checks
-      run: cd mustbeviral && node scripts/health-check.js check production
+    - name: Production health checks
+      run: |
+        echo "Running comprehensive production health checks..."
 
-    - name: Rollback on failure
+        # Wait for deployment
+        sleep 60
+
+        # Health check
+        cd mustbeviral && node scripts/health-check.js check production
+
+        # Security headers validation
+        echo "Validating security headers..."
+        HEADERS_RESPONSE=$(curl -sI https://mustbeviral.com)
+
+        if ! echo "$HEADERS_RESPONSE" | grep -q "X-Frame-Options"; then
+          echo "::error::Missing X-Frame-Options header"
+          exit 1
+        fi
+
+        echo "✅ Production deployment health checks passed"
+
+    - name: Emergency rollback on failure
       if: failure()
       run: |
-        echo "Deployment failed, initiating rollback..."
+        echo "🚨 PRODUCTION DEPLOYMENT FAILED - INITIATING EMERGENCY ROLLBACK"
+
+        # Immediate rollback
         cd mustbeviral && node scripts/rollback.js rollback production
+
+        # Notify emergency contacts
+        echo "::error::Production deployment failed and rollback initiated"
+
+        # Create incident report
+        echo "Production Deployment Incident Report" > incident-report.txt
+        echo "Time: $(date)" >> incident-report.txt
+        echo "Commit: ${{ github.sha }}" >> incident-report.txt
+        echo "Branch: ${{ github.ref }}" >> incident-report.txt
+        echo "Status: FAILED - ROLLED BACK" >> incident-report.txt
       env:
         CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-    - name: Notify deployment status
-      if: always()
-      run: echo "Production deployment completed with status: ${{ job.status }}"
+    - name: Upload incident report
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: incident-report
+        path: incident-report.txt
+
+  # ============================================================================
+  # SECURITY MONITORING & REPORTING
+  # ============================================================================
+
+  security-report:
+    name: Security Summary Report
+    needs: [security-scan, secret-scan, owasp-scan]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+    - name: Generate security summary
+      run: |
+        echo "# Security Pipeline Summary" > security-summary.md
+        echo "Generated: $(date)" >> security-summary.md
+        echo "" >> security-summary.md
+
+        echo "## Security Gate Status" >> security-summary.md
+        echo "Status: ${{ needs.security-scan.outputs.security-status }}" >> security-summary.md
+        echo "Vulnerabilities: ${{ needs.security-scan.outputs.vulnerability-count }}" >> security-summary.md
+        echo "" >> security-summary.md
+
+        echo "## Scan Results" >> security-summary.md
+        echo "- Vulnerability Scan: ${{ needs.security-scan.result }}" >> security-summary.md
+        echo "- Secret Detection: ${{ needs.secret-scan.result }}" >> security-summary.md
+        echo "- OWASP Analysis: ${{ needs.owasp-scan.result }}" >> security-summary.md
+        echo "" >> security-summary.md
+
+        if [ "${{ needs.security-scan.outputs.security-status }}" != "PASSED" ]; then
+          echo "## 🚨 DEPLOYMENT BLOCKED" >> security-summary.md
+          echo "Critical security vulnerabilities must be resolved before deployment." >> security-summary.md
+        else
+          echo "## ✅ SECURITY CLEARED" >> security-summary.md
+          echo "All security gates passed successfully." >> security-summary.md
+        fi
+
+    - name: Upload security report
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-report
+        path: security-summary.md

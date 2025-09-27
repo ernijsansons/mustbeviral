@@ -1,10 +1,20 @@
 // Comprehensive Input Validation and Sanitization
 // Prevents injection attacks and ensures data integrity
 
+import { SecureJWTValidator, JWTValidationResult } from '../lib/security/secureJWTValidator';
+
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
   sanitized?: unknown;
+}
+
+export interface EnhancedAuthValidation {
+  valid: boolean;
+  token?: string;
+  payload?: any;
+  error?: string;
+  warnings?: string[];
 }
 
 export class InputValidator {
@@ -323,7 +333,7 @@ export class InputValidator {
   }
 
   /**
-   * Validate Authorization header format
+   * Validate Authorization header format (basic validation)
    */
   static validateAuthHeader(authHeader: string | null): { valid: boolean; token?: string; error?: string } {
     if(!authHeader) {
@@ -335,7 +345,7 @@ export class InputValidator {
     }
 
     const token = authHeader.substring(7);
-    if (!token ?? token.length < 10) {
+    if (!token || token.length < 10) {
       return { valid: false, error: 'Invalid token format' };
     }
 
@@ -349,10 +359,94 @@ export class InputValidator {
   }
 
   /**
+   * Enhanced JWT validation with signature and expiry verification
+   * SECURITY FIX: CVSS 8.1 - Comprehensive JWT validation
+   */
+  static async validateJWTToken(
+    authHeader: string | null,
+    jwtSecret: string,
+    options?: {
+      expectedIssuer?: string;
+      expectedAudience?: string;
+      clockTolerance?: number;
+    }
+  ): Promise<EnhancedAuthValidation> {
+    // First, basic format validation
+    const basicValidation = this.validateAuthHeader(authHeader);
+    if (!basicValidation.valid) {
+      return {
+        valid: false,
+        error: basicValidation.error
+      };
+    }
+
+    const token = basicValidation.token!;
+
+    try {
+      // Enhanced JWT validation with signature verification
+      const jwtValidation = await SecureJWTValidator.verifyJWT(token, jwtSecret, options);
+
+      if (!jwtValidation.valid) {
+        return {
+          valid: false,
+          error: `JWT validation failed: ${jwtValidation.error}`
+        };
+      }
+
+      return {
+        valid: true,
+        token,
+        payload: jwtValidation.payload,
+        warnings: jwtValidation.warnings
+      };
+
+    } catch (error) {
+      return {
+        valid: false,
+        error: `JWT verification error: ${error instanceof Error ? error.message : 'unknown error'}`
+      };
+    }
+  }
+
+  /**
+   * Validate JWT token expiry specifically
+   */
+  static validateJWTExpiry(payload: any, clockTolerance: number = 60): { valid: boolean; error?: string } {
+    if (!payload.exp) {
+      return { valid: false, error: 'Missing expiry claim' };
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp <= now - clockTolerance) {
+      return { valid: false, error: 'Token expired' };
+    }
+
+    return { valid: true };
+  }
+
+  /**
+   * Validate JWT required claims
+   */
+  static validateJWTClaims(payload: any, requiredClaims: string[]): { valid: boolean; missing?: string[] } {
+    const missing: string[] = [];
+
+    for (const claim of requiredClaims) {
+      if (!payload[claim]) {
+        missing.push(claim);
+      }
+    }
+
+    return {
+      valid: missing.length === 0,
+      missing: missing.length > 0 ? missing : undefined
+    };
+  }
+
+  /**
    * Sanitize output data before sending to client
    */
   static sanitizeOutput(data: unknown): unknown {
-    if (typeof data !== 'object'  ?? data === null) {
+    if (typeof data !== 'object' || data === null) {
       return data;
     }
 
@@ -360,10 +454,10 @@ export class InputValidator {
       return data.map(item => this.sanitizeOutput(item));
     }
 
-    const sanitized: unknown = {};
+    const sanitized: any = {};
     for (const [key, value] of Object.entries(data)) {
       // Never expose password hashes or sensitive data
-      if (key === 'password_hash'  ?? key === 'password'  ?? key.includes('secret')) {
+      if (key === 'password_hash' || key === 'password' || key.includes('secret') || key.includes('token')) {
         continue;
       }
 

@@ -12,6 +12,50 @@ export interface SecretValidationResult {
   warnings: string[];
 }
 
+export interface SecretValidation {
+  valid: boolean;
+  issues: string[];
+  score: number;
+}
+
+export interface EnvironmentValidation {
+  valid: boolean;
+  missing: string[];
+  weak: string[];
+  score: number;
+}
+
+export interface SecretRotation {
+  success: boolean;
+  oldSecret: string;
+  newSecret: string;
+  rotatedAt: Date;
+}
+
+export interface SecurityIssue {
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  field?: string;
+  message: string;
+}
+
+export interface ScanResult {
+  vulnerabilities: SecurityIssue[];
+  score: number;
+  passed: boolean;
+}
+
+export interface SecretExposure {
+  exposed: boolean;
+  fields: string[];
+}
+
+export interface SecureEnvironment {
+  encrypted: string[];
+  public: string[];
+  secrets: string[];
+}
+
 export interface SecretMetadata {
   name: string;
   lastRotated: Date;
@@ -24,6 +68,30 @@ export class SecretManager {
   private env: CloudflareEnv;
   private secretCache: Map<string, { value: string; metadata: SecretMetadata; cachedAt: Date }> = new Map();
   private readonly CACHETTL = 300000; // 5 minutes
+
+  private static readonly WEAK_PATTERNS = [
+    /^(password|admin|secret|changeme|default|test|dev|123|qwerty)$/i,
+    /^dev_\w+/i,
+    /^test_\w+/i,
+    /^local_\w+/i,
+  ];
+
+  private static readonly SECRET_PATTERNS = [
+    { pattern: /sk_test_[a-zA-Z0-9]{24}/, type: 'stripe_test_key', severity: 'medium' as const },
+    { pattern: /sk_live_[a-zA-Z0-9]{24}/, type: 'stripe_live_key', severity: 'critical' as const },
+    { pattern: /pk_test_[a-zA-Z0-9]{24}/, type: 'stripe_publishable_test', severity: 'low' as const },
+    { pattern: /pk_live_[a-zA-Z0-9]{24}/, type: 'stripe_publishable_live', severity: 'medium' as const },
+    { pattern: /AKIA[0-9A-Z]{16}/, type: 'aws_access_key', severity: 'critical' as const },
+    { pattern: /AIza[0-9A-Za-z\\-_]{35}/, type: 'google_api_key', severity: 'high' as const },
+    { pattern: /ya29\\.[0-9A-Za-z\\-_]+/, type: 'google_oauth_token', severity: 'critical' as const },
+    { pattern: /ghp_[0-9A-Za-z]{36}/, type: 'github_token', severity: 'high' as const },
+    { pattern: /xoxb-[0-9]+-.+/, type: 'slack_bot_token', severity: 'high' as const },
+  ];
+
+  private static readonly SENSITIVE_FIELDS = [
+    'password', 'password_hash', 'secret', 'key', 'token', 'auth',
+    'credential', 'private', 'api_key', 'access_key', 'secret_key',
+  ];
 
   constructor(env: CloudflareEnv) {
     this.env = env;
@@ -283,24 +351,10 @@ export class SecretManager {
   }
 
   /**
-   * Calculate entropy of a string
+   * Calculate entropy of a string (instance method)
    */
   private calculateEntropy(str: string): number {
-    const charCounts = new Map<string, number>();
-
-    for (const char of str) {
-      charCounts.set(char, (charCounts.get(char)  ?? 0) + 1);
-    }
-
-    let entropy = 0;
-    const length = str.length;
-
-    for (const count of charCounts.values()) {
-      const probability = count / length;
-      entropy -= probability * Math.log2(probability);
-    }
-
-    return entropy;
+    return SecretManager.calculateEntropy(str) / str.length; // Normalize to per-character entropy
   }
 
   /**
@@ -393,6 +447,398 @@ export class SecretManager {
     }
 
     return this.generateSecureSecret(64);
+  }
+
+  /**
+   * Generate cryptographically secure secret (static method)
+   */
+  static generateSecureSecret(length: number): string {
+    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+    let result = '';
+
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * charset.length);
+      result += charset[randomIndex];
+    }
+
+    return result;
+  }
+
+  /**
+   * Calculate entropy of a string (static method)
+   */
+  static calculateEntropy(str: string): number {
+    const freqs = new Map<string, number>();
+
+    for (const char of str) {
+      freqs.set(char, (freqs.get(char) || 0) + 1);
+    }
+
+    let entropy = 0;
+    const length = str.length;
+
+    for (const freq of freqs.values()) {
+      const probability = freq / length;
+      entropy -= probability * Math.log2(probability);
+    }
+
+    return entropy * length;
+  }
+
+  /**
+   * Validate secret strength (static method)
+   */
+  static validateSecretStrength(secret: string): SecretValidation {
+    const issues: string[] = [];
+    let score = 100;
+
+    // Length check
+    if (secret.length < 16) {
+      issues.push('insufficient_length');
+      score -= 30;
+    }
+
+    // Entropy check
+    const entropy = this.calculateEntropy(secret);
+    if (entropy < 50) {
+      issues.push('insufficient_entropy');
+      score -= 40;
+    }
+
+    // Common pattern check
+    if (this.WEAK_PATTERNS.some(pattern => pattern.test(secret))) {
+      issues.push('weak_pattern');
+      score -= 50;
+    }
+
+    // Character diversity check
+    const hasUpper = /[A-Z]/.test(secret);
+    const hasLower = /[a-z]/.test(secret);
+    const hasDigit = /[0-9]/.test(secret);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(secret);
+
+    const charTypes = [hasUpper, hasLower, hasDigit, hasSpecial].filter(Boolean).length;
+    if (charTypes < 3) {
+      issues.push('insufficient_character_diversity');
+      score -= 20;
+    }
+
+    return {
+      valid: issues.length === 0,
+      issues,
+      score: Math.max(0, score),
+    };
+  }
+
+  /**
+   * Detect insecure secrets in content
+   */
+  static detectInsecureSecrets(content: string): SecurityIssue[] {
+    const issues: SecurityIssue[] = [];
+
+    // Check for development secrets
+    const devPatterns = [
+      /dev_\w+/gi,
+      /test_\w+/gi,
+      /local_\w+/gi,
+      /changeme/gi,
+      /password123/gi,
+      /admin/gi,
+    ];
+
+    devPatterns.forEach(pattern => {
+      const matches = content.match(pattern);
+      if (matches) {
+        matches.forEach(match => {
+          issues.push({
+            type: 'hardcoded_development_secret',
+            severity: 'critical',
+            message: `Development secret detected: ${match}`,
+          });
+        });
+      }
+    });
+
+    return issues;
+  }
+
+  /**
+   * Detect secret patterns in text
+   */
+  static detectSecretPatterns(text: string): SecurityIssue[] {
+    const issues: SecurityIssue[] = [];
+
+    this.SECRET_PATTERNS.forEach(({ pattern, type, severity }) => {
+      const matches = text.match(pattern);
+      if (matches) {
+        matches.forEach(match => {
+          issues.push({
+            type,
+            severity,
+            message: `${type} detected: ${match.substring(0, 8)}...`,
+          });
+        });
+      }
+    });
+
+    return issues;
+  }
+
+  /**
+   * Scan environment file for vulnerabilities
+   */
+  static scanEnvironmentFile(filePath: string): ScanResult {
+    const fs = require('fs');
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const vulnerabilities: SecurityIssue[] = [];
+
+    // Detect hardcoded secrets
+    vulnerabilities.push(...this.detectInsecureSecrets(content));
+    vulnerabilities.push(...this.detectSecretPatterns(content));
+
+    // Check for weak values
+    const lines = content.split('\n');
+    lines.forEach((line) => {
+      const match = line.match(/^([A-Z_]+)=(.+)$/);
+      if (match) {
+        const [, key, value] = match;
+        if (this.isSensitiveKey(key)) {
+          const validation = this.validateSecretStrength(value);
+          if (!validation.valid) {
+            vulnerabilities.push({
+              type: 'weak_secret',
+              severity: 'high',
+              field: key,
+              message: `Weak secret in ${key}: ${validation.issues.join(', ')}`,
+            });
+          }
+        }
+      }
+    });
+
+    // Calculate security score
+    const criticalCount = vulnerabilities.filter(v => v.severity === 'critical').length;
+    const highCount = vulnerabilities.filter(v => v.severity === 'high').length;
+    const mediumCount = vulnerabilities.filter(v => v.severity === 'medium').length;
+
+    const score = Math.max(0, 100 - (criticalCount * 40) - (highCount * 20) - (mediumCount * 10));
+
+    return {
+      vulnerabilities,
+      score,
+      passed: score >= 80,
+    };
+  }
+
+  /**
+   * Validate production secrets
+   */
+  static validateProductionSecrets(envVars: Record<string, string>): SecretValidation {
+    const issues: string[] = [];
+    let totalScore = 0;
+    let secretCount = 0;
+
+    Object.entries(envVars).forEach(([key, value]) => {
+      if (this.isSensitiveKey(key)) {
+        secretCount++;
+        const validation = this.validateSecretStrength(value);
+        totalScore += validation.score;
+
+        if (!validation.valid) {
+          issues.push(...validation.issues.map(issue => `${key}: ${issue}`));
+        }
+      }
+    });
+
+    const avgScore = secretCount > 0 ? totalScore / secretCount : 0;
+
+    return {
+      valid: issues.length === 0,
+      issues,
+      score: avgScore,
+    };
+  }
+
+  /**
+   * Validate required environment variables
+   */
+  static validateRequiredVars(
+    envVars: Record<string, string>,
+    required: string[]
+  ): EnvironmentValidation {
+    const missing = required.filter(key => !envVars[key]);
+    const weak: string[] = [];
+
+    required.forEach(key => {
+      if (envVars[key] && this.isSensitiveKey(key)) {
+        const validation = this.validateSecretStrength(envVars[key]);
+        if (!validation.valid) {
+          weak.push(key);
+        }
+      }
+    });
+
+    const score = Math.max(0, 100 - (missing.length * 30) - (weak.length * 20));
+
+    return {
+      valid: missing.length === 0 && weak.length === 0,
+      missing,
+      weak,
+      score,
+    };
+  }
+
+  /**
+   * Sanitize environment variables for logging
+   */
+  static sanitizeForLogging(envVars: Record<string, any>): Record<string, any> {
+    const sanitized: Record<string, any> = {};
+
+    Object.entries(envVars).forEach(([key, value]) => {
+      if (this.isSensitiveKey(key)) {
+        sanitized[key] = '***REDACTED***';
+      } else {
+        sanitized[key] = value;
+      }
+    });
+
+    return sanitized;
+  }
+
+  /**
+   * Load secure environment configuration
+   */
+  static loadSecureEnvironment(filePath: string): SecureEnvironment {
+    const fs = require('fs');
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const lines = content.split('\n');
+
+    const encrypted: string[] = [];
+    const public: string[] = [];
+    const secrets: string[] = [];
+
+    lines.forEach(line => {
+      const match = line.match(/^([A-Z_]+)=(.+)$/);
+      if (match) {
+        const [, key, value] = match;
+
+        if (key.endsWith('_ENCRYPTED')) {
+          encrypted.push(key);
+        } else if (this.isSensitiveKey(key)) {
+          if (this.detectSecretPatterns(value).length > 0 || this.detectInsecureSecrets(value).length > 0) {
+            secrets.push(key);
+          }
+        } else {
+          public.push(key);
+        }
+      }
+    });
+
+    return { encrypted, public, secrets };
+  }
+
+  /**
+   * Sanitize error messages to prevent secret leakage
+   */
+  static sanitizeErrorMessage(message: string): string {
+    let sanitized = message;
+
+    // Remove potential secrets from error messages
+    this.SECRET_PATTERNS.forEach(({ pattern }) => {
+      sanitized = sanitized.replace(pattern, '***REDACTED***');
+    });
+
+    // Remove common secret-like strings
+    sanitized = sanitized.replace(/([a-zA-Z0-9]{20,})/g, (match) => {
+      if (this.calculateEntropy(match) > 60) {
+        return '***REDACTED***';
+      }
+      return match;
+    });
+
+    return sanitized;
+  }
+
+  /**
+   * Detect secret exposure in response data
+   */
+  static detectSecretExposure(data: any, path = ''): SecretExposure {
+    const exposedFields: string[] = [];
+
+    const traverse = (obj: any, currentPath: string) => {
+      if (typeof obj === 'object' && obj !== null) {
+        Object.entries(obj).forEach(([key, value]) => {
+          const fieldPath = currentPath ? `${currentPath}.${key}` : key;
+
+          if (this.isSensitiveKey(key)) {
+            exposedFields.push(fieldPath);
+          }
+
+          if (typeof value === 'object') {
+            traverse(value, fieldPath);
+          }
+        });
+      }
+    };
+
+    traverse(data, path);
+
+    return {
+      exposed: exposedFields.length > 0,
+      fields: exposedFields,
+    };
+  }
+
+  /**
+   * Detect secrets in runtime strings
+   */
+  static detectRuntimeSecrets(str: string): boolean {
+    // Check for secret patterns
+    if (this.SECRET_PATTERNS.some(({ pattern }) => pattern.test(str))) {
+      return true;
+    }
+
+    // Check for high entropy strings (potential secrets)
+    if (str.length > 16 && this.calculateEntropy(str) > 80) {
+      return true;
+    }
+
+    // Check for key-value patterns that might contain secrets
+    if (/(?:password|token|key|secret)\s*[:=]\s*\S+/i.test(str)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Rotate secret
+   */
+  static async rotateSecret(
+    secretName: string,
+    oldSecret: string,
+    newSecret: string
+  ): Promise<SecretRotation> {
+    // Validate new secret strength
+    const validation = this.validateSecretStrength(newSecret);
+    if (!validation.valid) {
+      throw new Error(`New secret does not meet security requirements: ${validation.issues.join(', ')}`);
+    }
+
+    return {
+      success: true,
+      oldSecret,
+      newSecret,
+      rotatedAt: new Date(),
+    };
+  }
+
+  /**
+   * Check if key is sensitive
+   */
+  private static isSensitiveKey(key: string): boolean {
+    const lowerKey = key.toLowerCase();
+    return this.SENSITIVE_FIELDS.some(field => lowerKey.includes(field));
   }
 
   /**

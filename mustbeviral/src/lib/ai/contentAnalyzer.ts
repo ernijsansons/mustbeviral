@@ -206,8 +206,8 @@ export class ContentAnalyzer {
     }
 
     // Platform-specific analysis
-    const hashtagCount = (content.match(/#\w+/g)  ?? []).length;
-    if (hashtagCount = == requirements.optimalHashtags) {
+    const hashtagCount = (content.match(/#\w+/g) ?? []).length;
+    if (hashtagCount === requirements.optimalHashtags) {
       optimizationScore += 15;
     } else if (hashtagCount < requirements.optimalHashtags) {
       suggestions.push(`Add ${requirements.optimalHashtags - hashtagCount} more hashtags for optimal reach`);

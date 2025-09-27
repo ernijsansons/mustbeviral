@@ -12,6 +12,20 @@ interface PredictionResult {
   improvements: string[];
 }
 
+// Helper function for confidence level - simple if-else!
+function getConfidenceLevel(score: number): string {
+  if (score > 80) {
+    return 'Very High';
+  }
+  if (score > 60) {
+    return 'High';
+  }
+  if (score > 40) {
+    return 'Medium';
+  }
+  return 'Low';
+}
+
 export function ViralPredictor() {
   const [content, setContent] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -41,7 +55,7 @@ export function ViralPredictor() {
 
       setPrediction({
         score: Math.round(score),
-        confidence: score > 80 ? 'Very High' : score > 60 ? 'High' : score > 40 ? 'Medium' : 'Low',
+        confidence: getConfidenceLevel(score),
         bestTime: '2:00 PM - 4:00 PM EST',
         suggestedHashtags: ['#viral', '#trending', '#contentcreator', '#socialmedia', '#growth'],
         improvements: [
@@ -106,7 +120,7 @@ export function ViralPredictor() {
             <textarea
               id="content-input"
               value={content}
-              onChange={(e) => setContent(sanitizeInput(e.target.value))}
+              onChange={(event) => setContent(sanitizeInput(event.target.value))}
               placeholder="Example: Check out this amazing productivity hack that changed my life..."
               className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
               rows={4}

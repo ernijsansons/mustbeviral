@@ -1,0 +1,1435 @@
+openapi: 3.0.3
+info:
+  title: Must Be Viral V2 API
+  description: |
+    Comprehensive REST API for Must Be Viral V2 - AI-powered viral content creation platform.
+
+    ## Features
+    - AI-powered content generation and optimization
+    - Multi-platform content analysis and viral prediction
+    - User authentication with JWT and OAuth
+    - Real-time analytics and performance tracking
+    - Enterprise-grade security and rate limiting
+
+    ## Authentication
+    Most endpoints require authentication via JWT Bearer token or API key.
+
+    ## Rate Limiting
+    - Default: 1000 requests per hour per user
+    - Burst: 100 requests per minute
+    - AI endpoints: 50 requests per hour
+
+    ## SDKs
+    - JavaScript/TypeScript: `@mustbeviral/sdk`
+    - Python: `mustbeviral-python`
+    - PHP: `mustbeviral/php-sdk`
+  version: 2.0.0
+  contact:
+    name: Must Be Viral Support
+    url: https://docs.mustbeviral.com
+    email: support@mustbeviral.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.mustbeviral.com
+    description: Production server
+  - url: https://staging-api.mustbeviral.com
+    description: Staging server
+  - url: http://localhost:8787
+    description: Local development
+
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: AI Content
+    description: AI-powered content generation and optimization
+  - name: Content Management
+    description: Content library and management
+  - name: Analytics
+    description: Performance analytics and metrics
+  - name: User Management
+    description: User profiles and preferences
+  - name: Webhooks
+    description: Event notifications and integrations
+
+paths:
+  # Authentication Endpoints
+  /api/auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register new user
+      description: Create a new user account with email and password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              email: user@example.com
+              username: johndoe
+              password: SecurePass123!
+              role: creator
+              termsAccepted: true
+              marketingConsent: false
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+  /api/auth/login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate user
+      description: Login with email and password to receive JWT tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: user@example.com
+              password: SecurePass123!
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+  /api/auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout user
+      description: Invalidate current session and tokens
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh JWT token
+      description: Get new access token using refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+                  description: Valid refresh token
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        description: New JWT access token
+                      expiresIn:
+                        type: string
+                        example: "24h"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # AI Content Generation
+  /api/ai/generate-content:
+    post:
+      tags: [AI Content]
+      summary: Generate AI content
+      description: Generate content using AI based on topic, tone, and audience
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentGenerationRequest'
+            example:
+              type: social_post
+              topic: sustainable fashion trends 2024
+              tone: professional
+              audience: professionals
+              length: medium
+              keywords: [sustainability, fashion, eco-friendly]
+              platform: linkedin
+      responses:
+        '200':
+          description: Content generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneratedContent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+  /api/ai/generate-variations:
+    post:
+      tags: [AI Content]
+      summary: Generate content variations
+      description: Generate multiple variations of content for A/B testing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/ContentGenerationRequest'
+                - type: object
+                  properties:
+                    count:
+                      type: integer
+                      minimum: 1
+                      maximum: 10
+                      default: 3
+                      description: Number of variations to generate
+      responses:
+        '200':
+          description: Variations generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      variations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            content:
+                              type: string
+                            viralPotential:
+                              type: number
+                              format: float
+                              minimum: 0
+                              maximum: 1
+                      count:
+                        type: integer
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/ai/analyze-content:
+    post:
+      tags: [AI Content]
+      summary: Analyze content
+      description: Analyze existing content for viral potential and optimization suggestions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentAnalysisRequest'
+            example:
+              content: "Just launched our new sustainable fashion line! 🌱 Made from 100% recycled materials..."
+              type: social_post
+              targetKeywords: [sustainable, fashion, recycled]
+      responses:
+        '200':
+          description: Content analyzed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentAnalysis'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/ai/optimize-platform:
+    post:
+      tags: [AI Content]
+      summary: Optimize for platform
+      description: Optimize content for specific social media platform
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content, platform]
+              properties:
+                content:
+                  type: string
+                  maxLength: 10000
+                  description: Original content to optimize
+                platform:
+                  type: string
+                  enum: [instagram, twitter, linkedin, facebook, tiktok, youtube]
+                  description: Target platform for optimization
+            example:
+              content: "Our new AI tool helps businesses create viral content effortlessly"
+              platform: twitter
+      responses:
+        '200':
+          description: Content optimized successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      originalContent:
+                        type: string
+                      optimizedContent:
+                        type: string
+                      analysis:
+                        type: object
+                        properties:
+                          changes:
+                            type: array
+                            items:
+                              type: string
+                          platformScore:
+                            type: number
+                            format: float
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Content Management
+  /api/content/library:
+    get:
+      tags: [Content Management]
+      summary: Get content library
+      description: Retrieve user's content library with filtering and pagination
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of items per page
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/ContentType'
+          description: Filter by content type
+        - name: platform
+          in: query
+          schema:
+            type: string
+            enum: [instagram, twitter, linkedin, facebook, tiktok, youtube]
+          description: Filter by platform
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [created_at, updated_at, title, performance]
+            default: created_at
+          description: Sort field
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort order
+      responses:
+        '200':
+          description: Content library retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ContentItem'
+                      pagination:
+                        $ref: '#/components/schemas/PaginationInfo'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/content/save:
+    post:
+      tags: [Content Management]
+      summary: Save content
+      description: Save generated content to user's library
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveContentRequest'
+            example:
+              title: "AI Productivity Tips for 2024"
+              content: "Discover the latest AI tools that can boost your productivity..."
+              type: social_post
+              platform: linkedin
+              tags: [ai, productivity, tips]
+              scheduledFor: "2024-01-15T10:00:00Z"
+      responses:
+        '201':
+          description: Content saved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      title:
+                        type: string
+                      status:
+                        type: string
+                        enum: [draft, scheduled, published]
+                      createdAt:
+                        type: string
+                        format: date-time
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Analytics
+  /api/analytics/dashboard:
+    get:
+      tags: [Analytics]
+      summary: Get dashboard analytics
+      description: Retrieve analytics data for dashboard display
+      parameters:
+        - name: timeframe
+          in: query
+          schema:
+            type: string
+            enum: [1d, 7d, 30d, 90d, 1y]
+            default: 7d
+          description: Time range for analytics
+        - name: metrics
+          in: query
+          schema:
+            type: string
+            description: Comma-separated list of metrics
+          example: "engagement,reach,viral_score"
+      responses:
+        '200':
+          description: Dashboard analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardAnalytics'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/analytics/content/{contentId}:
+    get:
+      tags: [Analytics]
+      summary: Get content analytics
+      description: Get detailed analytics for specific content
+      parameters:
+        - name: contentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Content ID
+      responses:
+        '200':
+          description: Content analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentAnalytics'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # User Management
+  /api/user/profile:
+    get:
+      tags: [User Management]
+      summary: Get user profile
+      description: Retrieve current user's profile information
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    put:
+      tags: [User Management]
+      summary: Update user profile
+      description: Update user profile information and preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+            example:
+              username: johndoe_updated
+              preferences:
+                defaultTone: casual
+                preferredPlatforms: [instagram, tiktok]
+                aiAssistanceLevel: 4
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Profile updated successfully
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          username:
+                            type: string
+                          updatedAt:
+                            type: string
+                            format: date-time
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Webhooks
+  /api/webhooks/content-performance:
+    post:
+      tags: [Webhooks]
+      summary: Content performance webhook
+      description: Receive content performance updates from social platforms
+      security:
+        - webhookSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentPerformanceWebhook'
+            example:
+              event: "content.performance.viral"
+              data:
+                contentId: "550e8400-e29b-41d4-a716-446655440000"
+                platform: linkedin
+                metrics:
+                  views: 5000
+                  likes: 250
+                  shares: 45
+                  comments: 23
+                viralScore: 0.89
+                timestamp: "2024-01-15T10:00:00Z"
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key authentication for service-to-service calls
+    webhookSignature:
+      type: apiKey
+      in: header
+      name: X-Webhook-Signature
+      description: HMAC signature for webhook verification
+
+  schemas:
+    # Request Schemas
+    RegisterRequest:
+      type: object
+      required: [email, username, password, role, termsAccepted]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: User's email address
+        username:
+          type: string
+          minLength: 3
+          maxLength: 30
+          pattern: '^[a-zA-Z0-9_]+$'
+          description: Unique username (alphanumeric and underscore only)
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          description: Password (must include uppercase, lowercase, number)
+        role:
+          type: string
+          enum: [creator, influencer]
+          description: User role type
+        termsAccepted:
+          type: boolean
+          description: User must accept terms of service
+        marketingConsent:
+          type: boolean
+          default: false
+          description: Optional marketing email consent
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+        password:
+          type: string
+          description: User's password
+        mfaCode:
+          type: string
+          minLength: 6
+          maxLength: 6
+          description: MFA code (required if MFA enabled)
+
+    ContentGenerationRequest:
+      type: object
+      required: [type, topic, tone, audience, length]
+      properties:
+        type:
+          $ref: '#/components/schemas/ContentType'
+        topic:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Main topic or subject for content
+        tone:
+          type: string
+          enum: [professional, casual, humorous, urgent, inspiring, educational]
+          description: Desired tone of the content
+        audience:
+          type: string
+          enum: [general, professionals, students, seniors, teenagers]
+          description: Target audience
+        length:
+          type: string
+          enum: [short, medium, long]
+          description: Desired content length
+        keywords:
+          type: array
+          items:
+            type: string
+          maxItems: 20
+          description: Optional keywords to include
+        context:
+          type: string
+          maxLength: 2000
+          description: Additional context or requirements
+        platform:
+          type: string
+          enum: [instagram, twitter, linkedin, facebook, tiktok, youtube, generic]
+          description: Target platform for optimization
+
+    ContentAnalysisRequest:
+      type: object
+      required: [content, type]
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 50000
+          description: Content to analyze
+        type:
+          $ref: '#/components/schemas/ContentType'
+        targetKeywords:
+          type: array
+          items:
+            type: string
+          maxItems: 50
+          description: Keywords to analyze for
+
+    SaveContentRequest:
+      type: object
+      required: [title, content, type]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Content title
+        content:
+          type: string
+          minLength: 1
+          maxLength: 50000
+          description: Content body
+        type:
+          $ref: '#/components/schemas/ContentType'
+        platform:
+          type: string
+          enum: [instagram, twitter, linkedin, facebook, tiktok, youtube]
+          description: Target platform
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+          description: Content tags
+        scheduledFor:
+          type: string
+          format: date-time
+          description: Optional scheduled publishing time
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 30
+          pattern: '^[a-zA-Z0-9_]+$'
+          description: New username
+        preferences:
+          type: object
+          properties:
+            defaultTone:
+              type: string
+              enum: [professional, casual, humorous, urgent, inspiring, educational]
+            preferredPlatforms:
+              type: array
+              items:
+                type: string
+                enum: [instagram, twitter, linkedin, facebook, tiktok, youtube]
+            aiAssistanceLevel:
+              type: integer
+              minimum: 1
+              maximum: 5
+              description: AI assistance level (1=minimal, 5=maximum)
+
+    ContentPerformanceWebhook:
+      type: object
+      required: [event, data]
+      properties:
+        event:
+          type: string
+          enum: [content.performance.update, content.performance.viral, content.performance.milestone]
+          description: Event type
+        data:
+          type: object
+          required: [contentId, platform, metrics, timestamp]
+          properties:
+            contentId:
+              type: string
+              format: uuid
+              description: Content identifier
+            platform:
+              type: string
+              description: Social media platform
+            metrics:
+              type: object
+              properties:
+                views:
+                  type: integer
+                  minimum: 0
+                likes:
+                  type: integer
+                  minimum: 0
+                shares:
+                  type: integer
+                  minimum: 0
+                comments:
+                  type: integer
+                  minimum: 0
+            viralScore:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 1
+              description: Calculated viral score
+            timestamp:
+              type: string
+              format: date-time
+              description: Event timestamp
+
+    # Response Schemas
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            token:
+              type: string
+              description: JWT access token
+            refreshToken:
+              type: string
+              description: Refresh token for getting new access tokens
+            expiresIn:
+              type: string
+              example: "24h"
+              description: Token expiration time
+
+    GeneratedContent:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            content:
+              type: string
+              description: Generated content text
+            metadata:
+              type: object
+              properties:
+                wordCount:
+                  type: integer
+                  description: Number of words in content
+                readabilityScore:
+                  type: number
+                  format: float
+                  description: Content readability score
+                viralPotential:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 1
+                  description: Predicted viral potential
+                seoScore:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+                  description: SEO optimization score
+                sentiment:
+                  type: string
+                  enum: [positive, negative, neutral]
+                  description: Content sentiment
+            suggestions:
+              type: array
+              items:
+                type: string
+              description: Improvement suggestions
+            generationTime:
+              type: number
+              format: float
+              description: Time taken to generate (seconds)
+
+    ContentAnalysis:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            analysis:
+              type: object
+              properties:
+                viralPotential:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 1
+                seoScore:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+                readabilityScore:
+                  type: number
+                  format: float
+                sentiment:
+                  type: string
+                  enum: [positive, negative, neutral]
+                engagement:
+                  type: object
+                  properties:
+                    predicted:
+                      type: object
+                      properties:
+                        likes:
+                          type: integer
+                        shares:
+                          type: integer
+                        comments:
+                          type: integer
+            improvements:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum: [keyword_optimization, engagement, readability, viral_potential]
+                  suggestion:
+                    type: string
+                  impact:
+                    type: string
+                    enum: [low, medium, high]
+            optimizedContent:
+              type: string
+              description: AI-optimized version of the content
+
+    DashboardAnalytics:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            overview:
+              type: object
+              properties:
+                totalContent:
+                  type: integer
+                  description: Total content pieces
+                totalViews:
+                  type: integer
+                  description: Total views across all content
+                avgViralScore:
+                  type: number
+                  format: float
+                  description: Average viral score
+                topPerforming:
+                  type: string
+                  description: ID of top performing content
+            metrics:
+              type: object
+              properties:
+                engagement:
+                  $ref: '#/components/schemas/MetricComparison'
+                reach:
+                  $ref: '#/components/schemas/MetricComparison'
+                viralScore:
+                  $ref: '#/components/schemas/MetricComparison'
+            charts:
+              type: object
+              properties:
+                engagement:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      date:
+                        type: string
+                        format: date
+                      value:
+                        type: number
+                        format: float
+
+    ContentAnalytics:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            content:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                type:
+                  $ref: '#/components/schemas/ContentType'
+            performance:
+              type: object
+              properties:
+                views:
+                  type: integer
+                likes:
+                  type: integer
+                shares:
+                  type: integer
+                comments:
+                  type: integer
+                viralScore:
+                  type: number
+                  format: float
+                reachRate:
+                  type: number
+                  format: float
+            timeline:
+              type: array
+              items:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                  event:
+                    type: string
+                    enum: [published, viral_threshold, milestone_reached]
+                  platform:
+                    type: string
+                  details:
+                    type: string
+
+    UserProfile:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            user:
+              allOf:
+                - $ref: '#/components/schemas/User'
+                - type: object
+                  properties:
+                    subscription:
+                      type: object
+                      properties:
+                        plan:
+                          type: string
+                          enum: [free, creator, pro, enterprise]
+                        status:
+                          type: string
+                          enum: [active, inactive, cancelled, past_due]
+                        expiresAt:
+                          type: string
+                          format: date-time
+                    preferences:
+                      type: object
+                      properties:
+                        defaultTone:
+                          type: string
+                        preferredPlatforms:
+                          type: array
+                          items:
+                            type: string
+                        aiAssistanceLevel:
+                          type: integer
+                          minimum: 1
+                          maximum: 5
+                    stats:
+                      type: object
+                      properties:
+                        contentCreated:
+                          type: integer
+                        totalViews:
+                          type: integer
+                        avgViralScore:
+                          type: number
+                          format: float
+
+    # Base Schemas
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+        email:
+          type: string
+          format: email
+          description: User's email address
+        username:
+          type: string
+          description: User's username
+        role:
+          type: string
+          enum: [creator, influencer, admin]
+          description: User role
+        onboarding_completed:
+          type: boolean
+          description: Whether user has completed onboarding
+
+    ContentType:
+      type: string
+      enum: [article, social_post, headline, description, script, email]
+      description: Type of content
+
+    ContentItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        content:
+          type: string
+        type:
+          $ref: '#/components/schemas/ContentType'
+        platform:
+          type: string
+        status:
+          type: string
+          enum: [draft, scheduled, published, archived]
+        performance:
+          type: object
+          properties:
+            views:
+              type: integer
+            likes:
+              type: integer
+            shares:
+              type: integer
+            viralScore:
+              type: number
+              format: float
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MetricComparison:
+      type: object
+      properties:
+        current:
+          type: number
+          format: float
+          description: Current period value
+        previous:
+          type: number
+          format: float
+          description: Previous period value
+        change:
+          type: number
+          format: float
+          description: Percentage change
+
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Current page number
+        limit:
+          type: integer
+          description: Items per page
+        total:
+          type: integer
+          description: Total number of items
+        pages:
+          type: integer
+          description: Total number of pages
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          description: Success message
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          description: Request identifier for debugging
+
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    description: Field that failed validation
+                  message:
+                    type: string
+                    description: Validation error message
+                  value:
+                    description: Value that failed validation
+
+  responses:
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            success: false
+            error: "Validation failed"
+            code: "VALIDATION_ERROR"
+            timestamp: "2024-01-15T10:00:00Z"
+            requestId: "req_123456789"
+            details:
+              - field: "email"
+                message: "Invalid email format"
+                value: "invalid-email"
+
+    UnauthorizedError:
+      description: Authentication required or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error: "Authentication required"
+            code: "UNAUTHORIZED"
+            timestamp: "2024-01-15T10:00:00Z"
+            requestId: "req_123456789"
+
+    ConflictError:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error: "Email already exists"
+            code: "CONFLICT"
+            timestamp: "2024-01-15T10:00:00Z"
+            requestId: "req_123456789"
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error: "Resource not found"
+            code: "NOT_FOUND"
+            timestamp: "2024-01-15T10:00:00Z"
+            requestId: "req_123456789"
+
+    RateLimitError:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+          description: Request limit per window
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: Remaining requests in window
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+          description: Unix timestamp when window resets
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds to wait before retrying
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error: "Rate limit exceeded"
+            code: "RATE_LIMIT_EXCEEDED"
+            timestamp: "2024-01-15T10:00:00Z"
+            requestId: "req_123456789"
+
+  examples:
+    SocialPostGeneration:
+      summary: Generate LinkedIn post
+      value:
+        type: "social_post"
+        topic: "AI productivity tools for marketing teams"
+        tone: "professional"
+        audience: "professionals"
+        length: "medium"
+        keywords: ["AI", "productivity", "marketing", "automation"]
+        platform: "linkedin"
+
+    ContentAnalysisExample:
+      summary: Analyze viral potential
+      value:
+        content: "🚀 Just discovered this amazing AI tool that's revolutionizing content creation! It's like having a personal copywriter that never sleeps. Who else is excited about the future of AI? #AI #ContentCreation #Innovation"
+        type: "social_post"
+        targetKeywords: ["AI", "content creation", "innovation"]
+
+x-code-samples:
+  - lang: JavaScript
+    source: |
+      // Using the official SDK
+      import { MustBeViralAPI } from '@mustbeviral/sdk';
+
+      const api = new MustBeViralAPI({
+        apiKey: 'your-api-key',
+        baseURL: 'https://api.mustbeviral.com'
+      });
+
+      // Generate content
+      const content = await api.ai.generateContent({
+        type: 'social_post',
+        topic: 'AI trends 2024',
+        tone: 'professional',
+        audience: 'professionals',
+        length: 'medium'
+      });
+
+      console.log(content.data.content);
+
+  - lang: Python
+    source: |
+      # Using the Python SDK
+      from mustbeviral import MustBeViralAPI
+
+      api = MustBeViralAPI(
+          api_key='your-api-key',
+          base_url='https://api.mustbeviral.com'
+      )
+
+      # Generate content
+      content = api.ai.generate_content(
+          type='social_post',
+          topic='AI trends 2024',
+          tone='professional',
+          audience='professionals',
+          length='medium'
+      )
+
+      print(content['data']['content'])
+
+  - lang: cURL
+    source: |
+      # Generate content using cURL
+      curl -X POST https://api.mustbeviral.com/api/ai/generate-content \
+        -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{
+          "type": "social_post",
+          "topic": "AI trends 2024",
+          "tone": "professional",
+          "audience": "professionals",
+          "length": "medium"
+        }'

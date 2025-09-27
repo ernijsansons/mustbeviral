@@ -154,43 +154,48 @@ export class EventProcessor {
   }
 
   private async triggerProcessing(): Promise<void> {
-    if (this.isProcessing) {return;}
+    // Atomic check-and-set to prevent race conditions
+    if (this.isProcessing) {
+      return;
+    }
 
-    setTimeout(() => {
-      this.processQueue();
-    }, 100); // Small delay to allow batching
-  }
-
-  private async processQueue(): Promise<void> {
-    if (this.isProcessing) {return;}
-
+    // Immediately set flag before any async operations
     this.isProcessing = true;
 
     try {
-      while (this.processingQueue.length > 0) {
-        const batch = this.processingQueue.find(b => b.status === 'pending');
-        if (!batch) {break;}
-
-        batch.status = 'processing';
-
-        try {
-          await this.processBatch(batch);
-          batch.status = 'completed';
-
-          // Remove completed batch from queue
-          const index = this.processingQueue.indexOf(batch);
-          if (index > -1) {
-            this.processingQueue.splice(index, 1);
-          }
-
-        } catch (error) {
-          console.error('Error processing batch:', error);
-          batch.status = 'failed';
-        }
-      }
-
+      await this.processQueue();
+    } catch (error) {
+      console.error('Error in triggerProcessing:', error);
     } finally {
       this.isProcessing = false;
+    }
+  }
+
+  private async processQueue(): Promise<void> {
+    // This method is now only called from triggerProcessing with proper locking
+    while (this.processingQueue.length > 0) {
+      const batch = this.processingQueue.find(b => b.status === 'pending');
+      if (!batch) {
+        break;
+      }
+
+      batch.status = 'processing';
+
+      try {
+        await this.processBatch(batch);
+        batch.status = 'completed';
+
+        // Remove completed batch from queue
+        const index = this.processingQueue.indexOf(batch);
+        if (index > -1) {
+          this.processingQueue.splice(index, 1);
+        }
+
+      } catch (error) {
+        console.error('Error processing batch:', error);
+        batch.status = 'failed';
+        // Don't remove failed batches immediately for retry logic
+      }
     }
   }
 

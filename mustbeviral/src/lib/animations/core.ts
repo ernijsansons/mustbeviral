@@ -63,7 +63,7 @@ export class CosmicAnimationController {
 
   private bindMediaQuery() {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    mediaQuery.addEventListener('change', _(e) => {
+    mediaQuery.addEventListener('change', (e) => {
       this.prefersReducedMotion = e.matches;
       if (e.matches) {
         this.pauseAllAnimations();

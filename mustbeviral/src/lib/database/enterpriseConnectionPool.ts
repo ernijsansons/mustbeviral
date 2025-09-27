@@ -600,7 +600,7 @@ export class EnterpriseConnectionPool extends EventEmitter {
 
     const interval = this.config.monitoring.metricsInterval ?? 60000;
 
-    this.metricsInterval = setInterval_(() => {
+    this.metricsInterval = setInterval(() => {
       this.collectPoolMetrics();
       this.evaluateAutoScaling();
     }, interval);
@@ -637,7 +637,7 @@ export class EnterpriseConnectionPool extends EventEmitter {
     const pools = this.loadBalancer.getMetrics();
     const totalConnections = Array.from(pools.values()).reduce((sum, m) => sum + m.totalConnections, 0);
     const activeConnections = Array.from(pools.values()).reduce((sum, m) => sum + m.activeConnections, 0);
-    const utilizationRate = activeConnections / totalConnections;
+    const utilizationRate = totalConnections > 0 ? activeConnections / totalConnections : 0;
 
     console.warn(`📊 Connection utilization: ${(utilizationRate * 100).toFixed(1)}% (${activeConnections}/${totalConnections})`);
 
@@ -649,9 +649,7 @@ export class EnterpriseConnectionPool extends EventEmitter {
       this.lastScaleOperation = now;
     }
     // Scale down if utilization is low
-    else if (utilizationRate < (this.config.autoScaling.scaleDownThreshold ?? 0.3)  {
-    &&
-  }
+    else if (utilizationRate < (this.config.autoScaling.scaleDownThreshold ?? 0.3) &&
              totalConnections > this.config.autoScaling.minConnections) {
       console.warn('📉 Scaling down connection pools...');
       this.scaleDown();

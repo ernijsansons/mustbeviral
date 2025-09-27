@@ -308,7 +308,7 @@ export class RealTimeAnalytics {
     return events;
   }
 
-    return events.filter(e = >
+    return events.filter(e =>
       e.timestamp >= timeRange.start && e.timestamp <= timeRange.end
     );
   }
@@ -683,7 +683,7 @@ export class RealTimeAnalytics {
         .filter(([timestamp]) => timestamp > now - rule.timeWindow)
         .map(([, dataPoint]) => dataPoint.metrics[rule.metric]  ?? 0);
 
-      if (recentData.length = == 0) {return;}
+      if (recentData.length === 0) {return;}
 
       const aggregatedValue = this.aggregateValues(recentData, rule.condition.aggregation);
       const breaches = this.evaluateCondition(aggregatedValue, rule.condition.operator, rule.threshold);

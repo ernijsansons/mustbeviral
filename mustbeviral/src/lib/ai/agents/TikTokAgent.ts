@@ -820,8 +820,8 @@ TikTok Video Script:`;
       emotional_moment: ['emotional', 'crying', 'heartwarming', 'touching']
     };
 
-    const keywords = triggerMappings[trigger]  ?? [trigger];
-    return keywords.some(keyword = > content.toLowerCase().includes(keyword.toLowerCase()));
+    const keywords = triggerMappings[trigger] ?? [trigger];
+    return keywords.some(keyword => content.toLowerCase().includes(keyword.toLowerCase()));
   }
 
   private predictCompletionRate(content: string): number {

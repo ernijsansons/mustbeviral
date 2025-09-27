@@ -264,7 +264,7 @@ export class ApiClient {
       }
 
       // Safely parse success response with strict typing
-      let data: ApiResponse<T>;
+      let apiResponse: ApiResponse<T>;
       try {
         if (response.json && typeof response.json === 'function') {
           const contentType = response.headers?.get?.('content-type') || '';
@@ -272,9 +272,9 @@ export class ApiClient {
             const parsedData = await response.json() as unknown;
             // Validate that the response matches ApiResponse structure
             if (parsedData && typeof parsedData === 'object') {
-              data = parsedData as ApiResponse<T>;
+              apiResponse = parsedData as ApiResponse<T>;
             } else {
-              data = {
+              apiResponse = {
                 success: true,
                 data: parsedData as T,
                 message: 'Request completed successfully'
@@ -283,7 +283,7 @@ export class ApiClient {
           } else {
             // Handle non-JSON responses
             const textData = await response.text();
-            data = {
+            apiResponse = {
               success: true,
               data: textData as T,
               message: 'Request completed successfully'
@@ -291,7 +291,7 @@ export class ApiClient {
           }
         } else {
           // Fallback for responses without json method
-          data = {
+          apiResponse = {
             success: true,
             message: 'Request completed successfully'
           };
@@ -299,7 +299,7 @@ export class ApiClient {
       } catch (parseError: unknown) {
         // Fallback if JSON parsing fails
         logger.warn('Failed to parse response as JSON', parseError instanceof Error ? parseError : new Error(String(parseError)));
-        data = {
+        apiResponse = {
           success: true,
           message: 'Request completed successfully'
         };
@@ -311,7 +311,7 @@ export class ApiClient {
         metadata: { endpoint, status: response.status }
       });
 
-      return data;
+      return apiResponse;
 
     } catch (error: unknown) {
       logger.error('API request failed', error instanceof Error ? error : new Error(String(error)), {
@@ -439,7 +439,7 @@ export class ApiClient {
 
       const data = await this.parseSuccessResponse<T>(response);
 
-      return data;
+      return apiResponse;
     } catch (error: unknown) {
       if (error instanceof ApiClientError) {
         throw error;

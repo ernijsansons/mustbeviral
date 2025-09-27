@@ -1,0 +1,121 @@
+{
+  "metadata": {
+    "timestamp": "2025-09-27T19:54:00.137Z",
+    "version": "2.0.0",
+    "validator": "Must Be Viral V2 Final Performance Validator"
+  },
+  "status": "FAIL",
+  "confidence": 30,
+  "thresholds": {
+    "p99Latency": 150,
+    "p95DbLatency": 200,
+    "maxRegressionPercent": 10,
+    "minConcurrentUsers": 100000,
+    "maxMemoryUsageMB": 512,
+    "minLighthouseScore": 95
+  },
+  "findings": {
+    "security": {
+      "regression": 100.85,
+      "impact": "CRITICAL",
+      "details": {
+        "nonce_generation": 25,
+        "header_validation": 35,
+        "csp_building": 20,
+        "auth_validation": 35
+      }
+    },
+    "refactoring": {
+      "serviceRegistry": {
+        "resolutionTime": 1.6,
+        "improvement": 15.5
+      },
+      "dependencyInjection": {
+        "overhead": 2,
+        "acceptable": true
+      }
+    },
+    "database": {
+      "p95Compliance": true,
+      "queries": {
+        "User Authentication": {
+          "p95": 45,
+          "p99": 67
+        },
+        "Content Creation": {
+          "p95": 89,
+          "p99": 134
+        },
+        "Analytics Dashboard": {
+          "p95": 156,
+          "p99": 189
+        },
+        "Match Generation": {
+          "p95": 178,
+          "p99": 234
+        },
+        "User Profile Update": {
+          "p95": 34,
+          "p99": 52
+        }
+      }
+    },
+    "loadTesting": {
+      "scenarios": {
+        "1K Users": {
+          "p99": 48,
+          "throughput": 2100,
+          "errorRate": 0.05,
+          "status": "PASS"
+        },
+        "10K Users": {
+          "p99": 67,
+          "throughput": 1890,
+          "errorRate": 0.12,
+          "status": "PASS"
+        },
+        "50K Users": {
+          "p99": 98,
+          "throughput": 1456,
+          "errorRate": 0.34,
+          "status": "PASS"
+        },
+        "100K Users": {
+          "p99": 142,
+          "throughput": 1123,
+          "errorRate": 0.67,
+          "status": "PASS"
+        }
+      }
+    },
+    "baseline": {
+      "lighthouseScore": 95,
+      "endpointsP99": {
+        "Health Check": 48,
+        "Authentication": 117,
+        "Content Generation": 482,
+        "Analytics Dashboard": 157,
+        "User Profile": 94
+      }
+    }
+  },
+  "issues": [
+    "CRITICAL: Security enhancements caused 100.85% performance regression",
+    "Content Generation P99 latency (482ms) exceeds threshold (150ms)",
+    "Analytics Dashboard P99 latency (157ms) exceeds threshold (150ms)"
+  ],
+  "recommendations": [
+    "Optimize security middleware - consider caching nonces, simplifying header validation",
+    "Implement lazy loading for non-critical security checks",
+    "Consider moving expensive validations to background processes",
+    "Optimize Content Generation endpoint performance",
+    "Optimize Analytics Dashboard endpoint performance"
+  ],
+  "metrics": {
+    "p99Compliance": false,
+    "securityRegression": 100.85,
+    "loadTestPass": true,
+    "dbCompliance": true,
+    "lighthousePass": true
+  }
+}

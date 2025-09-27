@@ -254,8 +254,8 @@ export class QualityAssurance {
 
     // Apply relevant quality rules
     const relevantRules = this.qualityRules.filter(rule =>
-      (rule.platform === 'all'  ?? rule.platform === platform) &&
-      (rule.contentType = == 'all'  ?? rule.contentType === contentType)
+      (rule.platform === 'all' || rule.platform === platform) &&
+      (rule.contentType === 'all' || rule.contentType === contentType)
     );
 
     for (const rule of relevantRules) {
