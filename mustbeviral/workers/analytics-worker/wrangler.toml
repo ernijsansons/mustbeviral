@@ -42,26 +42,26 @@ vars = {
 [[d1_databases]]
 binding = "ANALYTICS_DB"
 database_name = "must-be-viral-analytics"
-database_id = "analytics-db-id-here"
+database_id = "{{ ANALYTICS_DATABASE_ID }}"  # TODO: Replace with actual D1 database ID
 migrations_dir = "migrations"
 
 # KV Namespace for real-time metrics cache
 [[kv_namespaces]]
 binding = "METRICS_CACHE"
-id = "analytics-metrics-kv-id"
-preview_id = "analytics-metrics-kv-preview"
+id = "{{ ANALYTICS_METRICS_KV_ID }}"  # TODO: Replace with actual KV namespace ID
+preview_id = "{{ ANALYTICS_METRICS_KV_PREVIEW_ID }}"  # TODO: Replace with preview KV namespace ID
 
 # KV Namespace for user behavior tracking
 [[kv_namespaces]]
 binding = "BEHAVIOR_TRACKING"
-id = "behavior-tracking-kv-id"
-preview_id = "behavior-tracking-kv-preview"
+id = "{{ BEHAVIOR_TRACKING_KV_ID }}"  # TODO: Replace with actual KV namespace ID
+preview_id = "{{ BEHAVIOR_TRACKING_KV_PREVIEW_ID }}"  # TODO: Replace with preview KV namespace ID
 
 # KV Namespace for A/B testing data
 [[kv_namespaces]]
 binding = "AB_TESTING"
-id = "ab-testing-kv-id"
-preview_id = "ab-testing-kv-preview"
+id = "{{ AB_TESTING_KV_ID }}"  # TODO: Replace with actual KV namespace ID
+preview_id = "{{ AB_TESTING_KV_PREVIEW_ID }}"  # TODO: Replace with preview KV namespace ID
 
 # R2 Bucket for analytics exports
 [[r2_buckets]]
@@ -134,6 +134,7 @@ BATCH_SIZE = "1000"
 PROCESSING_INTERVAL = "30000" # 30 seconds
 RETENTION_DAYS = "365"
 REAL_TIME_ENABLED = "true"
+
 
 
 

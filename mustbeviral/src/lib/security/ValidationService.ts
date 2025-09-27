@@ -4,6 +4,7 @@ import DOMPurify from 'isomorphic-dompurify';
 // Security constants
 const MINPASSWORDLENGTH = 8;
 const MAXPASSWORDLENGTH = 128;
+const PASSWORD_PATTERNS = {
   uppercase: /[A-Z]/,
   lowercase: /[a-z]/,
   digit: /\d/,

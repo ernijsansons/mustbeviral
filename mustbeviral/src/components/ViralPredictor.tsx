@@ -36,7 +36,7 @@ export function ViralPredictor() {
     setIsAnalyzing(true);
 
     // Simulate AI analysis
-    setTimeout_(() => {
+    setTimeout(() => {
       const score = Math.min(95, Math.max(40, sanitizedContent.length * 2 + Math.random() * 30));
 
       setPrediction({
@@ -122,7 +122,7 @@ export function ViralPredictor() {
                 variant="viral"
                 size="default"
                 onClick={analyzeContent}
-                disabled={!content.trim()  ?? isAnalyzing}
+                disabled={!content.trim() || isAnalyzing}
                 loading={isAnalyzing}
                 leftIcon={<Sparkles className="w-4 h-4" />}
                 aria-label={isAnalyzing ? 'Analyzing content' : 'Analyze your content for viral potential'}

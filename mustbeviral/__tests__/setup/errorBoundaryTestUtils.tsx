@@ -41,7 +41,7 @@ export interface ErrorBoundaryTestWrapperProps {
 export function ErrorBoundaryTestWrapper({ children,
   shouldError = false,
   errorToThrow = new Error('Test error'),
-  fallbackComponent = <div data-testid="error-fallback">Something went wrong</div>
+  _fallbackComponent = <div data-testid="error-fallback">Something went wrong</div>
 }: ErrorBoundaryTestWrapperProps) {
   if (shouldError) {
     throw errorToThrow;
@@ -63,6 +63,7 @@ export function renderWithErrorBoundary(
   const { errorBoundaryProps = {}, shouldError = false, errorToThrow } = options;
 
   // Import the ErrorBoundary component dynamically to avoid circular deps
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const ErrorBoundary = require('../../src/components/ErrorBoundary').ErrorBoundary;
 
   const TestComponent = () => {

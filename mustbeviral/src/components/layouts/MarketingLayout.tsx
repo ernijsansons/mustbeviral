@@ -344,7 +344,7 @@ function FloatingCTA() {
 /**
  * Main Marketing Layout Component
  */
-export function MarketingLayout(_{
+export function MarketingLayout({
   children, className, backgroundVariant = 'gradient', showFloatingCTA = true
 }: MarketingLayoutProps) {
   const backgroundClasses = {

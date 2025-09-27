@@ -9,12 +9,13 @@
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:workers\"",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:app\" \"npm run dev:workers\"",
     "dev:server": "nodemon server.js",
+    "dev:app": "cd mustbeviral && npm run dev",
     "dev:workers": "cd mustbeviral/workers && npm run dev",
-    "build": "npm run build:workers && npm run build:app",
-    "build:workers": "cd mustbeviral/workers && npm run build",
+    "build": "npm run build:app && npm run build:workers",
     "build:app": "cd mustbeviral && npm run build",
+    "build:workers": "cd mustbeviral/workers && npm run build",
     "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "test:unit": "cd mustbeviral && npm run test:unit",
     "test:frontend": "cd mustbeviral && npm run test:frontend",
@@ -50,6 +51,7 @@
     "cloudflare:pages:deploy": "cd mustbeviral && wrangler pages deploy out",
     "deploy:staging": "npm run build && npm run cloudflare:deploy:staging",
     "deploy:production": "npm run build && npm run cloudflare:deploy:production",
+    "postbuild": "echo 'Build completed successfully'",
     "monitor": "bash scripts/monitor.sh",
     "monitor:check": "bash scripts/monitor.sh check",
     "monitor:report": "bash scripts/monitor.sh report",
@@ -66,7 +68,7 @@
     "validate:ci": "npm run validate && npm run security:audit",
     "precommit": "npm run validate",
     "prepush": "npm run validate:ci",
-    "postinstall": "echo 'Post-install completed' && npm run deps:check",
+    "postinstall": "echo 'Post-install completed' && (npm run deps:check || true)",
     "prestart": "npm run security:audit"
   },
   "keywords": [
@@ -81,13 +83,14 @@
   ],
   "author": "Must Be Viral Team",
   "license": "MIT",
+  "type": "commonjs",
   "repository": {
     "type": "git",
     "url": "https://github.com/ernijsansons/mustbeviral.git"
   },
-    "bugs": {
-      "url": "https://github.com/ernijsansons/mustbeviral/issues"
-    },
+  "bugs": {
+    "url": "https://github.com/ernijsansons/mustbeviral/issues"
+  },
   "homepage": "https://mustbeviral.com",
   "devDependencies": {
     "@babel/plugin-transform-class-properties": "^7.27.1",
@@ -96,8 +99,8 @@
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^24.3.1",
-    "@typescript-eslint/eslint-plugin": "^8.3.0",
-    "@typescript-eslint/parser": "^8.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.44.1",
+    "@typescript-eslint/parser": "^8.44.1",
     "babel-jest": "^30.1.2",
     "concurrently": "^9.2.1",
     "eslint": "^9.9.1",

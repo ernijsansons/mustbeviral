@@ -2,7 +2,7 @@
 // Handles WebSocket connections, real-time collaboration, and notifications
 
 import { Router } from './router';
-import { _WebSocketRoom, CollaborationRoom, NotificationHub } from './durable-objects';
+import { WebSocketRoom, CollaborationRoom, NotificationHub } from './durable-objects';
 import { SecurityMiddleware } from './middleware/security';
 import { AuthMiddleware } from './middleware/auth';
 import { RateLimitMiddleware } from './middleware/rateLimit';
@@ -46,9 +46,11 @@ export default {
 
     // Start request tracking
     const startTime = Date.now();
-    const clientIP = request.headers.get('CF-Connecting-IP')  ?? 'unknown';
+    const clientIP = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+    const requestId = crypto.randomUUID();
 
-    logger.info('WebSocket request received', { _requestId,
+    logger.info('WebSocket request received', {
+      requestId,
       method: request.method,
       url: request.url,
       clientIP,
@@ -59,14 +61,14 @@ export default {
       // Apply security checks
       const securityCheck = await security.validate(request);
       if (!securityCheck.valid) {
-        logger.warn('Security check failed', { _requestId, reason: securityCheck.reason });
+        logger.warn('Security check failed', { requestId, reason: securityCheck.reason });
         return security.createErrorResponse(403, 'Security validation failed');
       }
 
       // Apply rate limiting
       const rateLimitCheck = await rateLimit.checkLimit(clientIP, request);
       if (!rateLimitCheck.allowed) {
-        logger.warn('Rate limit exceeded', { _requestId, clientIP });
+        logger.warn('Rate limit exceeded', { requestId, clientIP });
         return new Response('Rate limit exceeded', { status: 429 });
       }
 
@@ -84,46 +86,46 @@ export default {
 
       // WebSocket connection routes
       router.get('/ws/room/:roomId', async (req, params) => {
-        return this.handleRoomConnection(req, params.roomId, env, logger);
+        return handleRoomConnection(req, params.roomId, env, logger);
       });
 
       router.get('/ws/collaborate/:contentId', async (req, params) => {
-        return this.handleCollaborationConnection(req, params.contentId, env, logger);
+        return handleCollaborationConnection(req, params.contentId, env, logger);
       });
 
       router.get('/ws/notifications/:userId', async (req, params) => {
-        return this.handleNotificationConnection(req, params.userId, env, logger, auth);
+        return handleNotificationConnection(req, params.userId, env, logger, auth);
       });
 
       // Room management routes
       router.get('/api/rooms/:roomId/info', async (req, params) => {
-        return this.getRoomInfo(params.roomId, env);
+        return getRoomInfo(params.roomId, env);
       });
 
       router.post('/api/rooms/:roomId/message', async (req, params) => {
-        return this.sendRoomMessage(req, params.roomId, env);
+        return sendRoomMessage(req, params.roomId, env);
       });
 
       router.post('/api/rooms/:roomId/kick', async (req, params) => {
-        return this.kickUserFromRoom(req, params.roomId, env);
+        return kickUserFromRoom(req, params.roomId, env);
       });
 
       // Collaboration management
       router.get('/api/collaborate/:contentId/status', async (req, params) => {
-        return this.getCollaborationStatus(params.contentId, env);
+        return getCollaborationStatus(params.contentId, env);
       });
 
       router.post('/api/collaborate/:contentId/operation', async (req, params) => {
-        return this.applyCollaborativeOperation(req, params.contentId, env);
+        return applyCollaborativeOperation(req, params.contentId, env);
       });
 
       // Notification management
       router.post('/api/notifications/send', async (req) => {
-        return this.sendNotification(req, env);
+        return sendNotification(req, env);
       });
 
       router.post('/api/notifications/broadcast', async (req) => {
-        return this.broadcastNotification(req, env);
+        return broadcastNotification(req, env);
       });
 
       // Handle request
@@ -141,7 +143,8 @@ export default {
       const duration = Date.now() - startTime;
       metrics.recordRequest(request.method, response.status, duration);
 
-      logger.info('Request completed', { requestId: _requestId,
+      logger.info('Request completed', {
+        requestId,
         status: response.status,
         duration
       });
@@ -149,7 +152,8 @@ export default {
       return response;
 
     } catch (error) {
-      logger.error('Request failed', { _requestId,
+      logger.error('Request failed', {
+        requestId,
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined
       });
@@ -159,7 +163,9 @@ export default {
     }
   },
 
-  async handleRoomConnection(request: Request, roomId: string, env: Env, _logger: Logger): Promise<Response> {
+};
+
+async function handleRoomConnection(request: Request, roomId: string, env: Env, logger: Logger): Promise<Response> {
     try {
       // Get room durable object
       const roomObjectId = env.WEBSOCKET_ROOM.idFromName(roomId);
@@ -173,14 +179,15 @@ export default {
       });
 
     } catch (error) {
-      logger.error('Room connection failed', { _roomId,
+      logger.error('Room connection failed', {
+        roomId,
         error: error instanceof Error ? error.message : error
       });
       return new Response('Room connection failed', { status: 500 });
     }
-  },
+}
 
-  async handleCollaborationConnection(request: Request, contentId: string, env: Env, _logger: Logger): Promise<Response> {
+async function handleCollaborationConnection(request: Request, contentId: string, env: Env, logger: Logger): Promise<Response> {
     try {
       // Get collaboration room durable object
       const collabObjectId = env.COLLABORATION_ROOM.idFromName(contentId);
@@ -194,14 +201,15 @@ export default {
       });
 
     } catch (error) {
-      logger.error('Collaboration connection failed', { _contentId,
+      logger.error('Collaboration connection failed', {
+        contentId,
         error: error instanceof Error ? error.message : error
       });
       return new Response('Collaboration connection failed', { status: 500 });
     }
-  },
+}
 
-  async handleNotificationConnection(request: Request, userId: string, env: Env, _logger: Logger, auth: AuthMiddleware): Promise<Response> {
+async function handleNotificationConnection(request: Request, userId: string, env: Env, logger: Logger, auth: AuthMiddleware): Promise<Response> {
     try {
       // Authenticate user for notifications
       const authResult = await auth.authenticate(request);
@@ -221,22 +229,23 @@ export default {
       });
 
     } catch (error) {
-      logger.error('Notification connection failed', { userId: _userId,
+      logger.error('Notification connection failed', {
+        userId,
         error: error instanceof Error ? error.message : error
       });
       return new Response('Notification connection failed', { status: 500 });
     }
-  },
+}
 
-  async getRoomInfo(roomId: string, env: Env): Promise<Response> {
+async function getRoomInfo(roomId: string, env: Env): Promise<Response> {
     const roomObjectId = env.WEBSOCKET_ROOM.idFromName(roomId);
     const roomObject = env.WEBSOCKET_ROOM.get(roomObjectId);
 
     return await roomObject.fetch('http://internal/info');
-  },
+}
 
-  async sendRoomMessage(request: Request, _roomId: string, env: Env): Promise<Response> {
-    const roomObjectId = env.WEBSOCKET_ROOM.idFromName(_roomId);
+async function sendRoomMessage(request: Request, roomId: string, env: Env): Promise<Response> {
+    const roomObjectId = env.WEBSOCKET_ROOM.idFromName(roomId);
     const roomObject = env.WEBSOCKET_ROOM.get(roomObjectId);
 
     return await roomObject.fetch('http://internal/message', {
@@ -244,10 +253,10 @@ export default {
       body: request.body,
       headers: { 'Content-Type': 'application/json' }
     });
-  },
+}
 
-  async kickUserFromRoom(request: Request, _roomId: string, env: Env): Promise<Response> {
-    const roomObjectId = env.WEBSOCKET_ROOM.idFromName(_roomId);
+async function kickUserFromRoom(request: Request, roomId: string, env: Env): Promise<Response> {
+    const roomObjectId = env.WEBSOCKET_ROOM.idFromName(roomId);
     const roomObject = env.WEBSOCKET_ROOM.get(roomObjectId);
 
     return await roomObject.fetch('http://internal/kick', {
@@ -255,17 +264,17 @@ export default {
       body: request.body,
       headers: { 'Content-Type': 'application/json' }
     });
-  },
+}
 
-  async getCollaborationStatus(_contentId: string, env: Env): Promise<Response> {
-    const collabObjectId = env.COLLABORATION_ROOM.idFromName(_contentId);
+async function getCollaborationStatus(contentId: string, env: Env): Promise<Response> {
+    const collabObjectId = env.COLLABORATION_ROOM.idFromName(contentId);
     const collabObject = env.COLLABORATION_ROOM.get(collabObjectId);
 
     return await collabObject.fetch('http://internal/status');
-  },
+}
 
-  async applyCollaborativeOperation(request: Request, _contentId: string, env: Env): Promise<Response> {
-    const collabObjectId = env.COLLABORATION_ROOM.idFromName(_contentId);
+async function applyCollaborativeOperation(request: Request, contentId: string, env: Env): Promise<Response> {
+    const collabObjectId = env.COLLABORATION_ROOM.idFromName(contentId);
     const collabObject = env.COLLABORATION_ROOM.get(collabObjectId);
 
     return await collabObject.fetch('http://internal/operation', {
@@ -273,12 +282,12 @@ export default {
       body: request.body,
       headers: { 'Content-Type': 'application/json' }
     });
-  },
+}
 
-  async sendNotification(_request: Request, env: Env): Promise<Response> {
-    const { _userId, notification } = await request.json() as unknown;
+async function sendNotification(request: Request, env: Env): Promise<Response> {
+    const { userId, notification } = await request.json() as any;
 
-    const hubObjectId = env.NOTIFICATION_HUB.idFromName(_userId);
+    const hubObjectId = env.NOTIFICATION_HUB.idFromName(userId);
     const hubObject = env.NOTIFICATION_HUB.get(hubObjectId);
 
     return await hubObject.fetch('http://internal/send', {
@@ -286,13 +295,13 @@ export default {
       body: JSON.stringify(notification),
       headers: { 'Content-Type': 'application/json' }
     });
-  },
+}
 
-  async broadcastNotification(_request: Request, env: Env): Promise<Response> {
-    const { _userIds, notification } = await request.json() as unknown;
+async function broadcastNotification(request: Request, env: Env): Promise<Response> {
+    const { userIds, notification } = await request.json() as any;
 
     // Send to multiple users
-    const promises = _userIds.map(async (userId: string) => {
+    const promises = userIds.map(async (userId: string) => {
       const hubObjectId = env.NOTIFICATION_HUB.idFromName(userId);
       const hubObject = env.NOTIFICATION_HUB.get(hubObjectId);
 
@@ -308,8 +317,7 @@ export default {
     return new Response(JSON.stringify({ success: true }), {
       headers: { 'Content-Type': 'application/json' }
     });
-  }
-};
+}
 
 // Export Durable Objects
-export { _WebSocketRoom, CollaborationRoom, NotificationHub };
+export { WebSocketRoom, CollaborationRoom, NotificationHub };

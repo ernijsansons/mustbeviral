@@ -234,12 +234,12 @@ function AuthSidebar({ variant }: { variant: string }) {
 /**
  * Main Auth Layout Component
  */
-export function AuthLayout(_{
+export function AuthLayout({
   children, title, subtitle, showBackButton = false, backgroundVariant = 'cosmic', className
 }: AuthLayoutProps) {
   const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect_(() => {
+  useEffect(() => {
     // Trigger entrance animation
     const timer = setTimeout(() => setIsLoaded(true), 100);
     return () => clearTimeout(timer);

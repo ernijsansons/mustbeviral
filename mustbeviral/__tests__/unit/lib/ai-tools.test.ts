@@ -16,8 +16,14 @@ describe('AIToolsManager', () => {
     aiToolsManager = new AIToolsManager();
     
     // Mock Date to control time-based tests
+    const OriginalDate = Date;
     mockDate = jest.spyOn(global, 'Date').mockImplementation(
-      () => new Date('2025-01-25T12:00:00.000Z') as any
+      (...args: any[]) => {
+        if (args.length === 0) {
+          return new OriginalDate('2025-01-25T12:00:00.000Z') as any;
+        }
+        return new OriginalDate(...args) as any;
+      }
     );
     
     // Suppress console.log in tests

@@ -69,7 +69,7 @@ describe('SecurePassword Module - Comprehensive Security Testing', () => {
         'password\nwith\nnewlines',
         'password\twith\ttabs',
         'password"with\'quotes',
-        'password\with\backslashes',
+        'password\\with\\backslashes',
         'password/with/slashes',
         'password&with&special<>chars!@#$%^*()_+-=[]{}|;:,.<>?`~'
       ];
@@ -409,7 +409,7 @@ describe('SecurePassword Module - Comprehensive Security Testing', () => {
       // Generate one hash to get the salt
       const originalHash = await SecurePassword.hashPassword(password);
       const parts = originalHash.split('$');
-      const salt = parts[3];
+      const _salt = parts[3];
 
       // Manually test with same salt (this would require access to internal implementation)
       // Since we can't access internal methods, we verify that verification works consistently

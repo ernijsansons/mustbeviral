@@ -12,12 +12,11 @@ interface ProtectedRouteProps {
   requiredRole?: 'creator' | 'influencer' | 'admin';
 }
 
-export function ProtectedRoute(_{ children, fallback = null, requireOnboarding = false, requiredRole
-}: ProtectedRouteProps) {
+export function ProtectedRoute({ children, fallback = null, requireOnboarding = false, requiredRole }: ProtectedRouteProps) {
   const [, setLocation] = useLocation();
   const { isAuthenticated, user, isLoading, error, refreshAuth, clearError} = useAuth();
 
-  useEffect_(() => {
+  useEffect(() => {
     if (!isLoading && !error) {
       if (!isAuthenticated) {
         logger.info('User not authenticated, redirecting to login', undefined, {

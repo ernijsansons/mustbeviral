@@ -34,17 +34,14 @@ export function TrendsView() {
 
   console.log('LOG: COMPONENT-TRENDS-2 - TrendsView component rendered');
 
-  useEffect_(() => {
-    loadTrendingTopics();
-  }, [selectedRegion]);
-
+  const loadTrendingTopics = async () => {
     console.log('LOG: COMPONENT-TRENDS-3 - Loading trending topics');
     setLoading(true);
-    
+
     try {
       const response = await fetch(`/api/get-trends?type=trending&region=${selectedRegion}`);
       const data = await response.json();
-      
+
       if (data.success) {
         setTrendingTopics(data.data);
         console.log('LOG: COMPONENT-TRENDS-4 - Loaded', data.data.length, 'trending topics');
@@ -55,6 +52,10 @@ export function TrendsView() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadTrendingTopics();
+  }, [selectedRegion]);
 
   const searchKeywords = async () => {
     if (!searchKeyword.trim()) {return;}
@@ -154,7 +155,7 @@ export function TrendsView() {
           </div>
           <button
             onClick={searchKeywords}
-            disabled={loading ?? !searchKeyword.trim()}
+            disabled={loading || !searchKeyword.trim()}
             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Search
@@ -208,7 +209,7 @@ export function TrendsView() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
-                      {getTrendIcon(trend.trendscore)}
+                      {getTrendIcon(trend.trend_score)}
                       <h4 className="font-semibold text-gray-900">{trend.keyword}</h4>
                       <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                         {trend.category}
@@ -220,26 +221,26 @@ export function TrendsView() {
                         <span className="font-medium">Trend Score:</span>
                         <div className="flex items-center mt-1">
                           <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
-                            <div 
-                              className="bg-indigo-600 h-2 rounded-full" 
-                              style={{ width: `${trend.trendscore}%` }}
+                            <div
+                              className="bg-indigo-600 h-2 rounded-full"
+                              style={{ width: `${trend.trend_score}%` }}
                             ></div>
                           </div>
-                          <span>{trend.trendscore}</span>
+                          <span>{trend.trend_score}</span>
                         </div>
                       </div>
                       
                       <div>
                         <span className="font-medium">Search Volume:</span>
                         <p className="text-lg font-semibold text-gray-900">
-                          {formatNumber(trend.searchvolume)}
+                          {formatNumber(trend.search_volume)}
                         </p>
                       </div>
                       
                       <div>
                         <span className="font-medium">Viral Potential:</span>
-                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getViralPotentialColor(trend.viralpotential)}`}>
-                          {Math.round(trend.viralpotential)}%
+                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getViralPotentialColor(trend.viral_potential)}`}>
+                          {Math.round(trend.viral_potential)}%
                         </span>
                       </div>
                     </div>
@@ -287,7 +288,7 @@ export function TrendsView() {
                 <div key={index} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold text-gray-900">{prediction.keyword}</h4>
-                    <span className="text-sm text-gray-500">{prediction.timehorizon} forecast</span>
+                    <span className="text-sm text-gray-500">{prediction.time_horizon} forecast</span>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
@@ -306,10 +307,10 @@ export function TrendsView() {
                         <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
                           <div 
                             className="bg-green-500 h-2 rounded-full" 
-                            style={{ width: `${prediction.confidencelevel}%` }}
+                            style={{ width: `${prediction.confidence_level}%` }}
                           ></div>
                         </div>
-                        <span className="text-sm">{Math.round(prediction.confidencelevel)}%</span>
+                        <span className="text-sm">{Math.round(prediction.confidence_level)}%</span>
                       </div>
                     </div>
                   </div>

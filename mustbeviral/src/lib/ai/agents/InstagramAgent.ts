@@ -783,13 +783,11 @@ Instagram Content:`;
       lifestyle_aspirational: ['lifestyle', 'goals', 'inspiration', 'dream'],
       educational_carousel: ['carousel', 'tips', 'guide', 'tutorial', 'swipe'],
       transformation: ['transformation', 'before and after', 'progress', 'change'],
-      relatable_moment: ['relatable', 'me when', 'anyone else {
-    ', 'we all']
-  }
+      relatable_moment: ['relatable', 'me when', 'anyone else', 'we all']
     };
 
-    const keywords = triggerMappings[trigger]  ?? [trigger];
-    return keywords.some(keyword = > content.toLowerCase().includes(keyword.toLowerCase()));
+    const keywords = triggerMappings[trigger] ?? [trigger];
+    return keywords.some(keyword => content.toLowerCase().includes(keyword.toLowerCase()));
   }
 
   private predictVisualAppeal(content: string): number {

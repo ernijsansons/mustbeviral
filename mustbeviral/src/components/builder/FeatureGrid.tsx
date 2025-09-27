@@ -32,7 +32,7 @@ interface FeatureGridProps {
   builderState?: any;
 }
 
-export function FeatureGrid(_{
+export function FeatureGrid({
   title, subtitle, features, columns = 3, animation = 'float', variant = 'cosmic', className, _builderBlock, _builderState, ...props
 }: FeatureGridProps) {
   const gridClasses = {
@@ -112,7 +112,7 @@ export function FeatureGrid(_{
                 )}
 
                 {/* Title */}
-                  <CardTitle level={3} gradient={!feature.variant  ?? feature.variant === 'default'}>
+                  <CardTitle level={3} gradient={!feature.variant || feature.variant === 'default'}>
                   {feature.title}
                 </CardTitle>
 

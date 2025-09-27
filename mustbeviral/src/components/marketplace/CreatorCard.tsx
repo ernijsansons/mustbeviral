@@ -50,7 +50,7 @@ const nicheColors: Record<string, string> = {
   art: 'from-violet-500 to-purple-500'
 };
 
-export function CreatorCard(_{
+export function CreatorCard({
   creator, onConnect, onView, className
 }: CreatorCardProps) {
   const [isHovered, setIsHovered] = useState(false);

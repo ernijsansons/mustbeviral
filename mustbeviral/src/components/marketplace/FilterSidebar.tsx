@@ -46,7 +46,7 @@ const niches = [
   { id: 'art', label: 'Art', icon: '🎨', color: 'from-violet-500 to-purple-500' }
 ];
 
-export function FilterSidebar(_{ onFilterChange, className }: FilterSidebarProps) {
+export function FilterSidebar({ onFilterChange, className }: FilterSidebarProps) {
   const [filters, setFilters] = useState<FilterState>({
     priceRange: [0, 10000],
     viralScore: 0,

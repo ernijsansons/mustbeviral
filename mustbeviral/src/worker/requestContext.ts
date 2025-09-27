@@ -80,7 +80,7 @@ export class RequestCorrelation {
 
     // Extract user information if available
     const authHeader = request.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader?.startsWith('Bearer ')) {
       try {
         const token = authHeader.substring(7);
         const payload = JSON.parse(atob(token.split('.')[1]));

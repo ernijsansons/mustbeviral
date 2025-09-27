@@ -12,13 +12,13 @@ interface MetricCounterProps {
   showPlus?: boolean;
 }
 
-export function MetricCounter(_{
-  value, label, suffix = '', prefix = '', duration = 2000, className, decimals = 0, showPlus = false, }: MetricCounterProps) {
+export function MetricCounter({
+  value, label, suffix = '', prefix = '', duration = 2000, className, decimals = 0, showPlus = false }: MetricCounterProps) {
   const [count, setCount] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
 
-  useEffect_(() => {
+  useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && !isVisible) {
@@ -40,7 +40,7 @@ export function MetricCounter(_{
     };
   }, [isVisible]);
 
-  useEffect_(() => {
+  useEffect(() => {
     if (!isVisible) {return;}
 
     const startTime = Date.now();

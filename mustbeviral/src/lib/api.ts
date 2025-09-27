@@ -205,19 +205,19 @@ export class ApiClient {
       logger.info('Making API request', {
         component: 'ApiClient',
         action: 'request',
-        metadata: { endpoint, method: config.method ?? 'GET' }
+        metadata: { endpoint, method: config.method || 'GET' }
       });
 
       // Use retry client for resilient requests
       const response = await retryClient.request<Response>(url, config, finalConfig);
 
       // Validate response object
-        if (!response  ?? typeof response !== 'object') {
+        if (!response || typeof response !== 'object') {
         throw new ApiClientError('Invalid response object received', 0);
       }
 
       // Check if response has the methods we need
-      if (typeof response.ok !== 'boolean'  ?? typeof response.status !== 'number') {
+      if (typeof response.ok !== 'boolean' || typeof response.status !== 'number') {
         throw new ApiClientError('Invalid response format', 0);
       }
 
@@ -237,7 +237,7 @@ export class ApiClient {
         // Safely parse error response with proper typing
         try {
           if (response.json && typeof response.json === 'function') {
-            const contentType = response.headers?.get?.('content-type')  ?? '';
+            const contentType = response.headers?.get?.('content-type') || '';
             if (contentType.includes('application/json')) {
               const parsedError = await response.json() as unknown;
               if (parsedError && typeof parsedError === 'object') {
@@ -254,7 +254,7 @@ export class ApiClient {
           logger.warn('Failed to parse error response', parseError instanceof Error ? parseError : new Error(String(parseError)));
         }
 
-        const errorMessage = errorData.error ?? errorData.message ?? 'Request failed';
+        const errorMessage = errorData.error || errorData.message || 'Request failed';
         throw new ApiClientError(
           errorMessage,
           response.status,
@@ -267,7 +267,7 @@ export class ApiClient {
       let data: ApiResponse<T>;
       try {
         if (response.json && typeof response.json === 'function') {
-          const contentType = response.headers?.get?.('content-type')  ?? '';
+          const contentType = response.headers?.get?.('content-type') || '';
           if (contentType.includes('application/json')) {
             const parsedData = await response.json() as unknown;
             // Validate that the response matches ApiResponse structure
@@ -345,7 +345,7 @@ export class ApiClient {
 
     try {
       if (response.json && typeof response.json === 'function') {
-        const contentType = response.headers?.get?.('content-type')  ?? '';
+        const contentType = response.headers?.get?.('content-type') || '';
         if (contentType.includes('application/json')) {
           const parsedError = await response.json() as unknown;
           if (parsedError && typeof parsedError === 'object') {
@@ -369,7 +369,7 @@ export class ApiClient {
   private async parseSuccessResponse<T>(response: Response): Promise<ApiResponse<T>> {
     try {
       if (response.json && typeof response.json === 'function') {
-        const contentType = response.headers?.get?.('content-type')  ?? '';
+        const contentType = response.headers?.get?.('content-type') || '';
         if (contentType.includes('application/json')) {
           const parsedData = await response.json() as unknown;
           if (parsedData && typeof parsedData === 'object') {
@@ -423,14 +423,14 @@ export class ApiClient {
       const response = await fetch(url, config);
 
       // Validate response object
-        if (!response  ?? typeof response !== 'object') {
+        if (!response || typeof response !== 'object') {
         throw new ApiClientError('Invalid response object received', 0);
       }
 
       if (!response.ok) {
         const errorResponse = await this.parseErrorResponse(response);
         throw new ApiClientError(
-          errorResponse.error ?? errorResponse.message ?? 'Request failed',
+          errorResponse.error || errorResponse.message || 'Request failed',
           response.status,
           errorResponse.code,
           errorResponse.details
@@ -463,7 +463,7 @@ export class ApiClient {
 
       // Handle different response formats
       if (response.success) {
-        const token = response.data?.token ?? response.data?.accessToken;
+        const token = response.data?.token || response.data?.accessToken;
         if (token) {
           this.setToken(token);
         } else {
@@ -493,7 +493,7 @@ export class ApiClient {
 
       // Handle different response formats
       if (response.success) {
-        const token = response.data?.token ?? response.data?.accessToken;
+        const token = response.data?.token || response.data?.accessToken;
         if (token) {
           this.setToken(token);
         } else {

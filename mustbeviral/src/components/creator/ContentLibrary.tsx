@@ -87,7 +87,7 @@ function StatusBadge({ status }: { status: string }) {
 /**
  * Content card with hover preview
  */
-function ContentCard(_{ content, viewMode }: { content: ContentItem; viewMode: 'grid' | 'list' }) {
+function ContentCard({ content, viewMode }: { content: ContentItem; viewMode: 'grid' | 'list' }) {
   const [isHovered, setIsHovered] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 

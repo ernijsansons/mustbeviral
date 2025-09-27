@@ -3,7 +3,7 @@
  * Tests for comprehensive error handling system
  */
 
-import { _ValidationError,
+import { ValidationError,
   AuthenticationError,
   AuthorizationError,
   DatabaseError,

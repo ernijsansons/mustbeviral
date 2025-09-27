@@ -196,7 +196,7 @@ export class AuthMiddleware {
   private extractToken(request: Request): string | null {
     // Try Authorization header first
     const authHeader = request.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader?.startsWith('Bearer ')) {
       return authHeader.substring(7);
     }
 

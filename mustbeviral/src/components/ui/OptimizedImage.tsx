@@ -23,7 +23,7 @@ interface OptimizedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
  * - Responsive image loading
  * - WCAG 2.1 AA compliant alt text handling
  */
-export function OptimizedImage(_{
+export function OptimizedImage({
   src, alt, fallbackSrc = '/images/placeholder.svg', blurDataURL, priority = false, quality = 85, sizes, aspectRatio = '16/9', objectFit = 'cover', className, onLoadComplete, ...props
 }: OptimizedImageProps) {
   const [imageSrc, setImageSrc] = useState<string>(blurDataURL ?? '');
@@ -48,7 +48,7 @@ export function OptimizedImage(_{
 
   // Check WebP support
   const supportsWebP = useRef<boolean | null>(null);
-  useEffect_(() => {
+  useEffect(() => {
     if (supportsWebP.current === null) {
       const webP = new Image();
       webP.onload = webP.onerror = () => {
@@ -59,8 +59,8 @@ export function OptimizedImage(_{
   }, []);
 
   // Set up Intersection Observer for lazy loading
-  useEffect_(() => {
-    if (priority ?? !imgRef.current) {
+  useEffect(() => {
+    if (priority || !imgRef.current) {
       setIsInView(true);
       return;
     }
@@ -87,7 +87,7 @@ export function OptimizedImage(_{
   }, [priority]);
 
   // Load image when in view
-  useEffect_(() => {
+  useEffect(() => {
     if (!isInView) {return;}
 
     const img = new Image();
@@ -156,9 +156,9 @@ export function OptimizedImage(_{
       {/* Main image */}
       <img
         ref={imgRef}
-        src={imageSrc ?? fallbackSrc}
+        src={imageSrc || fallbackSrc}
         alt={alt}
-        srcSet={!hasError && isInView ? generateSrcSet(imageSrc ?? src) : undefined}
+        srcSet={!hasError && isInView ? generateSrcSet(imageSrc || src) : undefined}
         sizes={sizes}
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}

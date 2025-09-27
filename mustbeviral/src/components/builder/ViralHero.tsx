@@ -25,7 +25,7 @@ interface ViralHeroProps {
   builderState?: any;
 }
 
-export function ViralHero(_{
+export function ViralHero({
   title, subtitle, description, ctaText = "Start Creating", ctaVariant = "viral", backgroundVariant = "cosmic", animation = "float", className, _builderBlock, _builderState, ...props
 }: ViralHeroProps) {
   const backgroundClasses = {
@@ -36,6 +36,7 @@ export function ViralHero(_{
     energy: 'bg-gradient-to-br from-indigo-900/20 to-purple-900/20',
   };
 
+  const animationClasses = {
     float: 'animate-float',
     pulse: 'animate-pulse-glow',
     shimmer: 'animate-shimmer',

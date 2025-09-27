@@ -1,8 +1,8 @@
 // Universe-Bending Text Animation Component
 import React, { useEffect, useRef, useState } from 'react';
-import { cn} from '../../lib/utils';
-import { useCosmicAnimation, useCosmicSequence} from '../../hooks/useCosmicAnimation';
-import { useTheme} from '../../providers/ThemeProvider';
+import { cn } from '../../lib/utils';
+import { useCosmicAnimation, useCosmicSequence } from '../../hooks/useCosmicAnimation';
+import { useTheme } from '../../providers/ThemeProvider';
 
 interface CosmicTextProps {
   children: string;
@@ -15,8 +15,8 @@ interface CosmicTextProps {
   glowEffect?: boolean;
 }
 
-export function CosmicText({ children, className, variant = 'typewriter', speed = 'normal', delay = 0, loop = false, trigger = 'mount', glowEffect = true, }: CosmicTextProps) {
-  const { cosmicEffectsLevel, isAnimationEnabled} = useTheme();
+export function CosmicText({ children, className, variant = 'typewriter', speed = 'normal', delay = 0, loop = false, trigger = 'mount', glowEffect = true }: CosmicTextProps) {
+  const { cosmicEffectsLevel, isAnimationEnabled } = useTheme();
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout>();
@@ -32,8 +32,8 @@ export function CosmicText({ children, className, variant = 'typewriter', speed 
   const baseSpeed = speeds[speed];
 
   // Typewriter effect
-  useEffect_(() => {
-    if (variant !== 'typewriter'  ?? !isAnimationEnabled) {
+  useEffect(() => {
+    if (variant !== 'typewriter' || !isAnimationEnabled) {
       setDisplayText(children);
       return;
     }
@@ -42,8 +42,8 @@ export function CosmicText({ children, className, variant = 'typewriter', speed 
       setDisplayText('');
       setCurrentIndex(0);
 
-      const timeout = setTimeout_(() => {
-        intervalRef.current = setInterval_(() => {
+      const timeout = setTimeout(() => {
+        intervalRef.current = setInterval(() => {
           setCurrentIndex((prev) => {
             if (prev >= children.length) {
               if (loop) {
@@ -307,7 +307,7 @@ export function CosmicText({ children, className, variant = 'typewriter', speed 
 }
 
 // Word-by-word reveal animation
-export function CosmicWordReveal(_{ children, className, delay = 100, trigger = 'intersect', stagger = true, }: {
+export function CosmicWordReveal({ children, className, delay = 100, trigger = 'intersect', stagger = true }: {
   children: string;
   className?: string;
   delay?: number;
@@ -315,7 +315,7 @@ export function CosmicWordReveal(_{ children, className, delay = 100, trigger = 
   stagger?: boolean;
 }) {
   const words = children.split(' ');
-  const { isAnimationEnabled} = useTheme();
+  const { isAnimationEnabled } = useTheme();
 
   const { getRef, play, currentIndex} = useCosmicSequence(
     words.map((_, index) => ({

@@ -2,7 +2,7 @@
 // Handles content creation, AI generation, and media management
 
 import { Router } from './router';
-import { _ContentCollaborator, AIProcessor } from './durable-objects';
+import { ContentCollaborator, AIProcessor } from './durable-objects';
 import { ContentController } from './controllers/ContentController';
 import { MediaController } from './controllers/MediaController';
 import { AIController } from './controllers/AIController';
@@ -68,7 +68,9 @@ export default {
     // Start request tracking
     const startTime = Date.now();
 
-    logger.info('Request received', { _requestId,
+    const requestId = crypto.randomUUID();
+    logger.info('Request received', {
+      requestId,
       method: request.method,
       url: request.url,
       contentType: request.headers.get('Content-Type')
@@ -78,7 +80,7 @@ export default {
       // Apply security checks
       const securityCheck = await security.validate(request);
       if (!securityCheck.valid) {
-        logger.warn('Security check failed', { _requestId, reason: securityCheck.reason });
+        logger.warn('Security check failed', { requestId, reason: securityCheck.reason });
         return security.createErrorResponse(403, 'Security validation failed');
       }
 
@@ -103,7 +105,7 @@ export default {
       router.get('/api/trends/public', (req) => trendsController.getPublicTrends(req));
 
       // Protected routes (auth required)
-      const authRequired = async (_handler: Function) => {
+      const authRequired = async (handler: (...args: any[]) => any) => {
         return async (req: Request, params?: unknown) => {
           const authResult = await auth.authenticate(req);
           if (!authResult.valid) {
@@ -112,7 +114,7 @@ export default {
               headers: { 'Content-Type': 'application/json' }
             });
           }
-          req.user = authResult.user;
+          (req as any).user = authResult.user;
           return handler(req, params);
         };
       };
@@ -143,22 +145,22 @@ export default {
       // AI enhancement routes
       router.post('/api/ai/enhance', authRequired((req) => aiController.enhanceContent(req)));
       router.post('/api/ai/generate', authRequired((req) => aiController.generateContent(req)));
-      router.post('/api/ai/suggestions', authRequired((_req) => aiController.getSuggestions(req)));
-      router.post('/api/ai/analyze', authRequired((_req) => aiController.analyzeContent(req)));
-      router.post('/api/ai/optimize-seo', authRequired((_req) => aiController.optimizeSEO(req)));
-      router.post('/api/ai/generate-images', authRequired((_req) => aiController.generateImages(req)));
+      router.post('/api/ai/suggestions', authRequired((req) => aiController.getSuggestions(req)));
+      router.post('/api/ai/analyze', authRequired((req) => aiController.analyzeContent(req)));
+      router.post('/api/ai/optimize-seo', authRequired((req) => aiController.optimizeSEO(req)));
+      router.post('/api/ai/generate-images', authRequired((req) => aiController.generateImages(req)));
 
       // Trends and analytics routes
-      router.get('/api/trends', authRequired((_req) => trendsController.getTrends(req)));
-      router.get('/api/trends/keywords', authRequired((_req) => trendsController.getTrendingKeywords(req)));
-      router.get('/api/trends/topics', authRequired((_req) => trendsController.getTrendingTopics(req)));
-      router.post('/api/trends/analyze', authRequired((_req) => trendsController.analyzeTrends(req)));
+      router.get('/api/trends', authRequired((req) => trendsController.getTrends(req)));
+      router.get('/api/trends/keywords', authRequired((req) => trendsController.getTrendingKeywords(req)));
+      router.get('/api/trends/topics', authRequired((req) => trendsController.getTrendingTopics(req)));
+      router.post('/api/trends/analyze', authRequired((req) => trendsController.analyzeTrends(req)));
 
       // Bulk operations
-      router.post('/api/content/bulk/publish', authRequired((_req) => contentController.bulkPublish(req)));
-      router.post('/api/content/bulk/schedule', authRequired((_req) => contentController.bulkSchedule(req)));
-      router.post('/api/content/bulk/delete', authRequired((_req) => contentController.bulkDelete(req)));
-      router.post('/api/content/bulk/export', authRequired((_req) => contentController.bulkExport(req)));
+      router.post('/api/content/bulk/publish', authRequired((req) => contentController.bulkPublish(req)));
+      router.post('/api/content/bulk/schedule', authRequired((req) => contentController.bulkSchedule(req)));
+      router.post('/api/content/bulk/delete', authRequired((req) => contentController.bulkDelete(req)));
+      router.post('/api/content/bulk/export', authRequired((req) => contentController.bulkExport(req)));
 
       // Handle request
       let response = await router.handle(request);
@@ -175,7 +177,8 @@ export default {
       const duration = Date.now() - startTime;
       metrics.recordRequest(request.method, response.status, duration);
 
-      logger.info('Request completed', { _requestId,
+      logger.info('Request completed', {
+        requestId,
         status: response.status,
         duration,
         contentLength: response.headers.get('Content-Length')
@@ -184,7 +187,8 @@ export default {
       return response;
 
     } catch (error) {
-      logger.error('Request failed', { _requestId,
+      logger.error('Request failed', {
+        requestId,
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined
       });
@@ -225,7 +229,7 @@ export default {
   }
 };
 
-async function handleAIProcessing(data: unknown, env: Env, logger: Logger): Promise<void> {
+async function handleAIProcessing(data: any, env: Env, logger: Logger): Promise<void> {
   logger.info('Processing AI task', { taskType: data.type, contentId: data.contentId });
 
   // Get AI processor durable object
@@ -239,7 +243,7 @@ async function handleAIProcessing(data: unknown, env: Env, logger: Logger): Prom
   });
 }
 
-async function handleContentPublishing(data: unknown, env: Env, logger: Logger): Promise<void> {
+async function handleContentPublishing(data: any, env: Env, logger: Logger): Promise<void> {
   logger.info('Publishing content', { contentId: data.contentId, scheduledTime: data.scheduledTime });
 
   const contentController = new ContentController(env, logger, new MetricsCollector(env.SERVICE_NAME));
@@ -249,4 +253,4 @@ async function handleContentPublishing(data: unknown, env: Env, logger: Logger):
 }
 
 // Export Durable Objects
-export { _ContentCollaborator, AIProcessor };
+export { ContentCollaborator, AIProcessor };

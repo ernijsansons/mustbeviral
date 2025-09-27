@@ -332,9 +332,7 @@ export class DataIsolationMiddleware {
             const finalQuery = query;
             let finalParams = params;
 
-            if (query.toUpperCase() {
-    .includes('INSERT INTO') &&
-  }
+            if (query.toUpperCase().includes('INSERT INTO') &&
                 !query.includes('organization_id')) {
               // This is a simplified approach - in production you'd want more sophisticated logic
               finalParams = [...params, tenantContext.organizationId];

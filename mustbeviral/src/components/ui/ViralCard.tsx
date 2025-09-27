@@ -19,8 +19,8 @@ const variantClasses = {
   bordered: 'bg-white border-2 gradient-border',
 };
 
-export function ViralCard(_{
-  children, className, title, subtitle, icon, variant = 'default', hover = true, onClick, }: ViralCardProps) {
+export function ViralCard({
+  children, className, title, subtitle, icon, variant = 'default', hover = true, onClick }: ViralCardProps) {
   return (
     <div
       className={cn(

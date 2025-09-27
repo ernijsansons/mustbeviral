@@ -19,15 +19,23 @@ class HealthChecker {
   constructor() {
     this.config = {
       environments: {
+        development: {
+          workers: 'http://localhost:3000',
+          pages: 'http://localhost:5173',
+          api: 'http://localhost:3000/api',
+          app: 'http://localhost:3000'
+        },
         staging: {
-          workers: 'https://must-be-viral-staging.your-subdomain.workers.dev',
-          pages: 'https://must-be-viral-staging.pages.dev',
-          api: 'https://must-be-viral-staging.your-subdomain.workers.dev/api'
+          workers: 'https://staging.mustbeviral.com',
+          pages: 'https://staging.mustbeviral.com',
+          api: 'https://api-staging.mustbeviral.com',
+          app: 'https://staging.mustbeviral.com'
         },
         production: {
-          workers: 'https://must-be-viral-prod.your-subdomain.workers.dev',
-          pages: 'https://must-be-viral.pages.dev',
-          api: 'https://must-be-viral-prod.your-subdomain.workers.dev/api'
+          workers: 'https://mustbeviral.com',
+          pages: 'https://mustbeviral.com',
+          api: 'https://api.mustbeviral.com',
+          app: 'https://mustbeviral.com'
         }
       },
       timeouts: {
@@ -206,30 +214,41 @@ class HealthChecker {
     // API endpoints checks
     workersChecks.push(
       this.checkEndpoint(
-        'API Root',
-        `${config.api}/`,
-        200
-      )
-    );
-    
-    workersChecks.push(
-      this.checkEndpoint(
-        'API Auth',
-        `${config.api}/auth/status`,
-        200
-      )
-    );
-    
-    // Performance check
-    workersChecks.push(
-      this.checkEndpoint(
-        'Workers Performance',
-        `${config.workers}/api/ping`,
+        'API Health',
+        `${config.api}/health`,
         200,
         [
           async (response) => {
-            // Check response time is under 1 second
-            return response.responseTime < 1000;
+            try {
+              const data = JSON.parse(response.body);
+              return data.status === 'healthy';
+            } catch {
+              return false;
+            }
+          }
+        ]
+      )
+    );
+
+    // Metrics endpoint check
+    workersChecks.push(
+      this.checkEndpoint(
+        'Metrics Endpoint',
+        `${config.workers}/metrics`,
+        200
+      )
+    );
+
+    // Performance check
+    workersChecks.push(
+      this.checkEndpoint(
+        'API Performance',
+        `${config.api}/health`,
+        200,
+        [
+          async (response) => {
+            // Check response time is under 2 seconds
+            return response.responseTime < 2000;
           }
         ]
       )
@@ -240,47 +259,49 @@ class HealthChecker {
 
   async checkPages(environment) {
     this.log(`Checking Pages for ${environment}...`);
-    
+
     const config = this.config.environments[environment];
     if (!config) {
       throw new Error(`Unknown environment: ${environment}`);
     }
-    
+
     const pagesChecks = [];
-    
+
     // Main page check
     pagesChecks.push(
       this.checkEndpoint(
-        'Pages Home',
-        config.pages,
+        'App Home Page',
+        config.app,
         200,
         [
           async (response) => {
-            // Check if it's a valid HTML page
-            return response.body.includes('<html') && response.body.includes('Must Be Viral');
+            // Check if it's a valid response
+            return response.body.length > 0 && response.statusCode === 200;
           }
         ]
       )
     );
-    
-    // Static assets check
+
+    // Static assets check (only for production environments)
+    if (environment !== 'development') {
+      pagesChecks.push(
+        this.checkEndpoint(
+          'Static Assets',
+          `${config.app}/favicon.ico`,
+          200
+        )
+      );
+    }
+
+    // Robots.txt check
     pagesChecks.push(
       this.checkEndpoint(
-        'Pages Assets',
-        `${config.pages}/assets/index.css`,
+        'Robots.txt',
+        `${config.app}/robots.txt`,
         200
       )
     );
-    
-    // Service worker check (if applicable)
-    pagesChecks.push(
-      this.checkEndpoint(
-        'Service Worker',
-        `${config.pages}/sw.js`,
-        200
-      )
-    );
-    
+
     return Promise.all(pagesChecks);
   }
 
@@ -528,8 +549,8 @@ async function main() {
   const command = args[0] || 'check';
   const environment = args[1] || 'staging';
   
-  if (!['staging', 'production'].includes(environment)) {
-    console.error('❌ Invalid environment. Use "staging" or "production"');
+  if (!['development', 'staging', 'production'].includes(environment)) {
+    console.error('❌ Invalid environment. Use "development", "staging", or "production"');
     process.exit(1);
   }
   

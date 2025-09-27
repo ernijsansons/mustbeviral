@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   presets: [
     [
       '@babel/preset-env',
@@ -27,12 +27,8 @@ export default {
     ],
   ],
   plugins: [
-    // Use the modern class properties plugin
     '@babel/plugin-transform-class-properties',
-    // Transform import.meta for Jest compatibility
-    ['babel-plugin-transform-import-meta', {
-      module: 'ES6'
-    }]
+    '@babel/plugin-transform-async-to-generator',
   ],
   env: {
     test: {
@@ -43,8 +39,29 @@ export default {
             targets: {
               node: 'current',
             },
+            modules: 'auto',
           },
         ],
+        [
+          '@babel/preset-react',
+          {
+            runtime: 'automatic',
+          },
+        ],
+        [
+          '@babel/preset-typescript',
+          {
+            isTSX: true,
+            allExtensions: true,
+            allowDeclareFields: true,
+            allowNamespaces: true,
+            onlyRemoveTypeImports: true,
+          },
+        ],
+      ],
+      plugins: [
+        '@babel/plugin-transform-class-properties',
+        '@babel/plugin-transform-async-to-generator',
       ],
     },
   },

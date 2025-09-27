@@ -368,7 +368,7 @@ export class UserRateLimiter {
       maxRequests: limits.requestsPerHour, keyGenerator: (request) => {
         // Extract user ID from Authorization header
         const authHeader = request.headers.get('authorization');
-        if (authHeader && authHeader.startsWith('Bearer ')) {
+        if (authHeader?.startsWith('Bearer ')) {
           try {
             const token = authHeader.substring(7);
             const payload = JSON.parse(atob(token.split('.')[1]));

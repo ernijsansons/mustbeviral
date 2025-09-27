@@ -2,7 +2,7 @@
  * Rate Limiting Middleware Tests
  */
 
-import { _RateLimiter,
+import { RateLimiter,
   KVRateLimitStore,
   MemoryRateLimitStore,
   createRateLimiter,

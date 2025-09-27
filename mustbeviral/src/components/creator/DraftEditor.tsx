@@ -25,7 +25,7 @@ interface ToolbarButton {
   pulse?: boolean;
 }
 
-export function DraftEditor(_{
+export function DraftEditor({
   initialContent = '', onSave, onPublish, className
 }: DraftEditorProps) {
   const [content, setContent] = useState(initialContent);
@@ -63,10 +63,11 @@ export function DraftEditor(_{
     { text: "Add personal story for authenticity 💖", score: '+18' }
   ];
 
-  useEffect_(() => {
+  useEffect(() => {
     analyzeContent(content);
   }, [content]);
 
+  const analyzeContent = (text: string) => {
     const words = text.trim().split(/\s+/).filter(w => w.length > 0);
     const wordCount = words.length;
     const readingTime = Math.ceil(wordCount / 200);

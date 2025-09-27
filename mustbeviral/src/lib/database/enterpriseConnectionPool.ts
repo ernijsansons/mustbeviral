@@ -353,8 +353,8 @@ export class EnterpriseConnectionPool extends EventEmitter {
     this.startHealthChecks();
     this.startMetricsCollection();
     
-    console.log('🗄️ Enterprise connection pool initialized');
-    console.log(`📊 Write pools: 1, Read pools: ${this.config.readOnlyReplicas?.length ?? 0}, Analytics pools: 1`);
+    console.warn('🗄️ Enterprise connection pool initialized');
+    console.warn(`📊 Write pools: 1, Read pools: ${this.config.readOnlyReplicas?.length ?? 0}, Analytics pools: 1`);
   }
 
   /**
@@ -639,12 +639,12 @@ export class EnterpriseConnectionPool extends EventEmitter {
     const activeConnections = Array.from(pools.values()).reduce((sum, m) => sum + m.activeConnections, 0);
     const utilizationRate = activeConnections / totalConnections;
 
-    console.log(`📊 Connection utilization: ${(utilizationRate * 100).toFixed(1)}% (${activeConnections}/${totalConnections})`);
+    console.warn(`📊 Connection utilization: ${(utilizationRate * 100).toFixed(1)}% (${activeConnections}/${totalConnections})`);
 
     // Scale up if utilization is high
     if (utilizationRate > (this.config.autoScaling.scaleUpThreshold ?? 0.8) &&
         totalConnections < this.config.autoScaling.maxConnections) {
-      console.log('📈 Scaling up connection pools...');
+      console.warn('📈 Scaling up connection pools...');
       this.scaleUp();
       this.lastScaleOperation = now;
     }
@@ -653,7 +653,7 @@ export class EnterpriseConnectionPool extends EventEmitter {
     &&
   }
              totalConnections > this.config.autoScaling.minConnections) {
-      console.log('📉 Scaling down connection pools...');
+      console.warn('📉 Scaling down connection pools...');
       this.scaleDown();
       this.lastScaleOperation = now;
     }
@@ -698,7 +698,7 @@ export class EnterpriseConnectionPool extends EventEmitter {
    * Graceful shutdown
    */
   async shutdown(): Promise<void> {
-    console.log('🛑 Shutting down enterprise connection pool...');
+    console.warn('🛑 Shutting down enterprise connection pool...');
     this.isShuttingDown = true;
 
     if (this.healthCheckInterval) {
@@ -714,11 +714,11 @@ export class EnterpriseConnectionPool extends EventEmitter {
 
     for (const [poolName] of pools) {
       // In a real implementation, we'd get the actual pool instances and call pool.end()
-      console.log(`📴 Closing pool: ${poolName}`);
+      console.warn(`📴 Closing pool: ${poolName}`);
     }
 
     await Promise.all(shutdownPromises);
-    console.log('✅ Enterprise connection pool shutdown complete');
+    console.warn('✅ Enterprise connection pool shutdown complete');
   }
 }
 

@@ -56,7 +56,7 @@ const stickyColors = [
   'bg-orange-200'
 ];
 
-export function ContentCalendar(_{ onEventClick, onDateClick, className }: ContentCalendarProps) {
+export function ContentCalendar({ onEventClick, onDateClick, className }: ContentCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');

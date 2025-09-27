@@ -20,7 +20,7 @@ async function fixNullishCoalescing(content) {
   const patterns = [
     // Simple variable assignments: var = value || defaultValue
     {
-      pattern: /(\w+)\s*=\s*([^|]+)\s*\|\|\s*([^;,\n\)]+)/g,
+      pattern: /(\w+)\s*=\s*([^|]+)\s*\|\|\s*([^;,\n)]+)/g,
       replacement: '$1 = $2 ?? $3'
     },
     // Function parameters: func(param || defaultValue)
@@ -53,11 +53,11 @@ async function fixConstantNullishness(content) {
   // Fix constant nullishness: null ?? value -> value
   const patterns = [
     {
-      pattern: /null\s*\?\?\s*([^;,\n\)]+)/g,
+      pattern: /null\s*\?\?\s*([^;,\n)]+)/g,
       replacement: '$1'
     },
     {
-      pattern: /undefined\s*\?\?\s*([^;,\n\)]+)/g,
+      pattern: /undefined\s*\?\?\s*([^;,\n)]+)/g,
       replacement: '$1'
     }
   ];
@@ -131,3 +131,4 @@ async function main() {
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(console.error);
 }
+

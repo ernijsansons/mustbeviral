@@ -200,7 +200,7 @@ export class AdvancedAPIGateway {
     };
 
     this.routes.set(routeId, apiRoute);
-    console.log(`LOG: API-GATEWAY-ROUTE-1 - Registered route: ${route.path} [${route.methods.join(', ')}]`);
+    console.warn(`LOG: API-GATEWAY-ROUTE-1 - Registered route: ${route.path} [${route.methods.join(', ')}]`);
 
     return apiRoute;
   }
@@ -216,7 +216,7 @@ export class AdvancedAPIGateway {
 
     // Sort by order
     this.middleware.sort((a, b) => a.order - b.order);
-    console.log(`LOG: API-GATEWAY-MIDDLEWARE-1 - Registered middleware: ${middleware.name}`);
+    console.warn(`LOG: API-GATEWAY-MIDDLEWARE-1 - Registered middleware: ${middleware.name}`);
   }
 
   /**
@@ -224,7 +224,7 @@ export class AdvancedAPIGateway {
    */
   registerUpstream(name: string, service: UpstreamService): void {
     this.upstreams.set(name, service);
-    console.log(`LOG: API-GATEWAY-UPSTREAM-1 - Registered upstream: ${name}`);
+    console.warn(`LOG: API-GATEWAY-UPSTREAM-1 - Registered upstream: ${name}`);
   }
 
   /**
@@ -329,7 +329,7 @@ export class AdvancedAPIGateway {
   }
 
     route.config = { ...route.config, ...config };
-    console.log(`LOG: API-GATEWAY-UPDATE-1 - Updated route config: ${routeId}`);
+    console.warn(`LOG: API-GATEWAY-UPDATE-1 - Updated route config: ${routeId}`);
     return true;
   }
 
@@ -350,7 +350,7 @@ export class AdvancedAPIGateway {
       route.deprecationDate = undefined;
     }
 
-    console.log(`LOG: API-GATEWAY-TOGGLE-1 - Route ${enabled ? 'enabled' : 'disabled'}: ${routeId}`);
+    console.warn(`LOG: API-GATEWAY-TOGGLE-1 - Route ${enabled ? 'enabled' : 'disabled'}: ${routeId}`);
     return true;
   }
 
@@ -592,12 +592,12 @@ export class AdvancedAPIGateway {
     this.registerMiddleware({
       name: 'logging', handler: async (request, next) => {
         const startTime = Date.now();
-        console.log(`LOG: API-GATEWAY-REQUEST-1 - ${request.method} ${request.url}`);
+        console.warn(`LOG: API-GATEWAY-REQUEST-1 - ${request.method} ${request.url}`);
 
         const response = await next();
         const duration = Date.now() - startTime;
 
-        console.log(`LOG: API-GATEWAY-RESPONSE-1 - ${request.method} ${request.url} ${response.status} ${duration}ms`);
+        console.warn(`LOG: API-GATEWAY-RESPONSE-1 - ${request.method} ${request.url} ${response.status} ${duration}ms`);
         return response;
       },
       order: 300

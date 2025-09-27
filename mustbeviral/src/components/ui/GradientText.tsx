@@ -28,8 +28,8 @@ const sizeClasses = {
   '6xl': 'text-6xl',
 };
 
-export function GradientText(_{
-  children, className, variant = 'viral', animate = false, size = '3xl', }: GradientTextProps) {
+export function GradientText({
+  children, className, variant = 'viral', animate = false, size = '3xl' }: GradientTextProps) {
   return (
     <span
       className={cn(

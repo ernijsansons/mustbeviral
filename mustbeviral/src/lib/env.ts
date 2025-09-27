@@ -31,7 +31,7 @@ export function getEnvVar(key: string, defaultValue?: string): string {
   const viteKey = `VITE_${key}`;
   let value: string | undefined;
 
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
+  if (import.meta?.env) {
     // Vite environment (development/production)
     value = import.meta.env[viteKey];
   } else if (typeof process !== 'undefined' && process.env) {

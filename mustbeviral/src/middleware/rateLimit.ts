@@ -402,9 +402,9 @@ export const keyGenerators = {
   },
 
   // By user ID (from JWT token)
-  byUser: (request: Request): string = > {
+  byUser: (request: Request): string => {
     const auth = request.headers.get('Authorization');
-     if (!auth) {
+    if (!auth) {
        return 'anonymous';
      }
 

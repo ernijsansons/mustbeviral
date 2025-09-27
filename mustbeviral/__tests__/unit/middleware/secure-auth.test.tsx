@@ -162,6 +162,7 @@ describe('SecureAuth Module - Comprehensive Security Testing', () => {
       const encodedHeader = btoa(JSON.stringify(header));
       const encodedPayload = btoa(JSON.stringify(expiredPayload));
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const crypto = require('crypto');
       const data = `${encodedHeader}.${encodedPayload}`;
       const signature = crypto.createHmac('sha256', mockEnv.JWT_SECRET).update(data).digest('base64url');
@@ -191,6 +192,7 @@ describe('SecureAuth Module - Comprehensive Security Testing', () => {
       const encodedHeader = btoa(JSON.stringify(header));
       const encodedPayload = btoa(JSON.stringify(wrongIssuerPayload));
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const crypto = require('crypto');
       const data = `${encodedHeader}.${encodedPayload}`;
       const signature = crypto.createHmac('sha256', mockEnv.JWT_SECRET).update(data).digest('base64url');
@@ -220,6 +222,7 @@ describe('SecureAuth Module - Comprehensive Security Testing', () => {
       const encodedHeader = btoa(JSON.stringify(header));
       const encodedPayload = btoa(JSON.stringify(wrongAudiencePayload));
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const crypto = require('crypto');
       const data = `${encodedHeader}.${encodedPayload}`;
       const signature = crypto.createHmac('sha256', mockEnv.JWT_SECRET).update(data).digest('base64url');
@@ -423,6 +426,7 @@ describe('SecureAuth Module - Comprehensive Security Testing', () => {
       const parts = token.split('.');
 
       // Manually verify the signature
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const crypto = require('crypto');
       const data = `${parts[0]}.${parts[1]}`;
       const expectedSignature = crypto.createHmac('sha256', mockEnv.JWT_SECRET).update(data).digest('base64url');

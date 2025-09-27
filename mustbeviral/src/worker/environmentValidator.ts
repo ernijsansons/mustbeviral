@@ -249,7 +249,7 @@ export class EnvironmentValidator {
   private static validateDomainConfiguration(env: CloudflareEnv, result: EnvironmentValidationResult): void {
     const allowedOrigins = env.ALLOWED_ORIGINS?.split(',')  ?? [];
 
-    if (allowedOrigins.length = == 0) {
+    if (allowedOrigins.length === 0) {
       result.warnings.push('No allowed origins configured for CORS');
     }
 

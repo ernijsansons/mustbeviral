@@ -91,11 +91,11 @@ export class MockD1Database {
     };
   }
 
-  batch(statements: unknown[]) {
+  batch(_statements: unknown[]) {
     return Promise.resolve([]);
   }
 
-  exec(query: string) {
+  exec(_query: string) {
     return Promise.resolve({ count: 0, duration: 0 });
   }
 
@@ -131,7 +131,7 @@ export class MockKVNamespace {
     return value;
   }
 
-  async put(key: string, value: unknown, options?: unknown) {
+  async put(key: string, value: unknown, _options?: unknown) {
     const storedValue = typeof value === 'object' ? JSON.stringify(value) : value;
     this.store.set(key, storedValue);
   }
@@ -140,7 +140,7 @@ export class MockKVNamespace {
     this.store.delete(key);
   }
 
-  async list(options?: unknown) {
+  async list(_options?: unknown) {
     const keys = Array.from(this.store.keys());
     return {
       keys: keys.map(name => ({ name })),
@@ -176,8 +176,8 @@ export class MockR2Bucket {
     this.objects.delete(key);
   }
 
-  async list(options?: unknown) {
-    const objects = Array.from(this.objects.values());
+  async list(_options?: unknown) {
+    const _objects = Array.from(this.objects.values());
     return { _objects,
       truncated: false
     };
@@ -204,7 +204,7 @@ export function createMockCloudflareEnv(): CloudflareEnv {
 
 // Mock fetch for API tests
 export function createMockFetch() {
-  return jest.fn((url: string, options?: unknown) => {
+  return jest.fn((_url: string, _options?: unknown) => {
     return Promise.resolve({
       ok: true,
       status: 200,

@@ -90,7 +90,7 @@ export interface ButtonProps
 
     // Ripple effect handler
     const handleRipple = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-        if (!rippleEffect  ?? disabled  ?? loading) {return;}
+        if (!rippleEffect || disabled || loading) {return;}
 
       const button = event.currentTarget;
       const rect = button.getBoundingClientRect();
@@ -130,7 +130,7 @@ export interface ButtonProps
 
     // Enhanced key down handler for accessibility
     const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLButtonElement>) => {
-      if (event.key === ' '  ?? event.key === 'Enter') {
+      if (event.key === ' ' || event.key === 'Enter') {
         setIsPressed(true);
         simulateHapticFeedback();
       }

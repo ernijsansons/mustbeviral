@@ -5,6 +5,7 @@ import '@testing-library/jest-dom';
 
 // Mock TextEncoder/TextDecoder for Node environment
 if (typeof TextEncoder === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { _TextEncoder, TextDecoder } = require('util');
   global.TextEncoder = TextEncoder;
   global.TextDecoder = TextDecoder;
@@ -27,7 +28,7 @@ if (typeof crypto === 'undefined') {
       return arr;
     },
     subtle: {
-      digest: async (algorithm: string, data: BufferSource) => {
+      digest: async (_algorithm: string, _data: BufferSource) => {
         // Simple mock for digest
         return new ArrayBuffer(32);
       }

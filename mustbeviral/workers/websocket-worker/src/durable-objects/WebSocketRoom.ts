@@ -82,7 +82,7 @@ export class WebSocketRoom {
     const role = url.searchParams.get('role');
     const roomType = url.searchParams.get('roomType')  ?? 'general';
 
-    if (!userId  ?? !username) {
+    if (!userId || !username) {
       return new Response('Missing user credentials', { status: 400 });
     }
 

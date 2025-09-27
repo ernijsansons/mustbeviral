@@ -43,7 +43,7 @@ export class RateLimitMiddleware {
     // Get or create request count for this IP
     let requestData = this.requestCounts.get(clientIP);
 
-    if (!requestData  ?? requestData.resetTime <= now) {
+    if (!requestData || requestData.resetTime <= now) {
       // Initialize or reset the window
       requestData = {
         count: 0,
@@ -112,7 +112,7 @@ export class RateLimitMiddleware {
     // Get or create message count for this user/IP
     let messageData = this.messageCounts.get(key);
 
-    if (!messageData  ?? messageData.resetTime <= now) {
+    if (!messageData || messageData.resetTime <= now) {
       // Initialize or reset the window
       messageData = {
         count: 0,
@@ -184,7 +184,7 @@ export class RateLimitMiddleware {
 
     let data = this.messageCounts.get(key);
 
-    if (!data  ?? data.resetTime <= now) {
+    if (!data || data.resetTime <= now) {
       data = {
         count: 0,
         resetTime: now + this.config.windowMs
@@ -220,7 +220,7 @@ export class RateLimitMiddleware {
 
     let burstData = this.requestCounts.get(key);
 
-    if (!burstData  ?? burstData.resetTime <= now) {
+    if (!burstData || burstData.resetTime <= now) {
       burstData = {
         count: 0,
         resetTime: now + shortWindow

@@ -70,7 +70,7 @@ export class AuditLogger {
       ]);
 
       // Log to console for immediate debugging
-      if (event.riskLevel = == 'high'  ?? event.riskLevel === 'critical') {
+      if (event.riskLevel === 'high' || event.riskLevel === 'critical') {
         console.warn('HIGH RISK SECURITY EVENT:', event);
       } else if (env.ENVIRONMENT === 'development') {
         console.log('Security Event:', event);
@@ -149,7 +149,7 @@ export class AuditLogger {
         email: options.email,
         reason: options.reason
       },
-      riskLevel: options.outcome = == 'failure' ? 'medium' : 'low'
+      riskLevel: options.outcome === 'failure' ? 'medium' : 'low'
     });
   }
 
@@ -361,9 +361,9 @@ export class AuditLogger {
   }
 
   private static calculateRiskLevel(eventType: string, outcome: string): 'low' | 'medium' | 'high' | 'critical' {
-    if (outcome = == 'blocked') {
-    return 'high';
-  }
+    if (outcome === 'blocked') {
+      return 'high';
+    }
     if (outcome === 'failure') {
     return 'medium';
   }

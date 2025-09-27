@@ -131,6 +131,10 @@ export class AuthService {
       console.log('LOG: AUTH-TOKEN-2 - JWT token generated successfully');
       return token;
     } catch (error) {
+      // Re-throw JWT secret errors directly
+      if (error instanceof Error && error.message.includes('JWT secret not initialized')) {
+        throw error;
+      }
       console.error('LOG: AUTH-TOKEN-ERROR-1 - Failed to generate token:', error);
       throw new Error('Failed to generate token');
     }
@@ -138,7 +142,7 @@ export class AuthService {
 
   // Verify JWT token with enhanced type safety
   static async verifyToken(token: string): Promise<AuthUser | null> {
-    if (!token ?? typeof token !== 'string') {
+    if (!token || typeof token !== 'string') {
       console.log('LOG: AUTH-VERIFY-TOKEN-ERROR - Invalid token provided');
       return null;
     }
@@ -160,8 +164,8 @@ export class AuthService {
         email: payload.email,
         username: payload.username,
         role: payload.role,
-        onboarding_completed: payload.onboardingcompleted,
-        ai_preference_level: payload.aipreferencelevel
+        onboarding_completed: payload.onboarding_completed,
+        ai_preference_level: payload.ai_preference_level
       };
 
       console.log('LOG: AUTH-VERIFY-TOKEN-2 - Token verified successfully for user:', user.id);
@@ -176,7 +180,37 @@ export class AuthService {
   static validateEmail(email: string): boolean {
     console.log('LOG: AUTH-VALIDATE-1 - Validating email format');
     
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || typeof email !== 'string') {
+      return false;
+    }
+    
+    // Check for obvious invalid patterns first
+    if (email.includes('..') || email.startsWith('.') || email.endsWith('.') ||
+        email.includes('@@') || email.endsWith('@') || email.includes(' ') ||
+        !email.includes('@')) {
+      return false;
+    }
+    
+    // Split to check basic structure
+    const parts = email.split('@');
+    if (parts.length !== 2) {
+      return false;
+    }
+    
+    const [localPart, domainPart] = parts;
+    
+    // Check local part (before @)
+    if (!localPart || localPart.length === 0 || localPart.length > 64) {
+      return false;
+    }
+    
+    // Check domain part (after @)
+    if (!domainPart || domainPart.length === 0 || !domainPart.includes('.')) {
+      return false;
+    }
+    
+    // Basic regex for final validation
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
     const isValid = emailRegex.test(email);
     
     console.log('LOG: AUTH-VALIDATE-2 - Email validation result:', isValid);
@@ -230,8 +264,12 @@ export class AuthService {
       strengthScore += 1;
     }
 
-    // Common patterns check
-    if (password.toLowerCase().includes('password')  ?? password.toLowerCase().includes('123456')  ?? /([a-zA-Z])\1{2,}/.test(password)) {
+    // Common patterns check - be more specific
+    const lowercasePassword = password.toLowerCase();
+    if (lowercasePassword.includes('password') || 
+        lowercasePassword.includes('123456') || 
+        lowercasePassword.includes('qwerty') ||
+        /(.)\1{3,}/.test(password)) { // 4 or more consecutive repeated characters
       errors.push('Password should not contain common patterns or repeated characters');
       strengthScore -= 1;
     }

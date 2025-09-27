@@ -171,10 +171,10 @@ interface BuilderEntriesProps {
   className?: string;
 }
 
-export function BuilderEntries(_{ 
-  model, _limit = 10, renderItem, fallback, className = '' 
+export function BuilderEntries({
+  model, _limit = 10, renderItem, fallback, className = ''
 }: BuilderEntriesProps) {
-  const { entries, loading, error} = useBuilderContent(model);
+  const { entries, loading, error } = useBuilderContent(model);
 
   if (loading) {
     return (

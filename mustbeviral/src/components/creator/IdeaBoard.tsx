@@ -93,7 +93,7 @@ function ViralMeter({ score }: { score: number }) {
 /**
  * Draggable idea card with physics
  */
-function DraggableIdeaCard(_{
+function DraggableIdeaCard({
   idea, onDragStart, onDragEnd, onDelete, onEdit
 }: {
   idea: IdeaCard;

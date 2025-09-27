@@ -66,7 +66,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
-    const requestId = request.headers.get('X-Request-ID')  ?? generateRequestId();
+    const requestId = request.headers.get('X-Request-ID') ?? generateRequestId();
 
     // Add request ID to headers
     const enhancedRequest = new Request(request, {
@@ -155,15 +155,19 @@ export default {
         if (!authResult.authenticated) {
           return new Response(
             JSON.stringify({ error: 'Authentication required' }),
-            { 
-              status: 401, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            {
+              status: 401,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             }
           );
         }
         // Add user context to request
-        enhancedRequest.headers.set('X-User-ID', authResult.userId);
-        enhancedRequest.headers.set('X-User-Role', authResult.userRole);
+        if (authResult.userId) {
+          enhancedRequest.headers.set('X-User-ID', authResult.userId);
+        }
+        if (authResult.userRole) {
+          enhancedRequest.headers.set('X-User-Role', authResult.userRole);
+        }
       }
 
       // Check cache for GET requests
@@ -218,6 +222,9 @@ export default {
     } catch (error) {
       console.error('API Gateway Error:', error);
       
+      // Create gateway controller for error logging
+      const gatewayController = new APIGatewayController(env);
+
       // Log error
       await gatewayController.logError(enhancedRequest, error, requestId);
       
@@ -351,6 +358,7 @@ async function handleAPIDocumentation(env: Env): Promise<Response> {
 
 // Export Durable Object classes
 export { RateLimiter, CircuitBreaker, APIMonitor };
+
 
 
 

@@ -6,11 +6,11 @@
  */
 
 const fs = require('fs');
-const path = require('path');
+const _path = require('path');
 const glob = require('glob');
 
 // Patterns to fix unused variables
-const patterns = [
+const _patterns = [
   // Remove unused variable declarations
   {
     pattern: /^\s*(const|let|var)\s+(\w+)\s*=.*?;\s*$/gm,
@@ -79,7 +79,7 @@ function fixUnusedParameters(content) {
 }
 
 function removeUnusedVariables(content) {
-  const fixed = content;
+  const _fixed = content;
   let changes = 0;
   
   // Find and remove unused variable declarations

@@ -694,7 +694,7 @@ export class MultiRegionDeploymentManager {
     }
 
     const plan = this.deploymentPlans.get(execution.planId);
-    if (!plan || !plan.strategy.rollbackPolicy.enabled) {
+    if (!plan?.strategy.rollbackPolicy.enabled) {
       throw new Error('Rollback not supported for this deployment');
     }
 
@@ -827,7 +827,7 @@ export class MultiRegionDeploymentManager {
       recommendations: this.generateRecommendations(plan)
     };
 
-    console.log('Deployment Simulation:', simulation);
+    console.warn('Deployment Simulation:', simulation);
     return simulationId;
   }
 
@@ -1105,7 +1105,7 @@ export class MultiRegionDeploymentManager {
     toRegion: string,
     percentage: number
   ): Promise<void> {
-    console.log(`Migrating ${percentage}% traffic from ${fromRegion} to ${toRegion}`);
+    console.warn(`Migrating ${percentage}% traffic from ${fromRegion} to ${toRegion}`);
   }
 
   private async waitForTrafficStabilization(duration: number): Promise<void> {
@@ -1149,7 +1149,7 @@ export class MultiRegionDeploymentManager {
   }
 
   private async sendApprovalRequest(approver: string, plan: DeploymentPlan): Promise<void> {
-    console.log(`Approval request sent to ${approver} for plan ${plan.id}`);
+    console.warn(`Approval request sent to ${approver} for plan ${plan.id}`);
   }
 
   private async waitForApprovals(
@@ -1157,7 +1157,7 @@ export class MultiRegionDeploymentManager {
     required: number,
     timeout: number
   ): Promise<void> {
-    console.log(`Waiting for ${required} approvals with ${timeout}ms timeout`);
+    console.warn(`Waiting for ${required} approvals with ${timeout}ms timeout`);
   }
 
   private createPreparationSteps(_plan: DeploymentPlan): DeploymentStep[] {
@@ -1250,23 +1250,23 @@ export class MultiRegionDeploymentManager {
   }
 
   private async restoreTrafficConfiguration(execution: DeploymentExecution): Promise<void> {
-    console.log('Restoring previous traffic configuration');
+    console.warn('Restoring previous traffic configuration');
   }
 
   private async sendFailureNotifications(execution: DeploymentExecution): Promise<void> {
-    console.log(`Sending failure notifications for deployment ${execution.id}`);
+    console.warn(`Sending failure notifications for deployment ${execution.id}`);
   }
 
   private async updateTrafficRouting(): Promise<void> {
-    console.log('Updating global traffic routing configuration');
+    console.warn('Updating global traffic routing configuration');
   }
 
   private async syncRegionConfiguration(region: Region): Promise<void> {
-    console.log(`Syncing configuration for region ${region.id}`);
+    console.warn(`Syncing configuration for region ${region.id}`);
   }
 
   private async drainRegionTraffic(regionId: string): Promise<void> {
-    console.log(`Draining traffic from region ${regionId}`);
+    console.warn(`Draining traffic from region ${regionId}`);
   }
 
   private async terminateRegionInstances(regionId: string): Promise<void> {
@@ -1275,7 +1275,7 @@ export class MultiRegionDeploymentManager {
   }
 
   private async updateTrafficWeights(): Promise<void> {
-    console.log('Updating traffic weights across regions');
+    console.warn('Updating traffic weights across regions');
   }
 
   private startHealthMonitoring(): void {

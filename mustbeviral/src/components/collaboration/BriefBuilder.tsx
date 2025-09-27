@@ -90,7 +90,7 @@ const toneOptions = [
   { id: 'professional', label: 'Professional', emoji: '💼' }
 ];
 
-export function BriefBuilder(_{ onComplete, className }: BriefBuilderProps) {
+export function BriefBuilder({ onComplete, className }: BriefBuilderProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [brief, setBrief] = useState<ContentBrief>({
     title: '',

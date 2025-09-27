@@ -178,7 +178,7 @@ describe('AuthService', () => {
     it('should throw error when JWT secret not initialized', async () => {
       (AuthService as any).jwtSecret = undefined;
       
-      await expect(AuthService.generateToken(validUser)).rejects.toThrow('JWT secret not initialized');
+      await expect(AuthService.generateToken(validUser)).rejects.toThrow('JWT secret not initialized. Call AuthService.initJwtSecret() first.');
     });
 
     it('should throw error when JWT signing fails', async () => {
@@ -430,7 +430,7 @@ describe('AuthService', () => {
       const longPassword = 'ThisIsAVeryLongPasswordWithoutSpecialChars123';
       const result = AuthService.validatePassword(longPassword);
       
-      expect(result.strength).toBeOneOf(['medium', 'strong']);
+      expect(['medium', 'strong']).toContain(result.strength);
     });
 
     it('should require minimum length', () => {

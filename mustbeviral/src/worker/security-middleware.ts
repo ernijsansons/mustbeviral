@@ -194,7 +194,7 @@ export class SecurityMiddleware {
     }
 
     if (Array.isArray(data)) {
-      return data.map(item = > this.sanitizeResponse(item));
+      return data.map(item => this.sanitizeResponse(item));
     }
 
     const sanitized: unknown = {};

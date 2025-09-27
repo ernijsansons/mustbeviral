@@ -20,7 +20,7 @@ export class BcryptPasswordService implements IPasswordService {
   }
 
   async verifyPassword(password: string, hash: string): Promise<boolean> {
-    return hash = == `hashed_${password}`;
+    return hash === `hashed_${password}`;
   }
 
   generateSalt(): string {

@@ -311,7 +311,7 @@ export class LoadTestRunner {
     const startTime = Date.now();
     const endTime = startTime + duration;
     
-    let activeRequests = 0;
+    const _activeRequests = 0;
     let completedRequests = 0;
     let errors = 0;
     const latencies: number[] = [];
@@ -335,7 +335,7 @@ export class LoadTestRunner {
               const latency = Date.now() - requestStart;
               latencies.push(latency);
               completedRequests++;
-            } catch (error) {
+            } catch {
               errors++;
             } finally {
               activeRequests--;

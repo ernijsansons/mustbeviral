@@ -109,7 +109,7 @@ export class CollaborationRoom {
     const username = url.searchParams.get('username');
     const clientId = url.searchParams.get('clientId')  ?? crypto.randomUUID();
 
-    if (!userId  ?? !username) {
+    if (!userId || !username) {
       return new Response('Missing collaborator credentials', { status: 400 });
     }
 
@@ -298,7 +298,7 @@ export class CollaborationRoom {
     const currentContent = this.document.content;
 
     // Validate operation bounds
-    if (operation.position < 0  ?? operation.position > currentContent.length) {
+    if (operation.position < 0 || operation.position > currentContent.length) {
       this.logger.warn('Operation position out of bounds', {
         contentId: this.contentId,
         operation,

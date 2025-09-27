@@ -27,11 +27,11 @@ interface UploadedFile {
 /**
  * Get file icon based on type
  */
-function FileIcon(_{ type, className }: { type: string; className?: string }) {
-  if (type.startsWith('image/')) {return <Image className = {className} />;}
-  if (type.startsWith('video/')) {return <Video className={className} />;}
-  if (type.startsWith('audio/')) {return <Music className={className} />;}
-  if (type.includes('text')  ?? type.includes('document')) {return <FileText className={className} />;}
+function FileIcon({ type, className }: { type: string; className?: string }) {
+  if (type.startsWith('image/')) { return <Image className={className} />; }
+  if (type.startsWith('video/')) { return <Video className={className} />; }
+  if (type.startsWith('audio/')) { return <Music className={className} />; }
+  if (type.includes('text') || type.includes('document')) { return <FileText className={className} />; }
   return <File className={className} />;
 }
 
@@ -51,7 +51,7 @@ function formatFileSize(bytes: number): string {
 /**
  * Individual file upload card
  */
-function FileUploadCard(_{
+function FileUploadCard({
   file, onRemove
 }: {
   file: UploadedFile;
@@ -265,8 +265,9 @@ export function AssetUploader() {
   };
 
   // Simulate file upload with progress
+  const simulateUpload = (fileId: string) => {
     let progress = 0;
-    const interval = setInterval_(() => {
+    const interval = setInterval(() => {
       progress += Math.random() * 20;
       if (progress >= 100) {
         progress = 100;

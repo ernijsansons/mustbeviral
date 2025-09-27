@@ -122,7 +122,7 @@ describe('ErrorBoundary', () => {
     });
 
     it('should limit retry attempts based on maxRetries', () => {
-      let retryCount = 0;
+      let _retryCount = 0;
 
       render(
         <ErrorBoundary enableRetry={true} maxRetries={2}>
@@ -134,12 +134,12 @@ describe('ErrorBoundary', () => {
 
       // First retry
       fireEvent.click(retryButton);
-      retryCount++;
+      _retryCount++;
       expect(screen.getByText(/Try Again/i)).toBeInTheDocument();
 
       // Second retry (max reached)
       fireEvent.click(retryButton);
-      retryCount++;
+      _retryCount++;
 
       // Button should be disabled or not shown after max retries
       waitFor(() => {

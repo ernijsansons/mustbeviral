@@ -21,7 +21,7 @@ interface CosmicBackgroundProps {
   interactive?: boolean;
 }
 
-export function CosmicBackground(_{ children, className, variant = 'stars', density = 'medium', animated = true, interactive = false, }: CosmicBackgroundProps) {
+export function CosmicBackground({ children, className, variant = 'stars', density = 'medium', animated = true, interactive = false }: CosmicBackgroundProps) {
   const { cosmicEffectsLevel, isAnimationEnabled} = useTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -94,7 +94,7 @@ export function CosmicBackground(_{ children, className, variant = 'stars', dens
 
   // Canvas animation
     useEffect(() => {
-      if (!animated  ?? !isAnimationEnabled  ?? cosmicEffectsLevel === 'minimal') {
+      if (!animated || !isAnimationEnabled || cosmicEffectsLevel === 'minimal') {
         return;
       }
 
@@ -141,7 +141,7 @@ export function CosmicBackground(_{ children, className, variant = 'stars', dens
         ctx.globalAlpha = Math.max(0.1, opacity);
 
         // Main particle
-        ctx.fillStyle = particle.color ?? '#ffffff';
+        ctx.fillStyle = particle.color || '#ffffff';
         ctx.beginPath();
         ctx.arc(x, y, particle.size, 0, Math.PI * 2);
         ctx.fill();
@@ -149,7 +149,7 @@ export function CosmicBackground(_{ children, className, variant = 'stars', dens
         // Glow effect for non-minimal variants
         if (variant !== 'minimal' && cosmicEffectsLevel !== 'minimal') {
           ctx.globalAlpha = Math.max(0.05, opacity * 0.3);
-          ctx.fillStyle = particle.color ?? '#ffffff';
+          ctx.fillStyle = particle.color || '#ffffff';
           ctx.beginPath();
           ctx.arc(x, y, particle.size * 3, 0, Math.PI * 2);
           ctx.fill();
@@ -186,7 +186,7 @@ export function CosmicBackground(_{ children, className, variant = 'stars', dens
             top: `${particle.y}%`,
             width: `${particle.size}px`,
             height: `${particle.size}px`,
-            backgroundColor: particle.color ?? '#ffffff',
+            backgroundColor: particle.color || '#ffffff',
             opacity: particle.opacity,
             animationDelay: `${particle.animationDelay}s`,
           }}

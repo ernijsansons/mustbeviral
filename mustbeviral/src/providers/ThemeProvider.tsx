@@ -48,7 +48,7 @@ interface ThemeProviderProps {
   enableSystemTheme?: boolean;
 }
 
-export function ThemeProvider(_{ children, defaultMode = 'auto', enableSystemTheme = true, }: ThemeProviderProps) {
+export function ThemeProvider({ children, defaultMode = 'auto', enableSystemTheme = true }: ThemeProviderProps) {
   const [mode, setMode] = useState<ThemeMode>(defaultMode);
   const [isAnimationEnabled, setAnimationEnabled] = useState(true);
   const [cosmicEffectsLevel, setCosmicEffectsLevel] = useState<'minimal' | 'moderate' | 'maximum'>('moderate');

@@ -126,7 +126,7 @@ function UserProfileWidget({ collapsed }: { collapsed: boolean }) {
 /**
  * Sidebar Navigation Item
  */
-function SidebarNavItem(_{
+function SidebarNavItem({
   item, isActive, collapsed
 }: {
   item: SidebarItem;
@@ -203,7 +203,7 @@ function SidebarNavItem(_{
 /**
  * Main Sidebar Component
  */
-function Sidebar(_{ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const [location] = useLocation();
 
   return (
@@ -262,7 +262,7 @@ function Sidebar(_{ collapsed, onToggle }: { collapsed: boolean; onToggle: () =>
           <SidebarNavItem
             key={item.id}
             item={item}
-              isActive={location === item.href  ?? location.startsWith(item.href + '/')}
+              isActive={location === item.href || location.startsWith(item.href + '/')}
             collapsed={collapsed}
           />
         ))}
@@ -386,12 +386,12 @@ function MobileBottomNav() {
 /**
  * Main App Layout Component
  */
-export function AppLayout(_{ children, className }: AppLayoutProps) {
+export function AppLayout({ children, className }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Handle responsive sidebar
-  useEffect_(() => {
+  useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) {
         setSidebarCollapsed(true);

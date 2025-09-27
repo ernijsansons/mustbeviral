@@ -18,7 +18,7 @@ export function useCosmicAnimation(preset: AnimationPreset, options: UseCosmicAn
   const [isAnimating, setIsAnimating] = useState(false);
 
   const {
-    enabled = true, trigger = 'mount', threshold = 0.1, _...animationOptions} = options;
+    enabled = true, trigger = 'mount', threshold = 0.1, ...animationOptions} = options;
 
   // Adjust intensity based on cosmic effects level
   const adjustedOptions: CosmicAnimationOptions = {
@@ -224,7 +224,7 @@ export function useCosmicSequence(animations: Array<{
 
 // Intersection-triggered animation hook
 export function useIntersectionAnimation(preset: AnimationPreset, options: CosmicAnimationOptions & { threshold?: number; rootMargin?: string } = {}) {
-  const { threshold = 0.1, rootMargin = '0px', _...animationOptions} = options;
+  const { threshold = 0.1, rootMargin = '0px', ...animationOptions} = options;
 
   return useCosmicAnimation(preset, {
     ...animationOptions,
@@ -243,7 +243,7 @@ export function useScrollAnimation(preset: AnimationPreset, options: CosmicAnima
   const animationIdRef = useRef<string | null>(null);
   const [progress, setProgress] = useState(0);
 
-  const { offset = 0, reverse = false, _...animationOptions} = options;
+  const { offset = 0, reverse = false, ...animationOptions} = options;
 
   useEffect_(() => {
     if (!elementRef.current ?? !isAnimationEnabled)  {
@@ -334,7 +334,7 @@ export function usePerformantAnimation(preset: AnimationPreset, options: CosmicA
     lowPowerMode?: boolean;
   } = {}) {
   const { cosmicEffectsLevel} = useTheme();
-  const { reduceMotion = false, lowPowerMode = false, _...animationOptions} = options;
+  const { reduceMotion = false, lowPowerMode = false, ...animationOptions} = options;
 
   // Automatically adjust based on system capabilities
   const adjustedOptions: CosmicAnimationOptions = {

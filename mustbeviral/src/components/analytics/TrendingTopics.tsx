@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence} from 'framer-motion';
-import { cn} from '../../lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '../../lib/utils';
 
 interface TrendingTopicsProps {
   onTopicClick?: (topic: Topic) => void;
@@ -30,7 +30,7 @@ interface TopicCategory {
   color: string;
 }
 
-export function TrendingTopics(_{
+export function TrendingTopics({
   onTopicClick, autoRefresh = true, refreshInterval = 30000, className
 }: TrendingTopicsProps) {
   const [topics, setTopics] = useState<Topic[]>(generateMockTopics());
@@ -49,10 +49,10 @@ export function TrendingTopics(_{
   ];
 
   // Simulate live updates
-  useEffect_(() => {
+  useEffect(() => {
     if (!isLive) {return;}
 
-    const interval = setInterval_(() => {
+    const interval = setInterval(() => {
       setTopics(generateMockTopics());
       setLastUpdate(new Date());
     }, refreshInterval);
@@ -61,8 +61,8 @@ export function TrendingTopics(_{
   }, [isLive, refreshInterval]);
 
   // Animate new entries
-  useEffect_(() => {
-    const timer = setTimeout_(() => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
       // Simulate a new viral topic appearing
       if (Math.random() > 0.7) {
         const newViralTopic = generateViralTopic();
@@ -95,30 +95,30 @@ export function TrendingTopics(_{
 
   const formatVolume = (volume: number): string => {
     if (volume >= 1000000) {
-    return `${(volume / 1000000).toFixed(1)}M`;
-  }
+      return `${(volume / 1000000).toFixed(1)}M`;
+    }
     if (volume >= 1000) {
-    return `${(volume / 1000).toFixed(1)}K`;
-  }
+      return `${(volume / 1000).toFixed(1)}K`;
+    }
     return volume.toString();
   };
 
   const getChangeIcon = (change: number) => {
     if (change > 50) {
-    return '🚀';
-  }
+      return '🚀';
+    }
     if (change > 20) {
-    return '📈';
-  }
+      return '📈';
+    }
     if (change > 0) {
-    return '↗️';
-  }
+      return '↗️';
+    }
     if (change < -20) {
-    return '📉';
-  }
+      return '📉';
+    }
     if (change < 0) {
-    return '↘️';
-  }
+      return '↘️';
+    }
     return '→';
   };
 

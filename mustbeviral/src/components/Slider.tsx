@@ -13,13 +13,13 @@ interface SliderProps {
   className?: string;
 }
 
-export function AIControlSlider(_{ value, onChange, disabled = false, className = '' }: SliderProps) {
+export function AIControlSlider({ value, onChange, disabled = false, className = '' }: SliderProps) {
   const [localValue, setLocalValue] = useState(value);
   const [isDragging, setIsDragging] = useState(false);
 
   console.log('LOG: COMPONENT-SLIDER-2 - Slider rendered with value:', value);
 
-  useEffect_(() => {
+  useEffect(() => {
     setLocalValue(value);
   }, [value]);
 
@@ -192,7 +192,7 @@ export function useAIControlLevel(initialValue: number = 50) {
 
   console.log('LOG: COMPONENT-SLIDER-4 - AI control level hook initialized:', initialValue);
 
-  useEffect_(() => {
+  useEffect(() => {
     // Load from localStorage if available
     const saved = localStorage.getItem('ai-control-level');
     if (saved) {

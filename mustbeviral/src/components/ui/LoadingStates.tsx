@@ -114,14 +114,14 @@ export const LoadingButton: React.FC<LoadingButtonProps> = ({
     <button
       type={type}
       onClick={onClick}
-      disabled={disabled ?? loading}
+      disabled={disabled || loading}
       data-testid={testId}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
     >
       {loading && (
         <LoadingSpinner
           size="sm"
-          color={variant === 'outline'  ?? variant === 'ghost' ? 'primary' : 'white'}
+          color={variant === 'outline' || variant === 'ghost' ? 'primary' : 'white'}
           className="mr-2"
         />
       )}
@@ -245,7 +245,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ value, max = 100, clas
 
   return (
     <div className={className}>
-      {(label ?? showValue) && (
+      {(label || showValue) && (
         <div className="flex justify-between text-sm text-gray-700 mb-1">
           {label && <span>{label}</span>}
           {showValue && <span>{Math.round(percentage)}%</span>}
@@ -261,7 +261,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ value, max = 100, clas
           aria-valuenow={value}
           aria-valuemin={0}
           aria-valuemax={max}
-          aria-label={label ?? `Progress: ${Math.round(percentage)}%`}
+          aria-label={label || `Progress: ${Math.round(percentage)}%`}
         />
       </div>
     </div>

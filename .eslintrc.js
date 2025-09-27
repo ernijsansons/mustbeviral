@@ -13,8 +13,21 @@ module.exports = {
     node: true,
     browser: true,
     es6: true,
+    commonjs: true,
+  },
+  globals: {
+    'console': 'readonly',
+    'process': 'readonly',
+    'require': 'readonly',
+    'module': 'readonly',
+    '__dirname': 'readonly',
+    '__filename': 'readonly',
+    'Buffer': 'readonly',
+    'global': 'readonly',
   },
   rules: {
+    // Allow console statements in Node.js environment
+    'no-console': 'off',
     // Allow unused variables if they start with underscore
     '@typescript-eslint/no-unused-vars': [
       'error',
@@ -25,10 +38,11 @@ module.exports = {
         ignoreRestSiblings: true
       }
     ],
-    // Disable other strict rules that cause too many errors
+    // Relax strict rules
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/no-non-null-assertion': 'warn',
-    'no-unused-vars': 'off', // Use @typescript-eslint version instead
+    'no-unused-vars': 'off',
+    'no-undef': 'error',
   },
   ignorePatterns: [
     'node_modules/',
@@ -38,6 +52,7 @@ module.exports = {
     '.wrangler/',
     'coverage/',
     '*.min.js',
-    '*.d.ts'
+    '*.d.ts',
+    '__graveyard__/**/*', // Ignore archived files
   ],
 };

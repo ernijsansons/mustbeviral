@@ -53,13 +53,13 @@ export class GamificationService {
   private badges: Map<string, Badge> = new Map();
 
   constructor() {
-    console.log('LOG: GAMIFICATION-SERVICE-1 - Initializing gamification service');
+    console.warn('LOG: GAMIFICATION-SERVICE-1 - Initializing gamification service');
     this.initializeAchievements();
     this.initializeBadges();
   }
 
   private initializeAchievements(): void {
-    console.log('LOG: GAMIFICATION-ACHIEVEMENTS-1 - Loading achievements');
+    console.warn('LOG: GAMIFICATION-ACHIEVEMENTS-1 - Loading achievements');
     
     const achievements: Achievement[] = [
       {
@@ -157,11 +157,11 @@ export class GamificationService {
       this.achievements.set(achievement.id, achievement);
     });
 
-    console.log('LOG: GAMIFICATION-ACHIEVEMENTS-2 - Loaded', achievements.length, 'achievements');
+    console.warn('LOG: GAMIFICATION-ACHIEVEMENTS-2 - Loaded', achievements.length, 'achievements');
   }
 
   private initializeBadges(): void {
-    console.log('LOG: GAMIFICATION-BADGES-1 - Loading badges');
+    console.warn('LOG: GAMIFICATION-BADGES-1 - Loading badges');
     
     const badges: Badge[] = [
       {
@@ -234,11 +234,11 @@ export class GamificationService {
       this.badges.set(badge.id, badge);
     });
 
-    console.log('LOG: GAMIFICATION-BADGES-2 - Loaded', badges.length, 'badges');
+    console.warn('LOG: GAMIFICATION-BADGES-2 - Loaded', badges.length, 'badges');
   }
 
   async getUserProfile(userId: string): Promise<GamificationProfile> {
-    console.log('LOG: GAMIFICATION-PROFILE-1 - Getting user gamification profile:', userId);
+    console.warn('LOG: GAMIFICATION-PROFILE-1 - Getting user gamification profile:', userId);
     
     try {
       // In production, this would query the database
@@ -274,7 +274,7 @@ export class GamificationService {
         };
       }
 
-      console.log('LOG: GAMIFICATION-PROFILE-2 - Profile retrieved for user:', userId);
+      console.warn('LOG: GAMIFICATION-PROFILE-2 - Profile retrieved for user:', userId);
       return defaultProfile;
     } catch (error) {
       console.error('LOG: GAMIFICATION-PROFILE-ERROR-1 - Failed to get profile:', error);
@@ -283,7 +283,7 @@ export class GamificationService {
   }
 
   async awardPoints(userId: string, eventType: GamificationEvent['event_type'], metadata?: unknown): Promise<{ points_awarded: number; new_achievements: Achievement[]; new_badges: Badge[] }> {
-    console.log('LOG: GAMIFICATION-AWARD-1 - Awarding points for event:', eventType, 'User:', userId);
+    console.warn('LOG: GAMIFICATION-AWARD-1 - Awarding points for event:', eventType, 'User:', userId);
     
     try {
       const profile = await this.getUserProfile(userId);
@@ -323,7 +323,7 @@ export class GamificationService {
       // Save profile back to database (in production)
       await this.saveUserProfile(userId, profile);
       
-      console.log('LOG: GAMIFICATION-AWARD-2 - Points awarded successfully:', pointsMap.basepoints, 'New level:', profile.level);
+      console.warn('LOG: GAMIFICATION-AWARD-2 - Points awarded successfully:', pointsMap.basepoints, 'New level:', profile.level);
       
       return {
         points_awarded: pointsMap.base_points + newAchievements.reduce((sum, a) => sum + a.pointsreward, 0),
@@ -367,7 +367,7 @@ export class GamificationService {
   }
 
   private async checkAchievements(profile: GamificationProfile): Promise<Achievement[]> {
-    console.log('LOG: GAMIFICATION-CHECK-1 - Checking achievements for profile');
+    console.warn('LOG: GAMIFICATION-CHECK-1 - Checking achievements for profile');
     
     const newAchievements: Achievement[] = [];
     
@@ -377,7 +377,7 @@ export class GamificationService {
       const meetsRequirement = this.checkAchievementCriteria(achievement, profile);
       if (meetsRequirement) {
         newAchievements.push(achievement);
-        console.log('LOG: GAMIFICATION-CHECK-2 - New achievement unlocked:', achievement.name);
+        console.warn('LOG: GAMIFICATION-CHECK-2 - New achievement unlocked:', achievement.name);
       }
     }
     
@@ -424,7 +424,7 @@ export class GamificationService {
   }
 
   private async saveUserProfile(userId: string, profile: GamificationProfile): Promise<void> {
-    console.log('LOG: GAMIFICATION-SAVE-1 - Saving user profile:', userId);
+    console.warn('LOG: GAMIFICATION-SAVE-1 - Saving user profile:', userId);
     
     try {
       // In production, this would update the users.profile_data field
@@ -434,7 +434,7 @@ export class GamificationService {
         global.gamificationProfiles.set(userId, profile);
       }
       
-      console.log('LOG: GAMIFICATION-SAVE-2 - Profile saved successfully');
+      console.warn('LOG: GAMIFICATION-SAVE-2 - Profile saved successfully');
     } catch (error) {
       console.error('LOG: GAMIFICATION-SAVE-ERROR-1 - Failed to save profile:', error);
       throw error;
@@ -458,7 +458,7 @@ export class GamificationService {
   }
 
   async getLeaderboard(limit: number = 10): Promise<Array<{ user_id: string; username: string; points: number; level: number; badges: number }>> {
-    console.log('LOG: GAMIFICATION-LEADERBOARD-1 - Getting leaderboard, limit:', limit);
+    console.warn('LOG: GAMIFICATION-LEADERBOARD-1 - Getting leaderboard, limit:', limit);
     
     try {
       // Mock leaderboard data (in production, would query all users and sort by points)

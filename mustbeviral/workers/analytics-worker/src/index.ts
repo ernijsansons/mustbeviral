@@ -127,7 +127,7 @@ async function handleAnalyticsEvents(
     return new Response('Method Not Allowed', { status: 405, headers: corsHeaders });
   }
 
-  const body = await request.json();
+  const body = await request.json() as any;
   const result = await controller.trackEvent(body);
   
   return new Response(JSON.stringify(result), {
@@ -142,9 +142,9 @@ async function handleMetrics(
   env: Env
 ): Promise<Response> {
   const url = new URL(request.url);
-  const metricType = url.searchParams.get('type');
-  const timeRange = url.searchParams.get('range')  ?? '24h';
-  
+  const metricType = url.searchParams.get('type') || undefined;
+  const timeRange = url.searchParams.get('range') ?? '24h';
+
   const metrics = await controller.getMetrics(metricType, timeRange);
   
   return new Response(JSON.stringify(metrics), {
@@ -174,7 +174,7 @@ async function handleReports(
       });
     }
   } else if (request.method === 'POST') {
-    const body = await request.json();
+    const body = await request.json() as any;
     const report = await controller.generateReport(body);
     
     return new Response(JSON.stringify(report), {
@@ -187,7 +187,7 @@ async function handleReports(
 
 // Handle dashboard data
 async function handleDashboard(request: Request, env: Env): Promise<Response> {
-  const dashboardId = new URL(request.url).searchParams.get('id')  ?? 'default';
+  const dashboardId = new URL(request.url).searchParams.get('id') ?? 'default';
   
   // Get dashboard aggregator durable object
   const id = env.DASHBOARD_AGGREGATOR.idFromName(dashboardId);
@@ -209,13 +209,17 @@ async function handleABTesting(
     const url = new URL(request.url);
     const testId = url.searchParams.get('testId');
     const userId = url.searchParams.get('userId');
-    
+
+    if (!testId || !userId) {
+      return new Response('testId and userId are required', { status: 400, headers: corsHeaders });
+    }
+
     const variant = await controller.getABTestVariant(testId, userId);
     return new Response(JSON.stringify({ variant }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } else if (request.method === 'POST') {
-    const body = await request.json();
+    const body = await request.json() as any;
     const result = await controller.trackABTestEvent(body);
     
     return new Response(JSON.stringify(result), {
@@ -233,8 +237,8 @@ async function handleExport(
   env: Env
 ): Promise<Response> {
   const url = new URL(request.url);
-  const format = url.searchParams.get('format')  ?? 'json';
-  const dateRange = url.searchParams.get('range')  ?? '7d';
+  const format = url.searchParams.get('format') ?? 'json';
+  const dateRange = url.searchParams.get('range') ?? '7d';
   
   const exportData = await controller.exportData(format, dateRange);
   
@@ -271,6 +275,7 @@ async function handleHealthCheck(env: Env): Promise<Response> {
 
 // Export Durable Object classes
 export { RealtimeAnalytics, EventProcessor, DashboardAggregator };
+
 
 
 

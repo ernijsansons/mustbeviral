@@ -209,7 +209,7 @@ export interface CardProps
         )}
 
         {/* Glow effect for cosmic variants */}
-        {(variant === 'cosmic'  ?? variant === 'plasma'  ?? variant === 'aurora'  ?? variant === 'quantum' || variant === 'energy') && isHovered && (
+        {(variant === 'cosmic' || variant === 'plasma' || variant === 'aurora' || variant === 'quantum' || variant === 'energy') && isHovered && (
           <div className="absolute inset-0 rounded-lg opacity-75 blur-xl -z-10 transition-opacity duration-300" 
                style={{
                  background: variant === 'cosmic' ? 'linear-gradient(45deg, #8b5cf6, #3b82f6)' :

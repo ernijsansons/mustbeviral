@@ -4,7 +4,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Trophy, Star, Award, TrendingUp, Target, Zap, Users, Gift} from 'lucide-react';
+import { Trophy, Star, Award, TrendingUp, Target, Zap, Users, Gift, CheckCircle} from 'lucide-react';
 
 interface GamificationProfile {
   points: number;
@@ -46,7 +46,7 @@ interface LeaderboardEntry {
   badges: number;
 }
 
-export function GamificationWidget(_{ userId = 'demo-user', compact = false }: { userId?: string; compact?: boolean }) {
+export function GamificationWidget({ userId = 'demo-user', compact = false }: { userId?: string, compact?: boolean }) {
   const [profile, setProfile] = useState<GamificationProfile | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [allBadges, setAllBadges] = useState<Badge[]>([]);
@@ -114,10 +114,10 @@ export function GamificationWidget(_{ userId = 'demo-user', compact = false }: {
 
       if (result.success) {
         // Show notification for new achievements/badges
-          if (result.data.new_achievements.length > 0  ?? result.data.new_badges.length > 0) {
+          if (result.data.new_achievements.length > 0 || result.data.new_badges.length > 0) {
           setNotification({
             type: 'achievement',
-            message: `🎉 ${result.data.pointsawarded} points awarded! ${result.data.new_achievements.length} new achievements unlocked!`
+            message: `🎉 ${result.data.points_awarded} points awarded! ${result.data.new_achievements.length} new achievements unlocked!`
           });
           setShowNotification(true);
           setTimeout(() => setShowNotification(false), 5000);
@@ -261,7 +261,7 @@ export function GamificationWidget(_{ userId = 'demo-user', compact = false }: {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-600">Level {profile.level}</span>
               <span className="text-sm text-gray-500">
-                {gamificationService.getPointsForNextLevel(profile.points)} points to next level
+                {1000 - (profile.points % 1000)} points to next level
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
@@ -278,25 +278,25 @@ export function GamificationWidget(_{ userId = 'demo-user', compact = false }: {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white rounded-lg shadow p-4 text-center">
               <Target className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-gray-900">{profile.stats.contentcreated}</p>
+              <p className="text-2xl font-bold text-gray-900">{profile.stats.content_created}</p>
               <p className="text-sm text-gray-600">Content Created</p>
             </div>
             
             <div className="bg-white rounded-lg shadow p-4 text-center">
               <Zap className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-gray-900">{profile.stats.contentpublished}</p>
+              <p className="text-2xl font-bold text-gray-900">{profile.stats.content_published}</p>
               <p className="text-sm text-gray-600">Published</p>
             </div>
             
             <div className="bg-white rounded-lg shadow p-4 text-center">
               <Users className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-gray-900">{profile.stats.matchescompleted}</p>
+              <p className="text-2xl font-bold text-gray-900">{profile.stats.matches_completed}</p>
               <p className="text-sm text-gray-600">Matches</p>
             </div>
             
             <div className="bg-white rounded-lg shadow p-4 text-center">
               <Gift className="w-8 h-8 text-orange-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-gray-900">{profile.stats.workflowsrun}</p>
+              <p className="text-2xl font-bold text-gray-900">{profile.stats.workflows_run}</p>
               <p className="text-sm text-gray-600">AI Workflows</p>
             </div>
           </div>
@@ -356,7 +356,7 @@ export function GamificationWidget(_{ userId = 'demo-user', compact = false }: {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Creators</h3>
           <div className="space-y-3">
             {leaderboard.map((entry, index) => (
-              <div key={entry.userid} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={entry.user_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
                     index === 0 ? 'bg-yellow-500 text-white' :
@@ -386,7 +386,7 @@ export function GamificationWidget(_{ userId = 'demo-user', compact = false }: {
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">All Achievements</h3>
           <div className="grid gap-4">
-            {gamificationService.getAchievements().map((achievement) => {
+            {allBadges.map((achievement) => {
               const isUnlocked = profile.achievements.includes(achievement.id);
               return (
                 <div key={achievement.id} className={`p-4 border rounded-lg ${
@@ -406,7 +406,7 @@ export function GamificationWidget(_{ userId = 'demo-user', compact = false }: {
                     </div>
                     <div className="text-right">
                       <p className={`font-semibold ${isUnlocked ? 'text-green-600' : 'text-gray-500'}`}>
-                        +{achievement.pointsreward}
+                        +{(achievement as any).points_reward || 0}
                       </p>
                       <p className="text-xs text-gray-500">points</p>
                     </div>

@@ -55,23 +55,13 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
 
   console.log('LOG: COMPONENT-TOOL-SELECTOR-2 - ToolSelector rendered');
 
-  useEffect_(() => {
-    loadTiers();
-    loadUsageInfo();
-  }, [userId]);
-
-  useEffect_(() => {
-    if (selectedTier) {
-      loadModelsForTier(selectedTier.id);
-    }
-  }, [selectedTier]);
-
+  const loadTiers = async () => {
     console.log('LOG: COMPONENT-TOOL-SELECTOR-3 - Loading available tiers');
-    
+
     try {
       const response = await fetch('/api/select-tool?action=get_tiers');
       const result = await response.json();
-      
+
       if (result.success) {
         setTiers(result.data.tiers);
         console.log('LOG: COMPONENT-TOOL-SELECTOR-4 - Loaded', result.data.tiers.length, 'tiers');
@@ -80,6 +70,17 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
       console.error('LOG: COMPONENT-TOOL-SELECTOR-ERROR-1 - Failed to load tiers:', error);
     }
   };
+
+  useEffect(() => {
+    loadTiers();
+    loadUsageInfo();
+  }, [userId]);
+
+  useEffect(() => {
+    if (selectedTier) {
+      loadModelsForTier(selectedTier.id);
+    }
+  }, [selectedTier]);
 
   const loadUsageInfo = async () => {
     console.log('LOG: COMPONENT-TOOL-SELECTOR-5 - Loading user usage info');
@@ -98,8 +99,9 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
     }
   };
 
+  const loadModelsForTier = async (tierId: string) => {
     console.log('LOG: COMPONENT-TOOL-SELECTOR-7 - Loading models for tier:', tierId);
-    
+
     try {
       const response = await fetch('/api/select-tool', {
         method: 'POST',
@@ -110,9 +112,9 @@ export function ToolSelector({ userId = 'demo-user' }: { userId?: string }) {
           tier_id: tierId
         })
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         setAvailableModels(result.data.availablemodels);
         if (result.data.available_models.length > 0) {

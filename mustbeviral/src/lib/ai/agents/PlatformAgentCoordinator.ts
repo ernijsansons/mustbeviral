@@ -219,7 +219,7 @@ export class PlatformAgentCoordinator {
 
     // Add successful adaptations
     adaptationResults.forEach((result) => {
-      if (result && result.result) {
+      if (result?.result) {
         adaptations[result.platform] = result.result;
         platformSpecificScores[result.platform] = result.result.analysis.platformScore;
       }

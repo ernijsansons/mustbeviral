@@ -394,7 +394,7 @@ export class NotificationHub {
 
     // Remove expired notifications
     const now = Date.now();
-    notifications = notifications.filter(n => !n.expiresAt  ?? n.expiresAt > now);
+    notifications = notifications.filter(n => !n.expiresAt || n.expiresAt > now);
 
     return new Response(JSON.stringify({ _notifications,
       total: this.notifications.size,
@@ -465,7 +465,7 @@ export class NotificationHub {
   private getUnreadNotifications(): Notification[] {
     const now = Date.now();
     return Array.from(this.notifications.values())
-      .filter(n => !n.read && (!n.expiresAt  ?? n.expiresAt > now))
+      .filter(n => !n.read && (!n.expiresAt || n.expiresAt > now))
       .sort((a, _b) => b.createdAt - a.createdAt);
   }
 
@@ -555,7 +555,7 @@ export class NotificationHub {
     });
 
     // Reschedule if there are still notifications or connections
-    if (this.notifications.size > 0  ?? this.connections.size > 0) {
+    if (this.notifications.size > 0 || this.connections.size > 0) {
       this.scheduleCleanup();
     }
   }

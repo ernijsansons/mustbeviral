@@ -294,6 +294,7 @@ describe('NavBar', () => {
 
     it('should highlight active navigation item', () => {
       // Mock current location
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       jest.spyOn(require('react-router-dom'), 'useLocation').mockReturnValue({
         pathname: '/dashboard'
       });

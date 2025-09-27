@@ -446,7 +446,7 @@ export class ErrorHandler {
     const key = `${category}:${code}`;
     const breaker = this.circuitBreakers.get(key);
 
-    if (!breaker || !breaker.isOpen) {
+    if (!breaker?.isOpen) {
       return false;
     }
 

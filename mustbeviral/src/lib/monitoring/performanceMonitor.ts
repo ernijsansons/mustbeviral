@@ -252,7 +252,7 @@ export class PerformanceMonitor {
     const alert = this.alerts.find(a => a.id === alertId);
     if (alert) {
       alert.acknowledged = true;
-      console.log(`LOG: PERF-MONITOR-ALERT-ACK-1 - Alert acknowledged: ${alertId}`);
+      console.warn(`LOG: PERF-MONITOR-ALERT-ACK-1 - Alert acknowledged: ${alertId}`);
       return true;
     }
     return false;
@@ -341,7 +341,7 @@ export class PerformanceMonitor {
     this.alerts = [];
     this.metricsBuffer = [];
 
-    console.log('LOG: PERF-MONITOR-CLEAR-1 - Performance monitoring history cleared');
+    console.warn('LOG: PERF-MONITOR-CLEAR-1 - Performance monitoring history cleared');
   }
 
   /**
@@ -355,7 +355,7 @@ export class PerformanceMonitor {
     // Flush remaining metrics
     this.flushMetrics();
 
-    console.log('LOG: PERF-MONITOR-SHUTDOWN-1 - Performance monitor shutdown complete');
+    console.warn('LOG: PERF-MONITOR-SHUTDOWN-1 - Performance monitor shutdown complete');
   }
 
   /**
@@ -516,7 +516,7 @@ export class PerformanceMonitor {
       this.alerts = this.alerts.slice(-100);
     }
 
-    console.log(`LOG: PERF-MONITOR-ALERT-${severity.toUpperCase()}-1 - ${message}`, { alertId,
+    console.warn(`LOG: PERF-MONITOR-ALERT-${severity.toUpperCase()}-1 - ${message}`, { alertId,
       value,
       threshold,
       endpoint
@@ -647,15 +647,18 @@ export class PerformanceMonitor {
       let value = 0;
 
       switch (metric) {
-        case 'responseTime':
+        case 'responseTime': {
           value = 500 + Math.random() * 1000; // Random data for demo
           break;
-        case 'throughput':
+        }
+        case 'throughput': {
           value = 50 + Math.random() * 100;
           break;
-        case 'errorRate':
+        }
+        case 'errorRate': {
           value = Math.random() * 5;
           break;
+        }
       }
 
       points.push({ timestamp, value });
@@ -717,7 +720,7 @@ export class PerformanceMonitor {
 
     try {
       // In production, store in time-series database
-      console.log(`LOG: PERF-MONITOR-FLUSH-1 - Flushing ${this.metricsBuffer.length} metrics`);
+      console.warn(`LOG: PERF-MONITOR-FLUSH-1 - Flushing ${this.metricsBuffer.length} metrics`);
 
       // Clear buffer
       this.metricsBuffer = [];
@@ -743,7 +746,7 @@ export class PerformanceMonitor {
     try {
       const metrics = this.getCurrentMetrics();
 
-      console.log('LOG: PERF-MONITOR-AGGREGATE-1 - Aggregating metrics', {
+      console.warn('LOG: PERF-MONITOR-AGGREGATE-1 - Aggregating metrics', {
         avgResponseTime: metrics.responseTime.avg,
         requestsPerSecond: metrics.throughput.requestsPerSecond,
         errorRate: metrics.errors.rate
@@ -751,7 +754,7 @@ export class PerformanceMonitor {
 
       // In production, store aggregated metrics
     } catch (error: unknown) {
-      console.error('LOG: PERF-MONITOR-AGGREGATE-ERROR-1 - Failed to aggregate metrics:', error);
+      console.warn('LOG: PERF-MONITOR-AGGREGATE-ERROR-1 - Failed to aggregate metrics:', error);
     }
   }
 }

@@ -468,7 +468,7 @@ export class RouteSecurityEnforcer {
     allowed: boolean;
     response?: Response;
   } {
-    if (!config.subscription  ?? config.subscription = == 'none'  ?? !context.user) {
+    if (!config.subscription || config.subscription === 'none' || !context.user) {
       return { allowed: true };
     }
 

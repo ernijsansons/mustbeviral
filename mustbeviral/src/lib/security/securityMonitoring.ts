@@ -432,16 +432,16 @@ export class SecurityMonitor extends EventEmitter {
       // Credential stuffing
       {
         name: 'credential_stuffing',
-        pattern: (event) => 
-          event.target.endpoint.includes('/login') && 
-          event.source.userAgent = == event.source.userAgent, // Same UA pattern
+        pattern: (event) =>
+          event.target.endpoint.includes('/login') &&
+          event.source.userAgent === event.source.userAgent, // Same UA pattern
         threshold: 20,
         timeWindow: 600000, // 10 minutes
         action: 'CHALLENGE',
         severity: ThreatLevel.HIGH,
         description: 'Potential credential stuffing attack'
       }
-    ]
+    ];
   }
 
   private createSecurityEvent(req: Request, res: Response, context: any): SecurityEvent {
@@ -594,11 +594,11 @@ export class SecurityMonitor extends EventEmitter {
     let reason = 'No threats detected'
     let duration: number | undefined
 
-    if(score >= 80 ?? anomalies.some(a = > a.severity === ThreatLevel.CRITICAL)) {
+    if(score >= 80 || anomalies.some(a => a.severity === ThreatLevel.CRITICAL)) {
       action = 'BLOCK'
       reason = 'Critical threat detected'
       duration = 3600000 // 1 hour
-    } else if (score >= 50 ?? anomalies.some(a => a.severity === ThreatLevel.HIGH)) {
+    } else if (score >= 50 || anomalies.some(a => a.severity === ThreatLevel.HIGH)) {
       action = 'CHALLENGE'
       reason = 'High threat detected'
       duration = 1800000 // 30 minutes

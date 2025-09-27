@@ -129,13 +129,13 @@ export class DatabaseService {
   // Initialize with Cloudflare environment (for API routes)
   initWithEnv(cloudflareEnv: CloudflareEnv): void {
     this.cfService = new CloudflareService(cloudflareEnv);
-    console.log('LOG: DB-INIT-3 - Cloudflare environment initialized');
+    console.warn('LOG: DB-INIT-3 - Cloudflare environment initialized');
   }
 
   // User operations with enhanced type safety
   async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
     // Validate input data
-    if (!userData.email || !userData.username || !userData.passwordhash) {
+    if (!userData.email || !userData.username || !userData.password_hash) {
       throw new Error('Missing required user data: email, username, and password_hash are required');
     }
     
@@ -145,17 +145,17 @@ export class DatabaseService {
     
     try {
       const result = await this.cfService.db.fetchOne<User>(`
-        INSERT INTO users (email, username, passwordhash, role, profiledata, aipreferencelevel, onboardingcompleted)
+        INSERT INTO users (email, username, password_hash, role, profile_data, ai_preference_level, onboarding_completed)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         RETURNING *
       `, [
         userData.email,
         userData.username,
-        userData.passwordhash,
+        userData.password_hash,
         userData.role,
-        userData.profiledata,
-        userData.aipreferencelevel,
-        userData.onboardingcompleted
+        userData.profile_data,
+        userData.ai_preference_level,
+        userData.onboarding_completed
       ]);
 
       if (!result) {
@@ -202,10 +202,10 @@ export class DatabaseService {
     
     try {
       await this.cfService.db.executeQuery(`
-        UPDATE users SET onboardingcompleted = ? WHERE id = ?
+        UPDATE users SET onboarding_completed = ? WHERE id = ?
       `, [completed ? 1 : 0, userId]);
 
-      console.log('LOG: DB-USER-5 - Onboarding status updated successfully');
+      console.warn('LOG: DB-USER-5 - Onboarding status updated successfully');
     } catch (error) {
       console.error('LOG: DB-USER-ERROR-3 - Failed to update onboarding:', error);
       throw new Error(`Failed to update onboarding: ${error}`);
@@ -233,10 +233,10 @@ export class DatabaseService {
   }
 
   async getUserSession(userId: string): Promise<Record<string, unknown> | null> {
-    console.log('LOG: DB-SESSION-3 - Getting user session:', userId);
+    console.warn('LOG: DB-SESSION-3 - Getting user session:', userId);
     
     if (!this.cfService?.kv) {
-      console.log('LOG: DB-SESSION-WARN-2 - KV not available, no session data');
+      console.warn('LOG: DB-SESSION-WARN-2 - KV not available, no session data');
       return null;
     }
     
@@ -252,7 +252,7 @@ export class DatabaseService {
   async createContent(contentData: Omit<Content, 'id' | 'created_at' | 'updated_at'>): Promise<Content> {
     // Validate required content data
     if (!contentData.user_id || !contentData.title || !contentData.body) {
-      throw new Error('Missing required content data: userid, title, and body are required');
+      throw new Error('Missing required content data: user_id, title, and body are required');
     }
     
     console.warn('LOG: DB-CONTENT-1 - Creating new content:', contentData.title);
@@ -261,19 +261,19 @@ export class DatabaseService {
     
     try {
       const result = await this.cfService.db.fetchOne<Content>(`
-        INSERT INTO content (userid, title, body, imageurl, status, type, generatedbyai, aimodelused, ethicscheckstatus, metadata)
+        INSERT INTO content (user_id, title, body, image_url, status, type, generated_by_ai, ai_model_used, ethics_check_status, metadata)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         RETURNING *
       `, [
-        contentData.userid,
+        contentData.user_id,
         contentData.title,
         contentData.body,
-        contentData.imageurl,
+        contentData.image_url,
         contentData.status,
         contentData.type,
-        contentData.generatedbyai,
-        contentData.aimodelused,
-        contentData.ethicscheckstatus,
+        contentData.generated_by_ai,
+        contentData.ai_model_used,
+        contentData.ethics_check_status,
         contentData.metadata
       ]);
 
@@ -300,7 +300,7 @@ export class DatabaseService {
     
     try {
       const results = await this.cfService.db.fetchAll<Content>(`
-        SELECT * FROM content WHERE userid = ? ORDER BY created_at DESC
+        SELECT * FROM content WHERE user_id = ? ORDER BY created_at DESC
       `, [userId]);
 
       return results;
@@ -312,16 +312,16 @@ export class DatabaseService {
 
   // Health check
   async healthCheck(): Promise<boolean> {
-    console.log('LOG: DB-HEALTH-1 - Performing database health check');
+    console.warn('LOG: DB-HEALTH-1 - Performing database health check');
     
     if (!this.cfService?.db) {
-      console.log('LOG: DB-HEALTH-WARN-1 - No Cloudflare D1 database available');
+      console.warn('LOG: DB-HEALTH-WARN-1 - No Cloudflare D1 database available');
       return false;
     }
     
     try {
       await this.cfService.db.fetchOne('SELECT 1');
-      console.log('LOG: DB-HEALTH-2 - Database health check passed');
+      console.warn('LOG: DB-HEALTH-2 - Database health check passed');
       return true;
     } catch (error) {
       console.error('LOG: DB-HEALTH-ERROR-1 - Database health check failed:', error);

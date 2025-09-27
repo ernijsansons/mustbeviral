@@ -282,7 +282,7 @@ export class RetryClient {
       }
 
       const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
+      if (contentType?.includes('application/json')) {
         return await response.json();
       }
 
@@ -359,7 +359,7 @@ export class RetryClient {
    */
   private getCircuitBreakerKey(url: string, method: string): string {
     const urlObj = new URL(url);
-    return `${method}:${urlObj.hostname}${urlObj.pathname}`;
+    return `${method}:${urlObj.hostname}`;
   }
 
   /**
@@ -522,12 +522,41 @@ export function withRetry<T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
   config?: Partial<RetryConfig>
 ): T {
-  const client = new RetryClient(config);
+  const finalConfig = {
+    maxRetries: 2,
+    baseDelay: 100,
+    maxDelay: 1000,
+    backoffMultiplier: 2,
+    jitter: false,
+    retryableStatus: [500, 502, 503, 504, 429],
+    retryableErrors: ['NetworkError', 'TimeoutError'],
+    timeout: 5000,
+    ...config
+  };
 
   return (async (...args: Parameters<T>): Promise<ReturnType<T>> => {
-    return client.request('internal://function', {
-      method: 'POST',
-      body: JSON.stringify({ function: fn.name, args })
-    }, config).then(() => fn(...args));
+    let lastError: Error | null = null;
+    
+    for (let attempt = 0; attempt <= finalConfig.maxRetries; attempt++) {
+      try {
+        return await fn(...args) as ReturnType<T>;
+      } catch (error: unknown) {
+        lastError = error as Error;
+        
+        if (attempt === finalConfig.maxRetries) {
+          break;
+        }
+        
+        // Calculate delay for next attempt
+        const delay = Math.min(
+          finalConfig.baseDelay * Math.pow(finalConfig.backoffMultiplier, attempt),
+          finalConfig.maxDelay
+        );
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    throw lastError ?? new Error('Function failed after all retry attempts');
   }) as T;
 }

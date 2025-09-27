@@ -66,8 +66,8 @@ export function MatchesPage() {
   const [loading, setLoading] = useState(true);
 
   // Simulate data loading
-  useEffect_(() => {
-    const timer = setTimeout_(() => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
       setInfluencers(mockInfluencers);
       setLoading(false);
     }, 1000);
@@ -76,8 +76,8 @@ export function MatchesPage() {
   }, []);
 
   const filteredInfluencers = influencers.filter(influencer => {
-    const matchesSearch = influencer.name.toLowerCase().includes(searchTerm.toLowerCase())  ?? influencer.handle.toLowerCase().includes(searchTerm.toLowerCase())  ?? influencer.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all'  ?? influencer.category.toLowerCase() === selectedCategory.toLowerCase();
+    const matchesSearch = influencer.name.toLowerCase().includes(searchTerm.toLowerCase()) || influencer.handle.toLowerCase().includes(searchTerm.toLowerCase()) || influencer.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || influencer.category.toLowerCase() === selectedCategory.toLowerCase();
     
     return matchesSearch && matchesCategory;
   });

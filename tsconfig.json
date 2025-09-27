@@ -1,0 +1,133 @@
+{
+  "compilerOptions": {
+    // Core TypeScript Configuration
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
+    // Output Configuration
+    "outDir": "./dist",
+    "rootDir": "./",
+    "removeComments": true,
+    "noEmitOnError": true,
+    "declaration": false,
+    "sourceMap": true,
+    "noEmit": true,
+
+    // Strict Type Checking (Production Ready)
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    // Additional Checks
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+
+    // Module Resolution
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": false,
+    "allowArbitraryExtensions": false,
+
+    // Emit Configuration
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false,
+
+    // JSX Configuration
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+
+    // Path Mapping for Better Imports
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./mustbeviral/src/*"],
+      "@/components/*": ["./mustbeviral/src/components/*"],
+      "@/lib/*": ["./mustbeviral/src/lib/*"],
+      "@/types/*": ["./mustbeviral/src/types/*"],
+      "@/hooks/*": ["./mustbeviral/src/hooks/*"],
+      "@/pages/*": ["./mustbeviral/src/pages/*"],
+      "@/styles/*": ["./mustbeviral/src/styles/*"],
+      "@/workers/*": ["./mustbeviral/workers/*"]
+    },
+
+    // Type Definitions
+    "types": [
+      "node",
+      "vite/client",
+      "@cloudflare/workers-types",
+      "jest",
+      "@types/react",
+      "@types/react-dom"
+    ],
+
+    // Cloudflare Workers & Node.js Compatibility
+    "allowJs": true,
+    "checkJs": false
+  },
+
+  "include": [
+    "server.js",
+    "scripts/**/*",
+    "mustbeviral/src/**/*",
+    "mustbeviral/workers/**/*",
+    "mustbeviral/*.ts",
+    "mustbeviral/*.mts",
+    "mustbeviral/*.cts",
+    "*.ts",
+    "*.mts",
+    "*.cts"
+  ],
+
+  "exclude": [
+    "node_modules",
+    "**/node_modules",
+    "dist",
+    "**/dist",
+    "build",
+    "**/build",
+    "out",
+    "**/out",
+    ".next",
+    "**/.next",
+    "coverage",
+    "**/coverage",
+    "__graveyard__",
+    "**/__graveyard__",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/test/**/*",
+    "**/tests/**/*",
+    "**/__tests__/**/*",
+    "**/.git/**/*",
+    "**/tmp/**/*",
+    "**/temp/**/*"
+  ],
+
+
+  "ts-node": {
+    "esm": true,
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "ESNext",
+      "target": "ES2022",
+      "moduleResolution": "bundler"
+    }
+  },
+
+  "compileOnSave": false
+}

@@ -13,11 +13,11 @@ const mockEnv = {
   ANALYTICS: {} as AnalyticsEngineDataset
 };
 
-describe('Simple Architecture Validation', _() => {
-  describe('Dependency Injection Container', _() => {
+describe('Simple Architecture Validation', () => {
+  describe('Dependency Injection Container', () => {
     let container: DIContainer;
 
-    beforeEach_(() => {
+    beforeEach(() =>() => {
       container = new DIContainer();
     });
 
@@ -69,8 +69,8 @@ describe('Simple Architecture Validation', _() => {
     });
   });
 
-  describe('Service Registry Integration', _() => {
-    test('should create registry without circular dependencies', _() => {
+  describe('Service Registry Integration', () => {
+    test('should create registry without circular dependencies', () => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const validation = serviceRegistry.validateServices();
 
@@ -143,7 +143,7 @@ describe('Simple Architecture Validation', _() => {
     });
   });
 
-  describe('Architecture Principles Validation', _() => {
+  describe('Architecture Principles Validation', () => {
     test('should enforce proper layer separation', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const serviceInfo = serviceRegistry.getServiceInfo();
@@ -196,7 +196,7 @@ describe('Simple Architecture Validation', _() => {
     });
   });
 
-  describe('Performance and Resilience', _() => {
+  describe('Performance and Resilience', () => {
     test('should handle multiple service resolutions efficiently', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
@@ -220,7 +220,7 @@ describe('Simple Architecture Validation', _() => {
       expect(endTime - startTime).toBeLessThan(500);
     });
 
-    test('should validate service registrations', _() => {
+    test('should validate service registrations', () => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const validation = serviceRegistry.validateServices();
 
@@ -228,7 +228,7 @@ describe('Simple Architecture Validation', _() => {
       expect(validation.errors).toEqual([]);
     });
 
-    test('should provide service information for monitoring', _() => {
+    test('should provide service information for monitoring', () => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const serviceInfo = serviceRegistry.getServiceInfo();
 
@@ -244,7 +244,7 @@ describe('Simple Architecture Validation', _() => {
     });
   });
 
-  describe('Integration Testing', _() => {
+  describe('Integration Testing', () => {
     test('should execute complete user registration flow', async() => {
       const serviceRegistry = createSimpleServiceRegistry(mockEnv);
       const container = serviceRegistry.getContainer();
@@ -298,8 +298,8 @@ describe('Simple Architecture Validation', _() => {
   });
 });
 
-describe('Clean Architecture Validation', _() => {
-  test('should maintain clear architectural boundaries', _() => {
+describe('Clean Architecture Validation', () => {
+  test('should maintain clear architectural boundaries', () => {
     const serviceRegistry = createSimpleServiceRegistry(mockEnv);
     const serviceInfo = serviceRegistry.getServiceInfo();
 

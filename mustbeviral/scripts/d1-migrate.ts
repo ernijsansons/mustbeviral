@@ -239,17 +239,19 @@ async function main() {
       migrator.createInitialMigration();
       break;
       
-    case 'migrate':
+    case 'migrate': {
       const env = args[1] || 'development';
       console.log('LOG: D1-MIGRATE-CLI-3 - Running migrations for environment:', env);
       await migrator.runMigrations(env);
       break;
+    }
       
-    case 'list':
+    case 'list': {
       console.log('LOG: D1-MIGRATE-CLI-4 - Listing migrations');
       const migrations = migrator.listMigrations();
       console.table(migrations);
       break;
+    }
       
     case 'help':
     default:

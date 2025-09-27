@@ -166,7 +166,7 @@ class WebVitalsTracker {
 
     // Use React's built-in performance hooks if available
     if (typeof window !== 'undefined' && window.requestIdleCallback) {
-      window.requestIdleCallback_(() => {
+      window.requestIdleCallback(() => {
         this.recordCustomMetric('hydration-time', performance.now() - startTime);
       });
     }
@@ -294,7 +294,7 @@ class WebVitalsTracker {
   }
 
   private sendMetrics() {
-      if (!this.isEnabled  ?? this.customMetrics.length === 0) {return;}
+      if (!this.isEnabled || this.customMetrics.length === 0) {return;}
 
     const data = {
       type: 'web-vitals-batch',
@@ -304,7 +304,7 @@ class WebVitalsTracker {
       page: window.location.pathname,
       referrer: document.referrer,
       userAgent: navigator.userAgent,
-      connection: (navigator as any).connection?.effectiveType ?? 'unknown',
+      connection: (navigator as any).connection?.effectiveType || 'unknown',
     };
 
     if (navigator.sendBeacon) {
@@ -357,16 +357,16 @@ export const initWebVitals = (endpoint?: string, isEnabled?: boolean) => {
   return webVitalsTracker;
 };
 
-export const trackEvent = (name: string, data?: Record<string, _any>) => {
+export const trackEvent = (name: string, data?: Record<string, any>) => {
   webVitalsTracker?.trackEvent(name, data);
 };
 
 export const startTiming = (label: string) => {
-  return webVitalsTracker?.startTiming(label)  ?? _(() => {});
+  return webVitalsTracker?.startTiming(label) || (() => {});
 };
 
 export const getWebVitals = () => {
-  return webVitalsTracker?.getMetrics()  ?? {};
+  return webVitalsTracker?.getMetrics() || {};
 };
 
 // React hook for component-level performance tracking

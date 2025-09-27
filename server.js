@@ -6,8 +6,8 @@ const numCPUs = require('os').cpus().length;
 const http = require('http');
 const url = require('url');
 const Redis = require('ioredis'); // Use ioredis for better performance
-const compression = require('compression');
-const rateLimit = require('express-rate-limit');
+// const compression = require('compression'); // Unused - remove if not needed
+// const rateLimit = require('express-rate-limit'); // Unused - remove if not needed
 const NodeCache = require('node-cache');
 const pino = require('pino');
 const EventEmitter = require('events');
@@ -39,8 +39,8 @@ const memCache = new NodeCache({
 
 // Enhanced performance optimizations with adaptive clustering and resource management
 const OPTIMAL_WORKERS = process.env.CLUSTER_SIZE || Math.min(numCPUs, process.env.NODE_ENV === 'production' ? Math.max(numCPUs, 2) : 4);
-const MEMORY_THRESHOLD = parseInt(process.env.MEMORY_THRESHOLD) || (1024 * 1024 * 1024); // 1GB threshold
-const CPU_THRESHOLD = parseInt(process.env.CPU_THRESHOLD) || 80; // 80% CPU threshold
+// const MEMORY_THRESHOLD = parseInt(process.env.MEMORY_THRESHOLD) || (1024 * 1024 * 1024); // 1GB threshold - unused
+// const CPU_THRESHOLD = parseInt(process.env.CPU_THRESHOLD) || 80; // 80% CPU threshold - unused
 const WORKER_MEMORY_LIMIT = parseInt(process.env.WORKER_MEMORY_LIMIT) || (512 * 1024 * 1024); // 512MB per worker
 const RESTART_DELAY_BASE = 1000; // Base restart delay in ms
 const MAX_RESTART_DELAY = 30000; // Max restart delay 30s
@@ -250,7 +250,7 @@ class ClusterManager extends EventEmitter {
   evaluateScaling() {
     const currentWorkers = this.workers.size;
     const avgLoad = this.calculateAverageLoad();
-    const memoryPressure = this.calculateMemoryPressure();
+    // const memoryPressure = this.calculateMemoryPressure(); // Unused variable
     
     if (avgLoad > 80 && currentWorkers < numCPUs) {
       logger.info('🚀 High load detected, scaling up');
@@ -397,7 +397,8 @@ if (cluster.isPrimary) {
     logger.info('📊 Cluster monitoring available at http://localhost:3001/cluster/stats');
   });
 
-  return; // Primary doesn't run server logic
+  // Primary doesn't run server logic - exit here
+  process.exit(0);
 }
 
 // Enhanced performance monitoring for workers
@@ -590,7 +591,7 @@ const initializeRedis = async () => {
   try {
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
     const redisConfig = {
-      retryDelayOnFailover: 100,
+      retryDelayOnFailover: 300,
       enableReadyCheck: false,
       maxRetriesPerRequest: 3,
       lazyConnect: true,
@@ -599,8 +600,6 @@ const initializeRedis = async () => {
       connectTimeout: 5000,
       commandTimeout: 5000,
       retryDelayOnClusterDown: 300,
-      retryDelayOnFailover: 300,
-      maxRetriesPerRequest: 3,
       showFriendlyErrorStack: process.env.NODE_ENV !== 'production'
     };
     
@@ -913,7 +912,8 @@ const metrics = async (req, res) => {
 };
 
 // Rate limiting configuration
-const createRateLimiter = () => {
+// Unused function - commented out for now
+/* const createRateLimiter = () => {
   return {
     windowMs: 60 * 1000, // 1 minute window
     max: 100, // limit each IP to 100 requests per windowMs
@@ -925,7 +925,7 @@ const createRateLimiter = () => {
       res.end(JSON.stringify({ error: 'Too many requests, please try again later' }));
     }
   };
-};
+}; */
 
 // Optimized sliding window rate limiter with memory bounds
 class OptimizedRateLimiter {

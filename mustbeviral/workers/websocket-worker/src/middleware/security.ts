@@ -61,7 +61,7 @@ export class SecurityMiddleware {
     const requestedHeaders = request.headers.get('Access-Control-Request-Headers');
 
     // Check if origin is allowed
-    if (!origin  ?? !this.isOriginAllowed(origin)) {
+    if (!origin || !this.isOriginAllowed(origin)) {
       return new Response(null, { status: 403 });
     }
 

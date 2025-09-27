@@ -1,0 +1,188 @@
+# Cloudflare-specific Dockerfile for Workers and Pages deployment
+# Optimized for Cloudflare's infrastructure
+
+# ===================================
+# Stage 1: Base Node.js Environment
+# ===================================
+FROM node:20-alpine3.19 AS base
+
+# Install essential packages for Cloudflare deployment
+RUN apk update && apk upgrade --no-cache && \
+    apk add --no-cache \
+    curl \
+    ca-certificates \
+    tzdata \
+    git \
+    bash \
+    && addgroup -g 1001 -S cloudflare \
+    && adduser -S wrangler -u 1001 -G cloudflare \
+    && rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
+
+# Cloudflare-optimized environment
+ENV NODE_ENV=production \
+    CLOUDFLARE_DEPLOYMENT=true \
+    NEXT_TELEMETRY_DISABLED=1 \
+    NODE_OPTIONS="--max-old-space-size=1024 --optimize-for-size" \
+    TZ=UTC \
+    LANG=C.UTF-8
+
+WORKDIR /app
+RUN chown -R wrangler:cloudflare /app
+
+# ===================================
+# Stage 2: Dependencies for Cloudflare
+# ===================================
+FROM base AS deps
+
+WORKDIR /app
+
+# Install Wrangler CLI globally
+RUN npm install -g wrangler@latest && \
+    npm cache clean --force
+
+# Copy package files
+COPY --chown=wrangler:cloudflare package*.json ./
+COPY --chown=wrangler:cloudflare mustbeviral/package*.json ./mustbeviral/
+
+# Install dependencies
+RUN npm ci --omit=dev --no-audit --no-fund --prefer-offline --progress=false && \
+    cd mustbeviral && \
+    npm ci --omit=dev --no-audit --no-fund --prefer-offline --progress=false --legacy-peer-deps && \
+    cd .. && \
+    npm cache clean --force && \
+    rm -rf ~/.npm /tmp/* /var/tmp/*
+
+# ===================================
+# Stage 3: Workers Build
+# ===================================
+FROM base AS workers-builder
+
+WORKDIR /app
+
+# Copy dependencies
+COPY --from=deps --chown=wrangler:cloudflare /app/node_modules ./node_modules
+COPY --from=deps --chown=wrangler:cloudflare /app/mustbeviral/node_modules ./mustbeviral/node_modules
+
+# Copy source code
+COPY --chown=wrangler:cloudflare . .
+
+# Install Wrangler CLI
+RUN npm install -g wrangler@latest
+
+# Build all Workers
+WORKDIR /app/mustbeviral/workers
+RUN for worker in auth-worker content-worker analytics-worker api-gateway websocket-worker; do \
+      if [ -d "$worker" ]; then \
+        echo "Building $worker..."; \
+        cd "$worker" && \
+        npm run build && \
+        cd ..; \
+      fi; \
+    done
+
+# ===================================
+# Stage 4: Pages Build
+# ===================================
+FROM base AS pages-builder
+
+WORKDIR /app
+
+# Copy dependencies
+COPY --from=deps --chown=wrangler:cloudflare /app/node_modules ./node_modules
+COPY --from=deps --chown=wrangler:cloudflare /app/mustbeviral/node_modules ./mustbeviral/node_modules
+
+# Copy source code
+COPY --chown=wrangler:cloudflare . .
+
+# Build Pages application
+WORKDIR /app/mustbeviral
+RUN npm run build && \
+    rm -rf node_modules/.cache /tmp/* /var/tmp/*
+
+# ===================================
+# Stage 5: Cloudflare Deployment Runtime
+# ===================================
+FROM base AS cloudflare-runtime
+
+WORKDIR /app
+
+# Install Wrangler CLI in runtime
+RUN npm install -g wrangler@latest && \
+    npm cache clean --force
+
+# Copy built workers and pages
+COPY --from=workers-builder --chown=wrangler:cloudflare /app/mustbeviral/workers ./mustbeviral/workers
+COPY --from=pages-builder --chown=wrangler:cloudflare /app/mustbeviral/dist ./mustbeviral/dist
+
+# Copy deployment scripts and configuration
+COPY --chown=wrangler:cloudflare scripts/ ./scripts/
+COPY --chown=wrangler:cloudflare .env.production ./.env.production
+COPY --chown=wrangler:cloudflare package.json ./
+
+# Create deployment directories
+RUN mkdir -p /app/logs /app/deploy && \
+    chown -R wrangler:cloudflare /app/logs /app/deploy
+
+# Switch to non-root user
+USER wrangler
+
+# Create Cloudflare deployment script
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "🚀 Starting Cloudflare Deployment"\n\
+echo "📦 Wrangler version: $(wrangler --version)"\n\
+echo "🌍 Environment: ${ENVIRONMENT:-staging}"\n\
+echo "🔧 Account: ${CLOUDFLARE_ACCOUNT_ID}"\n\
+\n\
+# Source environment variables\n\
+if [ -f .env.production ]; then\n\
+  export $(grep -v "^#" .env.production | xargs)\n\
+fi\n\
+\n\
+# Deploy based on command\n\
+case "${1:-deploy}" in\n\
+  "workers")\n\
+    echo "📡 Deploying Workers..."\n\
+    bash scripts/cloudflare-deploy.sh ${ENVIRONMENT:-staging}\n\
+    ;;\n\
+  "pages")\n\
+    echo "📄 Deploying Pages..."\n\
+    cd mustbeviral && wrangler pages deploy dist\n\
+    ;;\n\
+  "deploy")\n\
+    echo "🚀 Full deployment..."\n\
+    bash scripts/cloudflare-deploy.sh ${ENVIRONMENT:-staging}\n\
+    ;;\n\
+  "health")\n\
+    echo "🏥 Running health checks..."\n\
+    node mustbeviral/scripts/health-check.js check ${ENVIRONMENT:-staging}\n\
+    ;;\n\
+  *)\n\
+    echo "Usage: $0 {workers|pages|deploy|health}"\n\
+    exit 1\n\
+    ;;\n\
+esac\n' > /app/cloudflare-deploy.sh && \
+    chmod +x /app/cloudflare-deploy.sh
+
+# Health check for deployment readiness
+HEALTHCHECK --interval=60s --timeout=30s --start-period=120s --retries=2 \
+    CMD wrangler --version > /dev/null || exit 1
+
+# Expose deployment port (for local testing)
+EXPOSE 8787
+
+# Entry point for Cloudflare operations
+ENTRYPOINT ["/app/cloudflare-deploy.sh"]
+CMD ["deploy"]
+
+# Labels for Cloudflare deployment
+LABEL maintainer="Must Be Viral Team <team@mustbeviral.com>" \
+      version="2.0.0-cloudflare" \
+      description="Must Be Viral V2 - Cloudflare Deployment Container" \
+      org.opencontainers.image.title="Must Be Viral V2 Cloudflare" \
+      org.opencontainers.image.description="Cloudflare Workers and Pages deployment container" \
+      org.opencontainers.image.version="2.0.0" \
+      org.opencontainers.image.authors="Must Be Viral Team" \
+      org.opencontainers.image.url="https://mustbeviral.com" \
+      org.opencontainers.image.licenses="MIT" \
+      cloudflare.deployment="true"

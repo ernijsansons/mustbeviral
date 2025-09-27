@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence} from 'framer-motion';
-import { cn} from '../../lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '../../lib/utils';
 
 interface PerformanceHeatmapProps {
   data?: HeatmapData;
@@ -23,7 +23,7 @@ interface TimeSlot {
   isPeak: boolean;
 }
 
-export function PerformanceHeatmap(_{
+export function PerformanceHeatmap({
   data = generateMockHeatmapData(),
   metric = 'engagement',
   onCellClick,
@@ -48,20 +48,20 @@ export function PerformanceHeatmap(_{
     const intensity = value / max;
 
     if (intensity === 0) {
-    return 'bg-slate-100 dark:bg-slate-800';
-  }
+      return 'bg-slate-100 dark:bg-slate-800';
+    }
     if (intensity < 0.2) {
-    return 'bg-blue-200 dark:bg-blue-900';
-  }
+      return 'bg-blue-200 dark:bg-blue-900';
+    }
     if (intensity < 0.4) {
-    return 'bg-green-300 dark:bg-green-800';
-  }
+      return 'bg-green-300 dark:bg-green-800';
+    }
     if (intensity < 0.6) {
-    return 'bg-yellow-400 dark:bg-yellow-700';
-  }
+      return 'bg-yellow-400 dark:bg-yellow-700';
+    }
     if (intensity < 0.8) {
-    return 'bg-orange-500 dark:bg-orange-600';
-  }
+      return 'bg-orange-500 dark:bg-orange-600';
+    }
     return 'bg-red-600 dark:bg-red-500';
   };
 
@@ -70,21 +70,21 @@ export function PerformanceHeatmap(_{
     const intensity = value / max;
 
     if (intensity < 0.6) {
-    return '';
-  }
+      return '';
+    }
     if (intensity < 0.8) {
-    return 'shadow-lg shadow-yellow-500/30';
-  }
+      return 'shadow-lg shadow-yellow-500/30';
+    }
     return 'shadow-xl shadow-red-500/50 animate-pulse';
   };
 
   const formatHour = (hour: number): string => {
     if (hour === 0) {
-    return '12 AM';
-  }
+      return '12 AM';
+    }
     if (hour === 12) {
-    return '12 PM';
-  }
+      return '12 PM';
+    }
     return hour < 12 ? `${hour} AM` : `${hour - 12} PM`;
   };
 
@@ -349,12 +349,12 @@ function generateMockHeatmapData(): HeatmapData {
       let value = Math.random() * 30;
 
       // Peak times: morning (7-9), lunch (12-13), evening (18-21)
-      if ((hour >= 7 && hour <= 9)  ?? (hour >= 12 && hour <= 13)  ?? (hour >= 18 && hour <= 21)) {
+      if ((hour >= 7 && hour <= 9) || (hour >= 12 && hour <= 13) || (hour >= 18 && hour <= 21)) {
         value += 40 + Math.random() * 30;
       }
 
       // Weekend boost
-      if (day === 0 ?? day === 6) {
+      if (day === 0 || day === 6) {
         value *= 1.2;
       }
 

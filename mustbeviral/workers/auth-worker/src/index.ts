@@ -57,7 +57,9 @@ export default {
     // Start request tracking
     const startTime = Date.now();
 
-    logger.info('Request received', { _requestId,
+    const requestId = crypto.randomUUID();
+    logger.info('Request received', {
+      requestId,
       method: request.method,
       url: request.url,
       headers: Object.fromEntries(request.headers.entries())
@@ -67,15 +69,15 @@ export default {
       // Apply security checks
       const securityCheck = await security.validate(request);
       if (!securityCheck.valid) {
-        logger.warn('Security check failed', { _requestId, reason: securityCheck.reason });
+        logger.warn('Security check failed', { requestId, reason: securityCheck.reason });
         return security.createErrorResponse(403, 'Security validation failed');
       }
 
       // Apply rate limiting
-      const clientId = request.headers.get('CF-Connecting-IP')  ?? 'unknown';
+      const clientId = request.headers.get('CF-Connecting-IP') ?? 'unknown';
       const rateLimitCheck = await rateLimiter.check(clientId, request.url);
       if (!rateLimitCheck.allowed) {
-        logger.warn('Rate limit exceeded', { _requestId, clientId });
+        logger.warn('Rate limit exceeded', { requestId, clientId });
         return security.createErrorResponse(429, 'Rate limit exceeded', {
           'Retry-After': rateLimitCheck.retryAfter.toString()
         });
@@ -95,23 +97,23 @@ export default {
       const router = new Router();
 
       // Register routes
-      router.post('/api/auth/register', (_req) => authController.register(req));
-      router.post('/api/auth/login', (_req) => authController.login(req));
-      router.post('/api/auth/logout', (_req) => authController.logout(req));
-      router.post('/api/auth/refresh', (_req) => tokenController.refresh(req));
-      router.get('/api/auth/verify', (_req) => tokenController.verify(req));
-      router.get('/api/auth/session', (_req) => sessionController.getSession(req));
-      router.delete('/api/auth/session', (_req) => sessionController.invalidateSession(req));
-      router.post('/api/auth/password/reset', (_req) => authController.resetPassword(req));
-      router.post('/api/auth/password/change', (_req) => authController.changePassword(req));
-      router.post('/api/auth/mfa/enable', (_req) => authController.enableMFA(req));
-      router.post('/api/auth/mfa/verify', (_req) => authController.verifyMFA(req));
+      router.post('/api/auth/register', (req) => authController.register(req));
+      router.post('/api/auth/login', (req) => authController.login(req));
+      router.post('/api/auth/logout', (req) => authController.logout(req));
+      router.post('/api/auth/refresh', (req) => tokenController.refresh(req));
+      router.get('/api/auth/verify', (req) => tokenController.verify(req));
+      router.get('/api/auth/session', (req) => sessionController.getSession(req));
+      router.delete('/api/auth/session', (req) => sessionController.invalidateSession(req));
+      router.post('/api/auth/password/reset', (req) => authController.resetPassword(req));
+      router.post('/api/auth/password/change', (req) => authController.changePassword(req));
+      router.post('/api/auth/mfa/enable', (req) => authController.enableMFA(req));
+      router.post('/api/auth/mfa/verify', (req) => authController.verifyMFA(req));
 
       // OAuth routes
-      router.get('/api/auth/oauth/google', (_req) => authController.oauthGoogle(req));
-      router.get('/api/auth/oauth/google/callback', (_req) => authController.oauthGoogleCallback(req));
-      router.get('/api/auth/oauth/github', (_req) => authController.oauthGithub(req));
-      router.get('/api/auth/oauth/github/callback', (_req) => authController.oauthGithubCallback(req));
+      router.get('/api/auth/oauth/google', (req) => authController.oauthGoogle(req));
+      router.get('/api/auth/oauth/google/callback', (req) => authController.oauthGoogleCallback(req));
+      router.get('/api/auth/oauth/github', (req) => authController.oauthGithub(req));
+      router.get('/api/auth/oauth/github/callback', (req) => authController.oauthGithubCallback(req));
 
       // Health check
       router.get('/health', () => HealthCheck.check(env));
@@ -132,7 +134,8 @@ export default {
       const duration = Date.now() - startTime;
       metrics.recordRequest(request.method, response.status, duration);
 
-      logger.info('Request completed', { _requestId,
+      logger.info('Request completed', {
+        requestId,
         status: response.status,
         duration
       });
@@ -140,7 +143,8 @@ export default {
       return response;
 
     } catch (error) {
-      logger.error('Request failed', { _requestId,
+      logger.error('Request failed', {
+        requestId,
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined
       });

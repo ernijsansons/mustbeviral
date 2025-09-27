@@ -23,7 +23,7 @@ export interface SessionTimeoutWarningProps {
 }
 
 export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
-  timeUntilExpiry, isContentSaved, onExtendSession, onSaveAndExit, show, warningThreshold = 300, _// 5 minutes
+  timeUntilExpiry, isContentSaved, onExtendSession, onSaveAndExit, show, warningThreshold = 300, // 5 minutes
   className
 }) => {
   const [countdown, setCountdown] = useState(timeUntilExpiry);
@@ -31,14 +31,14 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
   const [isSaving, setIsSaving] = useState(false);
 
   // Update countdown every second
-  useEffect_(() => {
+  useEffect(() => {
     setCountdown(timeUntilExpiry);
     
-    if (!show ?? timeUntilExpiry <= 0)  {
-    return
-  };
+    if (!show || timeUntilExpiry <= 0) {
+      return;
+    }
 
-    const interval = setInterval_(() => {
+    const interval = setInterval(() => {
       setCountdown(prev => {
         const newCount = prev - 1;
         return newCount <= 0 ? 0 : newCount;
@@ -233,8 +233,8 @@ export function useSessionTimeout(
   const [timeUntilExpiry, setTimeUntilExpiry] = useState(sessionDuration / 1000);
   const [showWarning, setShowWarning] = useState(false);
 
-  useEffect_(() => {
-    const interval = setInterval_(() => {
+  useEffect(() => {
+    const interval = setInterval(() => {
       const elapsed = Date.now() - sessionStartTime;
       const remaining = Math.max(0, sessionDuration - elapsed);
       const remainingSeconds = Math.floor(remaining / 1000);

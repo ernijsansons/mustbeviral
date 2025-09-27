@@ -50,7 +50,7 @@ export function BoostDashboard() {
     action: 'render'
   });
 
-  useEffect_(() => {
+  useEffect(() => {
     loadReputationData();
   }, []);
 
@@ -76,8 +76,8 @@ export function BoostDashboard() {
       const result = await response.json();
       
       if (result.success) {
-        setMetrics(result.data.currentmetrics);
-        setMentions(result.data.recentmentions);
+        setMetrics(result.data.current_metrics);
+        setMentions(result.data.recent_mentions);
         logger.info('Reputation data loaded successfully', {
           component: 'BoostDashboard',
           action: 'loadReputationData',
@@ -159,7 +159,7 @@ export function BoostDashboard() {
       const result = await response.json();
       
       if (result.success) {
-        setSeedingPlans(prev => [...prev, result.data.seedingplan]);
+        setSeedingPlans(prev => [...prev, result.data.seeding_plan]);
         logger.info('Seeding plan created successfully', {
           component: 'BoostDashboard',
           action: 'createSeedingPlan',
@@ -272,12 +272,12 @@ export function BoostDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Overall Sentiment</p>
-                <p className={`text-2xl font-bold ${getSentimentColor(metrics.overallsentiment).split(' ')[0]}`}>
-                  {formatSentimentScore(metrics.overallsentiment)}
+                <p className={`text-2xl font-bold ${getSentimentColor(metrics.overall_sentiment).split(' ')[0]}`}>
+                  {formatSentimentScore(metrics.overall_sentiment)}
                 </p>
               </div>
-              <div className={`p-2 rounded-lg ${getSentimentColor(metrics.overallsentiment)}`}>
-                {getSentimentIcon(metrics.overallsentiment)}
+              <div className={`p-2 rounded-lg ${getSentimentColor(metrics.overall_sentiment)}`}>
+                {getSentimentIcon(metrics.overall_sentiment)}
               </div>
             </div>
           </div>
@@ -286,7 +286,7 @@ export function BoostDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Mentions</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.mentioncount}</p>
+                <p className="text-2xl font-bold text-gray-900">{metrics.mention_count}</p>
               </div>
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Search className="w-6 h-6 text-blue-600" />
@@ -298,7 +298,7 @@ export function BoostDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Visibility Score</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.visibilityscore}</p>
+                <p className="text-2xl font-bold text-gray-900">{metrics.visibility_score}</p>
               </div>
               <div className="p-2 bg-purple-100 rounded-lg">
                 <TrendingUp className="w-6 h-6 text-purple-600" />
@@ -311,7 +311,7 @@ export function BoostDashboard() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Positive Ratio</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {metrics.mention_count > 0 ? Math.round((metrics.positive_mentions / metrics.mentioncount) * 100) : 0}%
+                  {metrics.mention_count > 0 ? Math.round((metrics.positive_mentions / metrics.mention_count) * 100) : 0}%
                 </p>
               </div>
               <div className="p-2 bg-green-100 rounded-lg">
@@ -337,9 +337,9 @@ export function BoostDashboard() {
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
                       <span className="text-sm font-medium text-gray-900">{mention.source}</span>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSentimentColor(mention.sentimentscore)}`}>
-                        {getSentimentIcon(mention.sentimentscore)}
-                        <span className="ml-1">{formatSentimentScore(mention.sentimentscore)}</span>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSentimentColor(mention.sentiment_score)}`}>
+                        {getSentimentIcon(mention.sentiment_score)}
+                        <span className="ml-1">{formatSentimentScore(mention.sentiment_score)}</span>
                       </span>
                     </div>
                     <p className="text-gray-700 mb-2">{mention.snippet}</p>
@@ -414,7 +414,7 @@ export function BoostDashboard() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
                         <span className="font-medium text-gray-900 capitalize">
-                          {plan.seeding_strategy.replace('', ' ')}
+                          {plan.seeding_strategy.replace('_', ' ')}
                         </span>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           plan.priority === 'high' ? 'bg-red-100 text-red-700' :

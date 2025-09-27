@@ -50,7 +50,7 @@ function VirtualScrollList<T>({
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Memoized item bounds calculation
-  const itemBounds = useMemo_(() => {
+  const itemBounds = useMemo(() => {
     const bounds: ItemBounds[] = [];
     let currentTop = 0;
 
@@ -67,7 +67,7 @@ function VirtualScrollList<T>({
   }, [items, itemHeight]);
 
   // Calculate visible range
-  const visibleRange = useMemo_(() => {
+  const visibleRange = useMemo(() => {
     const start = Math.max(0, 
       itemBounds.findIndex(bound => bound.top + bound.height >= scrollTop) - overscan
     );
@@ -83,7 +83,7 @@ function VirtualScrollList<T>({
   }, [scrollTop, containerHeight, itemBounds, overscan, items.length]);
 
   // Total height calculation
-  const totalHeight = useMemo_(() => {
+  const totalHeight = useMemo(() => {
     return itemBounds.length > 0 
       ? itemBounds[itemBounds.length - 1].top + itemBounds[itemBounds.length - 1].height
       : 0;
@@ -103,7 +103,7 @@ function VirtualScrollList<T>({
     }
 
     // Set isScrolling to false after scroll ends
-    scrollTimeoutRef.current = setTimeout_(() => {
+    scrollTimeoutRef.current = setTimeout(() => {
       setIsScrolling(false);
     }, 150);
   }, [onScroll]);
@@ -122,13 +122,14 @@ function VirtualScrollList<T>({
   }, [itemBounds, items.length, scrollBehavior]);
 
   // Scroll to top
+  const scrollToTop = useCallback((behavior: ScrollBehavior = scrollBehavior) => {
     if (!scrollElementRef.current) {return;}
     scrollElementRef.current.scrollTo({ top: 0, behavior });
   }, [scrollBehavior]);
 
   // Setup intersection observer for infinite loading
-  useEffect_(() => {
-    if (!loadMoreItems ?? !hasNextPage  ?? !loadMoreRef.current) {return;}
+  useEffect(() => {
+    if (!loadMoreItems || !hasNextPage || !loadMoreRef.current) {return;}
 
     const observer = new IntersectionObserver((entries) => {
         const target = entries[0];
@@ -148,7 +149,7 @@ function VirtualScrollList<T>({
   }, [loadMoreItems, hasNextPage, isLoading, threshold]);
 
   // Visible items with memoization
-  const visibleItems = useMemo_(() => {
+  const visibleItems = useMemo(() => {
     const items_: Array<{
       item: T;
       index: number;
@@ -173,7 +174,7 @@ function VirtualScrollList<T>({
   }, [visibleRange, items, itemBounds, getItemKey]);
 
   // Cleanup timeouts
-  useEffect_(() => {
+  useEffect(() => {
     return () => {
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
@@ -238,8 +239,8 @@ interface VirtualItemProps<T> {
   renderItem: (item: T, index: number, isVisible: boolean) => React.ReactNode;
 }
 
-const VirtualItem = memo(<T, _>({
-  item, index, top, height, isScrolling, renderItem, }: VirtualItemProps<T>) => {
+const VirtualItem = memo(<T,>({
+  item, index, top, height, isScrolling, renderItem }: VirtualItemProps<T>) => {
   return (
     <div
       className="virtual-item absolute w-full"
@@ -318,7 +319,7 @@ export function VirtualGrid<T>({
     Math.ceil((scrollTop + containerHeight) / (itemHeight + gap))
   );
 
-  const visibleItems = useMemo_(() => {
+  const visibleItems = useMemo(() => {
     const visible: Array<{ item: T; index: number; x: number; y: number }> = [];
 
     for (let row = startRow; row <= endRow; row++) {
@@ -381,7 +382,7 @@ export function useVirtualScrollPerformance() {
   const frameCount = useRef(0);
   const lastTime = useRef(performance.now());
 
-  useEffect_(() => {
+  useEffect(() => {
     let animationId: number;
 
     const measurePerformance = () => {

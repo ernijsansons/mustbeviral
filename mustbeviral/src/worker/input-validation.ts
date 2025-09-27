@@ -357,7 +357,7 @@ export class InputValidator {
     }
 
     if (Array.isArray(data)) {
-      return data.map(item = > this.sanitizeOutput(item));
+      return data.map(item => this.sanitizeOutput(item));
     }
 
     const sanitized: unknown = {};

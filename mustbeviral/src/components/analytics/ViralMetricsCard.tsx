@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { motion, useSpring, useTransform, useMotionValue} from 'framer-motion';
-import { cn} from '../../lib/utils';
+import { motion, useSpring, useTransform, useMotionValue } from 'framer-motion';
+import { cn } from '../../lib/utils';
 
 interface ViralMetricsCardProps {
   metric: {
@@ -19,7 +19,7 @@ interface ViralMetricsCardProps {
   className?: string;
 }
 
-export function ViralMetricsCard(_{ metric, animate = true, className }: ViralMetricsCardProps) {
+export function ViralMetricsCard({ metric, animate = true, className }: ViralMetricsCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [celebrated, setCelebrated] = useState(false);
 
@@ -30,7 +30,7 @@ export function ViralMetricsCard(_{ metric, animate = true, className }: ViralMe
     damping: 30
   });
 
-  const displayValue = useTransform(springValue, _(latest) => {
+  const displayValue = useTransform(springValue, (latest) => {
     if (metric.suffix === '%') {
       return Math.round(latest);
     }
@@ -43,14 +43,14 @@ export function ViralMetricsCard(_{ metric, animate = true, className }: ViralMe
     return Math.round(latest).toLocaleString();
   });
 
-  useEffect_(() => {
+  useEffect(() => {
     if (animate) {
       motionValue.set(metric.value);
     }
   }, [metric.value, animate, motionValue]);
 
   // Check for milestone celebration
-  useEffect_(() => {
+  useEffect(() => {
     if (metric.milestone && metric.value >= metric.milestone && !celebrated) {
       setCelebrated(true);
       setTimeout(() => setCelebrated(false), 3000);
@@ -74,15 +74,15 @@ export function ViralMetricsCard(_{ metric, animate = true, className }: ViralMe
   };
 
   const generateSparklinePath = (data: number[]) => {
-    if (!data ?? data.length === 0) {
-    return '';
-  }
+    if (!data || data.length === 0) {
+      return '';
+    }
 
     const width = 100;
     const height = 30;
     const max = Math.max(...data);
     const min = Math.min(...data);
-    const range = max - min ?? 1;
+    const range = max - min || 1;
 
     const points = data.map((value, index) => {
       const x = (index / (data.length - 1)) * width;

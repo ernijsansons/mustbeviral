@@ -24,22 +24,34 @@ jobs:
         cache: 'npm'
 
     - name: Install root dependencies
-      run: npm ci --ignore-scripts || npm install --ignore-scripts
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci --ignore-scripts
+        else
+          npm install --ignore-scripts
+        fi
 
     - name: Install mustbeviral dependencies
-      run: cd mustbeviral && (npm ci --ignore-scripts || npm install --ignore-scripts) || true
+      run: |
+        cd mustbeviral
+        if [ -f package-lock.json ]; then
+          npm ci --ignore-scripts --legacy-peer-deps
+        else
+          npm install --ignore-scripts --legacy-peer-deps
+        fi
 
-    - name: Run dependency check (non-blocking)
-      run: npm run deps:check || true
+    - name: Run dependency check
+      run: npm run deps:check
+      continue-on-error: true
 
     - name: Run linting
-      run: npm run lint || true
+      run: npm run lint
 
     - name: Run type checking
-      run: npm run type-check || true
+      run: npm run type-check
 
     - name: Run unit tests
-      run: npm run test:unit || true
+      run: npm run test:unit
 
   security:
     name: Security Audit
@@ -55,13 +67,25 @@ jobs:
         cache: 'npm'
 
     - name: Install root dependencies
-      run: npm ci --ignore-scripts || npm install --ignore-scripts
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci --ignore-scripts
+        else
+          npm install --ignore-scripts
+        fi
 
     - name: Install mustbeviral dependencies
-      run: cd mustbeviral && (npm ci --ignore-scripts || npm install --ignore-scripts) || true
+      run: |
+        cd mustbeviral
+        if [ -f package-lock.json ]; then
+          npm ci --ignore-scripts --legacy-peer-deps
+        else
+          npm install --ignore-scripts --legacy-peer-deps
+        fi
 
-    - name: Run security audit (non-blocking)
-      run: npm run security:audit || true
+    - name: Run security audit
+      run: npm run security:audit
+      continue-on-error: true
 
   build:
     name: Build Test
@@ -77,19 +101,31 @@ jobs:
         cache: 'npm'
 
     - name: Install root dependencies
-      run: npm ci --ignore-scripts || npm install --ignore-scripts
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci --ignore-scripts
+        else
+          npm install --ignore-scripts
+        fi
 
     - name: Install mustbeviral dependencies
-      run: cd mustbeviral && (npm ci --ignore-scripts || npm install --ignore-scripts) || true
+      run: |
+        cd mustbeviral
+        if [ -f package-lock.json ]; then
+          npm ci --ignore-scripts --legacy-peer-deps
+        else
+          npm install --ignore-scripts --legacy-peer-deps
+        fi
 
     - name: Build application
-      run: npm run build || true
+      run: npm run build
 
-  deploy:
-    name: Deploy
+  deploy-staging:
+    name: Deploy to Staging
     needs: [test, security, build]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: staging
 
     steps:
     - uses: actions/checkout@v4
@@ -102,12 +138,105 @@ jobs:
 
     - name: Install dependencies
       run: |
-        npm ci --ignore-scripts || npm install --ignore-scripts
-        cd mustbeviral && (npm ci --ignore-scripts || npm install --ignore-scripts) || true
+        if [ -f package-lock.json ]; then
+          npm ci --ignore-scripts
+        else
+          npm install --ignore-scripts
+        fi
+        cd mustbeviral
+        if [ -f package-lock.json ]; then
+          npm ci --ignore-scripts --legacy-peer-deps
+        else
+          npm install --ignore-scripts --legacy-peer-deps
+        fi
+
+    - name: Install Wrangler
+      run: npm install -g wrangler
+
+    - name: Build for staging
+      run: npm run build
+      env:
+        NODE_ENV: staging
+
+    - name: Deploy to Cloudflare (Staging)
+      run: npm run cloudflare:deploy:staging
+      env:
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+    - name: Run health checks
+      run: cd mustbeviral && node scripts/health-check.js check staging
+      continue-on-error: true
+
+    - name: Notify deployment status
+      if: always()
+      run: echo "Staging deployment completed with status: ${{ job.status }}"
+
+  deploy-production:
+    name: Deploy to Production
+    needs: [test, security, build]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci --ignore-scripts
+        else
+          npm install --ignore-scripts
+        fi
+        cd mustbeviral
+        if [ -f package-lock.json ]; then
+          npm ci --ignore-scripts --legacy-peer-deps
+        else
+          npm install --ignore-scripts --legacy-peer-deps
+        fi
+
+    - name: Install Wrangler
+      run: npm install -g wrangler
 
     - name: Build for production
-      run: npm run build || true
+      run: npm run build
+      env:
+        NODE_ENV: production
 
-    - name: Deploy to staging
-      if: success()
-      run: echo "Deploy to staging would happen here"
+    - name: Run database migrations
+      run: |
+        chmod +x database/scripts/migrate.sh
+        ./database/scripts/migrate.sh production false true
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+    - name: Deploy to Cloudflare (Production)
+      run: npm run cloudflare:deploy:production
+      env:
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+    - name: Run health checks
+      run: cd mustbeviral && node scripts/health-check.js check production
+
+    - name: Rollback on failure
+      if: failure()
+      run: |
+        echo "Deployment failed, initiating rollback..."
+        cd mustbeviral && node scripts/rollback.js rollback production
+      env:
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+    - name: Notify deployment status
+      if: always()
+      run: echo "Production deployment completed with status: ${{ job.status }}"

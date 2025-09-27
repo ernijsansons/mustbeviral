@@ -249,7 +249,7 @@ export function useGlobalLoading() {
 /**
  * Component for pages that need the full viral treatment
  */
-export function ViralPageContainer(_{
+export function ViralPageContainer({
   children, className, backgroundVariant = 'cosmic'
 }: {
   children: ReactNode;

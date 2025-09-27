@@ -651,7 +651,7 @@ export function createSecurityMiddleware() {
     /**
      * Process request security
      */
-    processRequest: (request: Request): Response | null = > {
+    processRequest: (request: Request): Response | null => {
       // Validate request for security issues
       const validation = security.validateRequest(request);
       if (!validation.valid) {

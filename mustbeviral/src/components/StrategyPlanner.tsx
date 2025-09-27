@@ -48,16 +48,13 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
 
   console.log('LOG: COMPONENT-STRATEGY-2 - StrategyPlanner rendered');
 
-  useEffect(() => {
-    loadTemplates();
-  }, []);
-
+  const loadTemplates = async () => {
     console.log('LOG: COMPONENT-STRATEGY-3 - Loading strategy templates');
-    
+
     try {
       const response = await fetch('/api/get-strategy?action=get_templates');
       const result = await response.json();
-      
+
       if (result.success) {
         setTemplates(result.data.templates);
         console.log('LOG: COMPONENT-STRATEGY-4 - Loaded', result.data.templates.length, 'templates');
@@ -67,16 +64,21 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
     }
   };
 
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
   const handleInputChange = (field: string, value: unknown) => {
     console.log('LOG: COMPONENT-STRATEGY-5 - Input changed:', field, value);
     setStrategyRequest(prev => ({ ...prev, [field]: value }));
   };
 
+  const toggleChannel = (channel: string) => {
     const currentChannels = strategyRequest.existing_channels ?? [];
     const updatedChannels = currentChannels.includes(channel)
       ? currentChannels.filter(c => c !== channel)
       : [...currentChannels, channel];
-    
+
     handleInputChange('existing_channels', updatedChannels);
   };
 
@@ -246,7 +248,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
           <div className="flex justify-end">
             <button
               onClick={nextStep}
-                disabled={!strategyRequest.brand_name  ?? !strategyRequest.industry}
+                disabled={!strategyRequest.brand_name || !strategyRequest.industry}
               className = "px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
@@ -324,7 +326,7 @@ export function StrategyPlanner({ userId = 'demo-user' }: { userId?: string }) {
             </button>
             <button
               onClick={nextStep}
-                disabled={!strategyRequest.primary_goal  ?? !strategyRequest.budgetrange}
+                disabled={!strategyRequest.primary_goal || !strategyRequest.budgetrange}
               className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
             >
               Analyze
