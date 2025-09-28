@@ -78,9 +78,12 @@ export default defineConfig({
         manualChunks: (id) => {
           // Core vendor chunks (critical path) - optimized for HTTP/2 parallelization
           if (id.includes('node_modules')) {
-            // React ecosystem - critical, load first
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-core';
+            // Split React into smaller chunks for better caching
+            if (id.includes('react-dom')) {
+              return 'react-dom';
+            }
+            if (id.includes('react') && !id.includes('react-dom')) {
+              return 'react';
             }
             // Query management - high priority
             if (id.includes('@tanstack/react-query')) {
@@ -177,6 +180,12 @@ export default defineConfig({
     target: ['es2020', 'chrome87', 'firefox78', 'safari14', 'edge88'],
     // CSS optimizations
     cssMinify: 'lightningcss',
+    // Aggressive code splitting for better caching
+    assetsInlineLimit: 4096, // Inline smaller assets
+    modulePreload: {
+      polyfill: false, // Remove polyfill for modern browsers
+    },
+    reportCompressedSize: false, // Faster builds
   },
 
   optimizeDeps: {

@@ -106,6 +106,8 @@ export function ViralMetricsCard({ metric, animate = true, className }: ViralMet
       whileHover={{ y: -4 }}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
+      role="article"
+      aria-label={`${metric.label} metrics card`}
     >
       {/* Gradient Background */}
       <div
@@ -160,18 +162,23 @@ export function ViralMetricsCard({ metric, animate = true, className }: ViralMet
               metric.color
             )}
             whileHover={{ scale: 1.1, rotate: 10 }}
+            role="img"
+            aria-label={`${metric.label} icon`}
           >
             {metric.icon}
           </motion.div>
           <div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <h3 className="text-sm text-slate-500 dark:text-slate-400">
               {metric.label}
-            </p>
+            </h3>
             <div className="flex items-center gap-2">
-              <span className={cn("text-xs font-medium", getTrendColor())}>
+              <span
+                className={cn("text-xs font-medium", getTrendColor())}
+                aria-label={`Change: ${metric.change > 0 ? 'increased' : 'decreased'} by ${Math.abs(metric.change)} percent`}
+              >
                 {metric.change > 0 ? '+' : ''}{metric.change}%
               </span>
-              <span className="text-lg">{getTrendIcon()}</span>
+              <span className="text-lg" role="img" aria-label={`Trend: ${metric.trending}`}>{getTrendIcon()}</span>
             </div>
           </div>
         </div>
@@ -183,8 +190,10 @@ export function ViralMetricsCard({ metric, animate = true, className }: ViralMet
             initial={{ scale: 0 }}
             animate={{ scale: [0, 1.2, 1] }}
             transition={{ delay: 0.5 }}
+            role="status"
+            aria-label="Trending hot: significant increase"
           >
-            🔥 HOT
+            <span role="img" aria-label="fire emoji">🔥</span> HOT
           </motion.div>
         )}
       </div>

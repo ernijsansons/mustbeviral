@@ -173,9 +173,9 @@ export class StrategyGenerator {
       const strategy: PersonalizedStrategy = {
         id: this.generateStrategyId(),
         template_id: selectedTemplate.id,
-        user_id: request.userid,
-        brand_name: request.brandname,
-        customizedsteps,
+        user_id: request.user_id,
+        brand_name: request.brand_name,
+        customized_steps: customizedSteps,
         timeline,
         budget_estimate: budgetEstimate,
         success_probability: successProbability,
@@ -191,12 +191,12 @@ export class StrategyGenerator {
   }
 
   private selectBestTemplate(request: StrategyRequest): StrategyTemplate {
-    console.log('LOG: STRATEGIES-SELECT-1 - Selecting best template for goal:', request.primarygoal);
-    
+    console.log('LOG: STRATEGIES-SELECT-1 - Selecting best template for goal:', request.primary_goal);
+
     // Simple template selection logic based on primary goal
-    if (request.primarygoal === 'affiliate_revenue') {
+    if (request.primary_goal === 'affiliate_revenue') {
       return this.templates.get('affiliate-funnel-basic')!;
-    } else if (request.primarygoal === 'awareness') {
+    } else if (request.primary_goal === 'awareness') {
       return this.templates.get('brand-awareness-viral')!;
     }
     
@@ -205,7 +205,7 @@ export class StrategyGenerator {
   }
 
   private async customizeSteps(template: StrategyTemplate, request: StrategyRequest): Promise<CustomizedStep[]> {
-    console.log('LOG: STRATEGIES-CUSTOMIZE-1 - Customizing steps for brand:', request.brandname);
+    console.log('LOG: STRATEGIES-CUSTOMIZE-1 - Customizing steps for brand:', request.brand_name);
     
     return template.steps.map(step => {
       const personalizedContent = this.generatePersonalizedContent(step, request);
@@ -223,8 +223,8 @@ export class StrategyGenerator {
 
   private generatePersonalizedContent(step: StrategyStep, request: StrategyRequest): string {
     const industry = request.industry;
-    const brandName = request.brandname;
-    const audience = request.targetaudience;
+    const brandName = request.brand_name;
+    const audience = request.target_audience;
     
     switch (step.actiontype) {
       case 'influencer_outreach':

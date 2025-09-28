@@ -743,10 +743,15 @@ export class MachineLearningPipeline {
     features: Record<string, unknown>,
     count: number
   ): Promise<AlternativePrediction[]> {
-    return Array.from({ length: count }, () => ({
-      value: await this.runInference(model, features),
-      confidence: Math.random() * 0.5 + 0.3
-    }));
+    const alternatives: AlternativePrediction[] = [];
+    for (let i = 0; i < count; i++) {
+      const value = await this.runInference(model, features);
+      alternatives.push({
+        value,
+        confidence: Math.random() * 0.5 + 0.3
+      });
+    }
+    return alternatives;
   }
 
   private async executeHyperparameterOptimization(experiment: MLExperiment): Promise<void> {

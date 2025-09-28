@@ -7,11 +7,11 @@ compatibility_flags = ["nodejs_compat"]
 # Environment configurations
 [env.development]
 name = "must-be-viral-dev"
-vars = { NODE_ENV = "development" }
+vars = { NODE_ENV = "development", NEXT_PUBLIC_CLOUDFLARE_WORKERS_URL = "http://localhost:8787" }
 
 [env.production]
 name = "must-be-viral-prod"
-vars = { NODE_ENV = "production" }
+vars = { NODE_ENV = "production", NEXT_PUBLIC_CLOUDFLARE_WORKERS_URL = "https://must-be-viral-prod.your-subdomain.workers.dev" }
 
 # D1 Database binding
 [[d1_databases]]
@@ -39,11 +39,7 @@ preview_bucket_name = "must-be-viral-assets-preview"
 # - CLOUDFLARE_API_TOKEN
 
 # Local development with Next.js
-[env.development.vars]
-NEXT_PUBLIC_CLOUDFLARE_WORKERS_URL = "http://localhost:8787"
-
-[env.production.vars]
-NEXT_PUBLIC_CLOUDFLARE_WORKERS_URL = "https://must-be-viral-prod.your-subdomain.workers.dev"
+# Variables are now defined in the env sections above
 
 # Build configuration for Workers  
 # [build]

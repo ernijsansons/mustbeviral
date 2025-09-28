@@ -2,6 +2,8 @@
 import { AIModelSelector, ContentType, ContentLength } from './core/AIModelSelector';
 import { PromptBuilder } from './core/PromptBuilder';
 import { ContentEnhancer } from './enhancement/ContentEnhancer';
+import { AIProviderManager } from './providers/AIProviderManager';
+import { AIProviderType, ProviderConfig, AIRequest } from './providers/types';
 
 export interface ContentGenerationRequest {
   type: 'article' | 'social_post' | 'headline' | 'description' | 'script' | 'email';
@@ -53,6 +55,7 @@ export class ContentGenerator {
   private modelSelector: AIModelSelector;
   private promptBuilder: PromptBuilder;
   private contentEnhancer: ContentEnhancer;
+  private providerManager: AIProviderManager;
 
   constructor(ai: AIService, env: Record<string, any>) {
     this.ai = ai;
@@ -60,6 +63,67 @@ export class ContentGenerator {
     this.modelSelector = new AIModelSelector();
     this.promptBuilder = new PromptBuilder();
     this.contentEnhancer = new ContentEnhancer(ai);
+    this.initializeProviderManager();
+  }
+
+  private initializeProviderManager(): void {
+    const providerConfigs: Record<AIProviderType, ProviderConfig> = {
+      cloudflare: {
+        enabled: true,
+        priority: 1,
+        maxTokensPerRequest: 4096,
+        costPerToken: 0.0001,
+        rateLimit: {
+          requestsPerMinute: 100,
+          tokensPerMinute: 100000
+        },
+        timeout: 30000,
+        retryAttempts: 3,
+        retryDelay: 1000,
+        models: ['@cf/meta/llama-2-7b-chat-int8', '@cf/mistral/mistral-7b-instruct-v0.1'],
+        capabilities: ['text-generation', 'conversation']
+      },
+      openai: {
+        enabled: !!this.env.OPENAI_API_KEY,
+        priority: 2,
+        maxTokensPerRequest: 4096,
+        costPerToken: 0.002,
+        rateLimit: {
+          requestsPerMinute: 60,
+          tokensPerMinute: 90000
+        },
+        timeout: 30000,
+        retryAttempts: 4,
+        retryDelay: 2000,
+        models: ['gpt-3.5-turbo', 'gpt-4'],
+        capabilities: ['text-generation', 'conversation', 'code-generation']
+      },
+      anthropic: {
+        enabled: !!this.env.ANTHROPIC_API_KEY,
+        priority: 3,
+        maxTokensPerRequest: 4096,
+        costPerToken: 0.008,
+        rateLimit: {
+          requestsPerMinute: 50,
+          tokensPerMinute: 50000
+        },
+        timeout: 30000,
+        retryAttempts: 3,
+        retryDelay: 3000,
+        models: ['claude-3-haiku-20240307', 'claude-3-sonnet-20240229'],
+        capabilities: ['text-generation', 'conversation', 'analysis']
+      }
+    };
+
+    this.providerManager = new AIProviderManager(providerConfigs, this.env);
+
+    // Set the Cloudflare AI service for the Cloudflare adapter
+    if (this.ai) {
+      const cloudflareAdapter = (this.providerManager as any).providers?.get('cloudflare');
+      if (cloudflareAdapter && typeof cloudflareAdapter.setAIService === 'function') {
+        cloudflareAdapter.setAIService(this.ai);
+      }
+    }
   }
 
   async generateContent(request: ContentGenerationRequest): Promise<ContentGenerationResult> {
@@ -68,18 +132,51 @@ export class ContentGenerator {
       const model = this.modelSelector.selectModel(request.type);
       const maxTokens = this.modelSelector.getMaxTokens(request.length);
 
-      let result: unknown;
-      if (model.startsWith('@cf/')) {
-        result = await this.ai.run(model, { prompt, max_tokens: maxTokens });
-      } else {
-        result = await this.callExternalAI(model, prompt, request);
-      }
+      // Create AI request for provider manager
+      const aiRequest: AIRequest = {
+        model,
+        prompt,
+        maxTokens,
+        temperature: 0.7,
+        metadata: {
+          contentType: request.type,
+          topic: request.topic,
+          tone: request.tone,
+          audience: request.audience
+        }
+      };
 
-      const content = this.extractContent(result);
-      return await this.contentEnhancer.enhance(content, request, model);
+      // Use provider manager for resilient AI generation
+      const aiResponse = await this.providerManager.generateContent(aiRequest);
+
+      // Convert AI response to content generation result
+      return await this.convertToContentResult(aiResponse, request);
     } catch (error: unknown) {
       throw new Error(`Content generation failed: ${error instanceof Error ? error.message : error}`);
     }
+  }
+
+  private async convertToContentResult(
+    aiResponse: any,
+    request: ContentGenerationRequest
+  ): Promise<ContentGenerationResult> {
+    const content = aiResponse.content || this.extractContent(aiResponse);
+
+    // Use the content enhancer to add additional metadata and suggestions
+    const enhanced = await this.contentEnhancer.enhance(content, request, aiResponse.model || 'unknown');
+
+    // Merge AI response metadata with enhanced content
+    return {
+      ...enhanced,
+      metadata: {
+        ...enhanced.metadata,
+        provider: aiResponse.provider || 'unknown',
+        cost: aiResponse.cost || 0,
+        tokensUsed: aiResponse.tokensUsed || enhanced.metadata.tokensUsed,
+        requestId: aiResponse.metadata?.requestId,
+        latency: aiResponse.metadata?.latency
+      }
+    };
   }
 
   async generateMultipleVariations(request: ContentGenerationRequest, count: number = 3): Promise<ContentGenerationResult[]> {
@@ -457,5 +554,34 @@ Optimized content:`;
     }
 
     return results;
+  }
+
+  // Provider management methods
+  async getProviderHealthStatus() {
+    return await this.providerManager.getHealthStatus();
+  }
+
+  async getProviderMetrics() {
+    return await this.providerManager.getMetrics();
+  }
+
+  async getCostSummary() {
+    return await this.providerManager.getCostSummary();
+  }
+
+  setLoadBalancingStrategy(strategy: { type: 'round-robin' | 'weighted' | 'least-latency' | 'cost-optimized', weights?: Record<AIProviderType, number> }) {
+    this.providerManager.setLoadBalancingStrategy(strategy);
+  }
+
+  async testProvider(provider: AIProviderType): Promise<boolean> {
+    return await this.providerManager.testProvider(provider);
+  }
+
+  async clearCache(): Promise<void> {
+    await this.providerManager.clearCache();
+  }
+
+  async resetMetrics(): Promise<void> {
+    await this.providerManager.resetMetrics();
   }
 }

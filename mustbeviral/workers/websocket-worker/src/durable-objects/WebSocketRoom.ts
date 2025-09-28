@@ -1,7 +1,8 @@
 // WebSocket Room Durable Object
-// Manages real-time connections for a specific room/channel
+// Manages real-time connections for a specific room/channel with operational transform support
 
 import { Logger } from '../utils/logger';
+import { collaborationController, CollaborationMessage } from '../controllers/CollaborationController';
 
 export interface RoomMessage {
   type: string;
@@ -30,6 +31,7 @@ export class WebSocketRoom {
   private messageHistory: RoomMessage[] = [];
   private maxHistorySize = 100;
   private logger: Logger;
+  private isCollaborationRoom = false;
 
   constructor(private state: DurableObjectState, private env: unknown) {
     this.roomId = state.id.toString();
@@ -81,10 +83,15 @@ export class WebSocketRoom {
     const username = url.searchParams.get('username');
     const role = url.searchParams.get('role');
     const roomType = url.searchParams.get('roomType') || 'general';
+    const documentId = url.searchParams.get('documentId');
 
     if (!userId || !username) {
       return new Response('Missing user credentials', { status: 400 });
     }
+
+    // Check if this is a collaboration room
+    this.isCollaborationRoom = roomType === 'collaboration' && documentId;
+    this.roomType = roomType;
 
     // Check connection limits
     const userConnections = Array.from(this.connections.values())
@@ -109,19 +116,39 @@ export class WebSocketRoom {
       websocket: server,
       userId,
       username,
-      role: role  ?? 'user',
+      role: role ?? 'user',
       joinedAt: Date.now(),
       lastActivity: Date.now(),
-      metadata: { _roomType,
-        connectionId
+      metadata: {
+        roomType,
+        connectionId,
+        documentId
       }
     };
 
     this.connections.set(connectionId, connection);
-    this.roomType = roomType;
+
+    // Initialize collaboration if this is a collaboration room
+    if (this.isCollaborationRoom && documentId) {
+      try {
+        await collaborationController.initializeCollaboration(
+          connectionId,
+          connection,
+          this.roomId,
+          documentId
+        );
+      } catch (error) {
+        this.logger.error('Failed to initialize collaboration', {
+          roomId: this.roomId,
+          connectionId,
+          userId,
+          error: error instanceof Error ? error.message : error
+        });
+      }
+    }
 
     // Set up WebSocket event handlers
-    server.addEventListener('message', (_event) => {
+    server.addEventListener('message', (event) => {
       this.handleWebSocketMessage(connectionId, event);
     });
 
@@ -129,7 +156,7 @@ export class WebSocketRoom {
       this.handleWebSocketClose(connectionId);
     });
 
-    server.addEventListener('error', (_error) => {
+    server.addEventListener('error', (error) => {
       this.logger.error('WebSocket error', {
         roomId: this.roomId,
         connectionId,
@@ -216,7 +243,17 @@ export class WebSocketRoom {
           await this.handleSelectionUpdate(connectionId, message);
           break;
         case 'operation':
-          await this.handleCollaborativeOperation(connectionId, message);
+        case 'cursor':
+        case 'selection':
+        case 'presence':
+        case 'document_request':
+        case 'undo':
+        case 'redo':
+          if (this.isCollaborationRoom) {
+            await this.handleCollaborativeMessage(connectionId, message);
+          } else {
+            await this.handleCollaborativeOperation(connectionId, message);
+          }
           break;
         default:
           this.logger.warn('Unknown message type', {
@@ -380,17 +417,37 @@ export class WebSocketRoom {
     this.broadcastMessage(selectionMessage, connectionId);
   }
 
+  async handleCollaborativeMessage(connectionId: string, message: unknown): Promise<void> {
+    const connection = this.connections.get(connectionId);
+    if (!connection) {return;}
+
+    try {
+      // Handle through collaboration controller
+      await collaborationController.handleCollaborationMessage(
+        connectionId,
+        connection,
+        message as CollaborationMessage
+      );
+    } catch (error) {
+      this.logger.error('Collaboration message handling failed', {
+        roomId: this.roomId,
+        connectionId,
+        error: error instanceof Error ? error.message : error
+      });
+    }
+  }
+
   async handleCollaborativeOperation(connectionId: string, message: unknown): Promise<void> {
     const connection = this.connections.get(connectionId);
     if (!connection) {return;}
 
-    // This would integrate with operational transform or CRDT
+    // Legacy operation handling for non-collaboration rooms
     const operationMessage: RoomMessage = {
       type: 'operation',
       from: connection.userId,
       data: {
-        operation: message.operation,
-        documentVersion: message.documentVersion,
+        operation: (message as any).operation,
+        documentVersion: (message as any).documentVersion,
         timestamp: Date.now()
       },
       timestamp: Date.now(),
@@ -404,6 +461,18 @@ export class WebSocketRoom {
   handleWebSocketClose(connectionId: string): void {
     const connection = this.connections.get(connectionId);
     if (!connection) {return;}
+
+    // Handle collaboration cleanup if this is a collaboration room
+    if (this.isCollaborationRoom) {
+      collaborationController.handleDisconnection(connectionId, connection)
+        .catch(error => {
+          this.logger.error('Collaboration disconnect cleanup failed', {
+            roomId: this.roomId,
+            connectionId,
+            error: error instanceof Error ? error.message : error
+          });
+        });
+    }
 
     // Notify other users
     this.broadcastMessage({

@@ -88,7 +88,7 @@ async function handleRegister(request: Request, dbService: DatabaseService, cors
     const { email, username, password, role} = body;
     
     // Validate input
-    if (!email ?? !username  ?? !password  ?? !role) {
+    if (!email || !username || !password || !role) {
       return new Response(JSON.stringify({ error: 'All fields are required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

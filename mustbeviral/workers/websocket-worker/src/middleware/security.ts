@@ -125,7 +125,7 @@ export class SecurityMiddleware {
     return new Response(JSON.stringify({
       error: message,
       timestamp: new Date().toISOString()
-    }), { _status,
+    }), { status,
       headers: {
         'Content-Type': 'application/json'
       }
