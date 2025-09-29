@@ -1,0 +1,7 @@
+{
+  "timestamp": "2025-09-28T23:35:16.485Z",
+  "deployment_status": "FAILED",
+  "error_message": "Command failed: cd mustbeviral && npm ci",
+  "duration_seconds": "10.29",
+  "rollback_required": true
+}

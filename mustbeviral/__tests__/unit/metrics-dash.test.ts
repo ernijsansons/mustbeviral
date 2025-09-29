@@ -7,19 +7,19 @@ import { MetricsDash, useMetrics } from '../../src/components/MetricsDash';
 
 // Mock recharts components
 jest.mock('recharts', () => ({
-  LineChart: ({ children }: any) => <div data-testid="line-chart">{children}</div>,
-  Line: () => <div data-testid="line" />,
-  BarChart: ({ children }: any) => <div data-testid="bar-chart">{children}</div>,
-  Bar: () => <div data-testid="bar" />,
-  PieChart: ({ children }: any) => <div data-testid="pie-chart">{children}</div>,
-  Pie: () => <div data-testid="pie" />,
-  Cell: () => <div data-testid="cell" />,
-  XAxis: () => <div data-testid="x-axis" />,
-  YAxis: () => <div data-testid="y-axis" />,
-  CartesianGrid: () => <div data-testid="cartesian-grid" />,
-  Tooltip: () => <div data-testid="tooltip" />,
-  Legend: () => <div data-testid="legend" />,
-  ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>
+  LineChart: ({ children }: any) => React.createElement('div', { 'data-testid': 'line-chart' }, children),
+  Line: () => React.createElement('div', { 'data-testid': 'line' }),
+  BarChart: ({ children }: any) => React.createElement('div', { 'data-testid': 'bar-chart' }, children),
+  Bar: () => React.createElement('div', { 'data-testid': 'bar' }),
+  PieChart: ({ children }: any) => React.createElement('div', { 'data-testid': 'pie-chart' }, children),
+  Pie: () => React.createElement('div', { 'data-testid': 'pie' }),
+  Cell: () => React.createElement('div', { 'data-testid': 'cell' }),
+  XAxis: () => React.createElement('div', { 'data-testid': 'x-axis' }),
+  YAxis: () => React.createElement('div', { 'data-testid': 'y-axis' }),
+  CartesianGrid: () => React.createElement('div', { 'data-testid': 'cartesian-grid' }),
+  Tooltip: () => React.createElement('div', { 'data-testid': 'tooltip' }),
+  Legend: () => React.createElement('div', { 'data-testid': 'legend' }),
+  ResponsiveContainer: ({ children }: any) => React.createElement('div', { 'data-testid': 'responsive-container' }, children)
 }));
 
 // Mock fetch

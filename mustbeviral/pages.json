@@ -1,0 +1,21 @@
+{
+  "name": "must-be-viral-v2",
+  "production_branch": "main",
+  "build_config": {
+    "build_command": "npm run build",
+    "build_output_directory": "dist",
+    "root_directory": "mustbeviral"
+  },
+  "deployment_configs": {
+    "production": {
+      "environment_variables": {
+        "NODE_ENV": "production",
+        "NEXT_PUBLIC_CLOUDFLARE_WORKERS_URL": "https://must-be-viral-prod.ernijs-ansons.workers.dev",
+        "NEXT_PUBLIC_API_URL": "https://must-be-viral-prod.ernijs-ansons.workers.dev/api",
+        "NEXT_PUBLIC_SUPABASE_URL": "",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "",
+        "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": ""
+      }
+    }
+  }
+}

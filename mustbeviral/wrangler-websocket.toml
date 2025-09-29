@@ -1,0 +1,37 @@
+name = "must-be-viral-websocket"
+main = "workers/websocket-worker.js"
+compatibility_date = "2024-12-01"
+account_id = "d2897bdebfa128919bd89b265e6a712e"
+
+[env.production]
+name = "must-be-viral-websocket-prod"
+vars = { NODE_ENV = "production" }
+
+# Durable Objects for room management (for free plan)
+[[env.production.durable_objects.bindings]]
+name = "ROOMS"
+class_name = "WebSocketRoom"
+script_name = "must-be-viral-websocket-prod"
+
+# Migrations for Durable Objects using SQLite (free plan compatible)
+[[env.production.migrations]]
+tag = "v1"
+new_sqlite_classes = ["WebSocketRoom"]
+
+# Durable Objects moved to production environment
+# See env.production section below
+
+# KV Namespace for presence storage
+[[env.production.kv_namespaces]]
+binding = "PRESENCE_STORE"
+id = "7e322b647b814e7298e38c23197c5a06"
+
+# D1 Database
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "must-be-viral-db"
+database_id = "14bdc6aa-5ddb-4340-bfb2-59dc68d2c520"
+
+# Environment secrets (add via wrangler secret put)
+# Required:
+# - JWT_SECRET

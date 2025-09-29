@@ -1,0 +1,135 @@
+name: Deploy Frontend to Cloudflare Pages
+
+on:
+  push:
+    branches: [main, develop]
+    paths: ['mustbeviral/**']
+  pull_request:
+    branches: [main]
+    paths: ['mustbeviral/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mustbeviral/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd mustbeviral
+          npm ci
+
+      - name: Type check
+        run: |
+          cd mustbeviral
+          npm run typecheck
+
+      - name: Lint
+        run: |
+          cd mustbeviral
+          npm run lint
+
+      - name: Security audit
+        run: |
+          cd mustbeviral
+          npm run security:audit
+
+      - name: Run tests
+        run: |
+          cd mustbeviral
+          npm test
+
+  build-and-deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mustbeviral/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd mustbeviral
+          npm ci
+
+      - name: Build for production
+        run: |
+          cd mustbeviral
+          npm run build
+        env:
+          NODE_ENV: production
+          VITE_APP_ENV: production
+          VITE_WORKERS_URL: https://must-be-viral-prod.ernijs-ansons.workers.dev
+          VITE_API_URL: https://must-be-viral-prod.ernijs-ansons.workers.dev/api
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: must-be-viral-frontend
+          directory: mustbeviral/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Performance audit
+        run: |
+          cd mustbeviral
+          npm run perf:lighthouse
+
+      - name: Security check
+        run: |
+          cd mustbeviral
+          npm run security:check
+
+  deploy-staging:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mustbeviral/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd mustbeviral
+          npm ci
+
+      - name: Build for staging
+        run: |
+          cd mustbeviral
+          npm run build
+        env:
+          NODE_ENV: staging
+          VITE_APP_ENV: staging
+          VITE_WORKERS_URL: https://must-be-viral-staging.ernijs-ansons.workers.dev
+          VITE_API_URL: https://must-be-viral-staging.ernijs-ansons.workers.dev/api
+
+      - name: Deploy to Cloudflare Pages (Staging)
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: must-be-viral-staging
+          directory: mustbeviral/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

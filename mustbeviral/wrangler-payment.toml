@@ -1,0 +1,25 @@
+name = "must-be-viral-payment"
+main = "workers/payment-worker.js"
+compatibility_date = "2024-12-01"
+account_id = "d2897bdebfa128919bd89b265e6a712e"
+
+[env.production]
+name = "must-be-viral-payment-prod"
+vars = { NODE_ENV = "production" }
+
+# KV Namespace for session storage
+[[env.production.kv_namespaces]]
+binding = "PAYMENT_CACHE"
+id = "7e322b647b814e7298e38c23197c5a06"
+
+# D1 Database
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "must-be-viral-db"
+database_id = "14bdc6aa-5ddb-4340-bfb2-59dc68d2c520"
+
+# Environment secrets (add via wrangler secret put)
+# Required:
+# - STRIPE_SECRET_KEY
+# - STRIPE_WEBHOOK_SECRET
+# - JWT_SECRET

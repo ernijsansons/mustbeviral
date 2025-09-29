@@ -83,27 +83,27 @@ export function validateEnvironment(): { isValid: boolean; errors: string[] } {
 
   try {
     // Required environment variables for different environments
-    if (env.APPENV === 'production') {
-      if (!env.STRIPEPUBLISHABLEKEY) {
+    if (env.APP_ENV === 'production') {
+      if (!env.STRIPE_PUBLISHABLE_KEY) {
         errors.push('VITE_STRIPE_PUBLISHABLE_KEY is required in production');
       }
 
-      if (!env.ANALYTICS_ID && env.ENABLEPERFORMANCEMONITORING) {
+      if (!env.ANALYTICS_ID && env.ENABLE_PERFORMANCE_MONITORING) {
         errors.push('VITE_ANALYTICS_ID is recommended when performance monitoring is enabled');
       }
     }
 
     // Validate URLs (safely)
     try {
-      new URL(env.BASEURL);
+      new URL(env.BASE_URL);
     } catch (error: unknown) {
-      errors.push(`Invalid BASE_URL format: ${env.BASEURL}`);
+      errors.push(`Invalid BASE_URL format: ${env.BASE_URL}`);
     }
 
     try {
-      new URL(env.WORKERSURL);
+      new URL(env.WORKERS_URL);
     } catch (error: unknown) {
-      errors.push(`Invalid WORKERS_URL format: ${env.WORKERSURL}`);
+      errors.push(`Invalid WORKERS_URL format: ${env.WORKERS_URL}`);
     }
 
   } catch (error: unknown) {
@@ -128,13 +128,13 @@ export function isFeatureEnabled(feature: keyof Pick<EnvironmentConfig, 'ENABLE_
 }
 
 // Development utilities
-export const isDevelopment = env.APPENV === 'development';
-export const isProduction = env.APPENV === 'production';
-export const isStaging = env.APPENV === 'staging';
+export const isDevelopment = env.APP_ENV === 'development';
+export const isProduction = env.APP_ENV === 'production';
+export const isStaging = env.APP_ENV === 'staging';
 
 // API endpoint builders
 export function buildApiUrl(endpoint: string): string {
-  const baseUrl = env.WORKERS_URL.endsWith('/') ? env.WORKERS_URL.slice(0, -1) : env.WORKERSURL;
+  const baseUrl = env.WORKERS_URL.endsWith('/') ? env.WORKERS_URL.slice(0, -1) : env.WORKERS_URL;
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   return `${baseUrl}${cleanEndpoint}`;
 }
@@ -142,14 +142,14 @@ export function buildApiUrl(endpoint: string): string {
 // Log environment configuration (development only)
 if (isDevelopment) {
   console.log('🌌 Universe-Bending Environment Configuration:', {
-    environment: env.APPENV,
+    environment: env.APP_ENV,
     features: {
-      '3D Effects': env.ENABLE3DEFFECTS,
-      'AI Personalization': env.ENABLEAIPERSONALIZATION,
-      'Voice Interface': env.ENABLEVOICEINTERFACE,
-      'Analytics Dashboard': env.ENABLEANALYTICSDASHBOARD,
-      'Real-time Features': env.ENABLEREALTIME_FEATURES,
+      '3D Effects': env.ENABLE_3D_EFFECTS,
+      'AI Personalization': env.ENABLE_AI_PERSONALIZATION,
+      'Voice Interface': env.ENABLE_VOICE_INTERFACE,
+      'Analytics Dashboard': env.ENABLE_ANALYTICS_DASHBOARD,
+      'Real-time Features': env.ENABLE_REAL_TIME_FEATURES,
     },
-    monitoring: env.ENABLEPERFORMANCEMONITORING,
+    monitoring: env.ENABLE_PERFORMANCE_MONITORING,
   });
 }

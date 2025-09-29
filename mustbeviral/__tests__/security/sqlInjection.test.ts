@@ -228,7 +228,7 @@ describe('SQL Injection Protection Tests', () => {
       const userIds = ['user1', 'user2'];
       const maliciousUpdates = {
         "role'; DROP TABLE users; --": UserRole.ADMIN,
-        "email': 'hacked@evil.com"; email": "test@example.com",
+        "email\": \"hacked@evil.com\"; email": "test@example.com",
       };
 
       await expect(

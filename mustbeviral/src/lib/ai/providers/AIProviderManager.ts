@@ -47,7 +47,8 @@ export class AIProviderManager {
     if (this.config.cloudflare?.enabled) {
       this.providers.set('cloudflare', new CloudflareAdapter(
         this.config.cloudflare,
-        this.env
+        this.env,
+        this.env.AI // Pass the Cloudflare AI service
       ));
     }
 

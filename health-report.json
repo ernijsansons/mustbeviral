@@ -1,0 +1,46 @@
+{
+  "timestamp": "2025-09-29T04:22:24.668Z",
+  "overallStatus": "DEGRADED",
+  "servicesUp": 3,
+  "servicesTotal": 4,
+  "criticalIssues": 0,
+  "services": [
+    {
+      "name": "Main API",
+      "url": "https://must-be-viral-prod.ernijs-ansons.workers.dev/api/health",
+      "statusCode": 200,
+      "status": "UP",
+      "responseTime": 381,
+      "critical": true
+    },
+    {
+      "name": "AI Content Generation",
+      "url": "https://must-be-viral-prod.ernijs-ansons.workers.dev/api/ai/models",
+      "statusCode": 200,
+      "status": "UP",
+      "responseTime": 504,
+      "critical": true
+    },
+    {
+      "name": "Payment Worker",
+      "url": "https://must-be-viral-payment-prod.ernijs-ansons.workers.dev/",
+      "statusCode": 500,
+      "status": "DOWN",
+      "responseTime": 144,
+      "critical": false,
+      "note": "May show 1101 error if route not configured"
+    },
+    {
+      "name": "WebSocket Worker",
+      "url": "https://must-be-viral-websocket-prod.ernijs-ansons.workers.dev/",
+      "statusCode": 200,
+      "status": "UP",
+      "responseTime": 122,
+      "critical": false
+    }
+  ],
+  "recommendations": [
+    "💳 Payment worker may need route configuration or is not fully deployed",
+    "🔧 Some services are not responding. Check deployment logs for details"
+  ]
+}

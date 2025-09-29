@@ -1,0 +1,4 @@
+name = "must-be-viral-test"
+main = "src/test-worker.js"
+compatibility_date = "2024-12-01"
+account_id = "d2897bdebfa128919bd89b265e6a712e"

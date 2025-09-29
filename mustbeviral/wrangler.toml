@@ -3,6 +3,7 @@ name = "must-be-viral"
 main = "src/worker.ts"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
+account_id = "d2897bdebfa128919bd89b265e6a712e"
 
 # Environment configurations
 [env.development]
@@ -11,26 +12,44 @@ vars = { NODE_ENV = "development", NEXT_PUBLIC_CLOUDFLARE_WORKERS_URL = "http://
 
 [env.production]
 name = "must-be-viral-prod"
-vars = { NODE_ENV = "production", NEXT_PUBLIC_CLOUDFLARE_WORKERS_URL = "https://must-be-viral-prod.your-subdomain.workers.dev" }
+vars = { NODE_ENV = "production", NEXT_PUBLIC_CLOUDFLARE_WORKERS_URL = "https://must-be-viral-prod.ernijs-ansons.workers.dev" }
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "must-be-viral-db"
+database_id = "14bdc6aa-5ddb-4340-bfb2-59dc68d2c520"
+
+[[env.production.kv_namespaces]]
+binding = "TRENDS_CACHE"
+id = "7e322b647b814e7298e38c23197c5a06"
+
+[[env.production.r2_buckets]]
+binding = "ASSETS_STORAGE"
+bucket_name = "must-be-viral-assets"
+
+[env.production.ai]
+binding = "AI"
 
 # D1 Database binding
 [[d1_databases]]
 binding = "DB"
 database_name = "must-be-viral-db"
-database_id = "your-d1-database-id-here"
+database_id = "14bdc6aa-5ddb-4340-bfb2-59dc68d2c520"
 migrations_dir = "migrations"
 
 # KV Namespace for trends cache
 [[kv_namespaces]]
 binding = "TRENDS_CACHE"
-id = "your-kv-namespace-id-here"
-preview_id = "your-kv-preview-id-here"
+id = "7e322b647b814e7298e38c23197c5a06"
 
 # R2 Bucket for asset storage
 [[r2_buckets]]
 binding = "ASSETS_STORAGE"
 bucket_name = "must-be-viral-assets"
-preview_bucket_name = "must-be-viral-assets-preview"
+
+# AI binding for Cloudflare AI
+[ai]
+binding = "AI"
 
 # Environment secrets (add via wrangler secret put)
 # Required secrets:
@@ -41,9 +60,12 @@ preview_bucket_name = "must-be-viral-assets-preview"
 # Local development with Next.js
 # Variables are now defined in the env sections above
 
-# Build configuration for Workers  
-# [build]
-# command = "npm run build"
+# Build configuration for Workers
+[build]
+command = "npm run build"
+
+# Pages configuration
+pages_build_output_dir = "dist"
 
 # Routes for Workers API (if using custom domain)
 # routes = [
