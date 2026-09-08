@@ -14,7 +14,9 @@ at 2026-09-08T03:18:11Z, as recorded in `replacement-observation-baseline-2026-0
    `C:/Users/ernij/.claude/plans/mustbeviral-exec/packets/WP-P3-009.md`
    against only Supabase project
    `jjgtlfblsfobdhmtngbz`, using the explicitly targeted connector or Management
-   API. Record UTC capture times, allowlisted aggregate results and metadata. Never collect owner identifiers,
+   API. For required daily captures, follow the external spec's sequential S1–S7
+   read order and retain the UTC capture bounds for each read. Record allowlisted
+   aggregate results and metadata. Never collect owner identifiers,
    passwords, tokens, cookies, Auth rows, or customer records.
 3. Preserve the original S1 count, but add aggregate total/revoked/active refresh
    token counts and distinct session count. Normal token rotation can leave a
@@ -76,8 +78,11 @@ does not change the accepted containment criterion or pass the old window.
 ## Completion and ongoing checks
 
 The hourly task `mustbeviral-private-v2-observation` collects recovery checkpoints
-in this Codex task. It is active, but its first scheduled run is not yet verified.
-Scheduling the task is not proof of execution or a completed observation.
+in this Codex task. Its first scheduled execution is evidenced in
+`replacement-observation-scheduled-01-2026-09-08.md`: the September 8 04:52Z run
+completed provider reads but encountered unavailable browser control. Scheduling
+or executing a task is not proof that every capture requirement passed or that
+the observation is complete.
 
 Preserve contemporaneous daily checkpoints and intervening available telemetry.
 Day 1 is due September 9 at 03:18:11Z, within 01:18:11–05:18:11Z; day 2 uses the
