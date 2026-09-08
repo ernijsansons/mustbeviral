@@ -22,4 +22,4 @@ DO NOT EDIT — generated from `PROJECT_STATE.yaml` and the active packet.
 
 ## One next action
 
-p3i-003: observe the replacement private window 2026-09-08T03:18:11Z through at least 2026-09-11T03:18:11Z using observation-recovery-procedure-2026-09-08.md, with the next required daily capture on September 9 at 03:18:11Z plus or minus two hours; retain the original window as unproven and the separate owner traffic ruling as pending.
+p3i-003: continue the replacement observation from 2026-09-08T03:18:11Z through at least 2026-09-11T03:18:11Z; hour-01 evidence is recorded, the next required daily capture is September 9 at 03:18:11Z plus or minus two hours, and the separate owner traffic ruling remains pending.

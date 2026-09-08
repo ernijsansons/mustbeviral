@@ -144,11 +144,10 @@ external_effects:
   destructive_remote_actions: false
 handoff:
   current_step: p3i-003-private-72-hour-observation
-  next_action:
-    'p3i-003: observe the replacement private window 2026-09-08T03:18:11Z through at least
-    2026-09-11T03:18:11Z using observation-recovery-procedure-2026-09-08.md, with the next required
-    daily capture on September 9 at 03:18:11Z plus or minus two hours; retain the original window as
-    unproven and the separate owner traffic ruling as pending.'
+  next_action: 'p3i-003: continue the replacement observation from 2026-09-08T03:18:11Z through at
+    least 2026-09-11T03:18:11Z; hour-01 evidence is recorded, the next required daily capture is
+    September 9 at 03:18:11Z plus or minus two hours, and the separate owner traffic ruling remains
+    pending.'
   blockers: []
   changed_paths:
     - governance/evidence/WP-P3-009/trunk-sync-2026-09-04.md
@@ -159,6 +158,7 @@ handoff:
     - governance/evidence/WP-P3-009/private-observation-2026-09-08.md
     - governance/evidence/WP-P3-009/private-72-hour-observation-2026-09-07.md
     - governance/evidence/WP-P3-009/replacement-observation-baseline-2026-09-08.md
+    - governance/evidence/WP-P3-009/replacement-observation-hour-01-2026-09-08.md
     - governance/evidence/WP-P3-009/observation-recovery-procedure-2026-09-08.md
     - governance/evidence/WP-P3-009/traffic-decision-draft.md
     - governance/evidence/WP-P3-009/execution-recovery-review-2026-09-08.md
