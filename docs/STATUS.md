@@ -22,4 +22,4 @@ DO NOT EDIT — generated from `PROJECT_STATE.yaml` and the active packet.
 
 ## One next action
 
-p3i-003: observe the protected provider surface for 72 continuous hours (window 2026-09-04T21:22Z to 2026-09-07T21:22Z) with daily zero-mutation snapshots (auth.sessions, all tenant and money tables, R2 object count, Core health, Vercel runtime errors); the owner may set the password at any time via the reset page; then prepare the p3i-004 traffic decision draft.
+p3i-003: observe the replacement private window 2026-09-08T03:18:11Z through at least 2026-09-11T03:18:11Z using observation-recovery-procedure-2026-09-08.md, with the next required daily capture on September 9 at 03:18:11Z plus or minus two hours; retain the original window as unproven and the separate owner traffic ruling as pending.

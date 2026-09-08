@@ -1,0 +1,170 @@
+schema_version: 1
+id: WP-P3-010
+spec_revision: 1
+title: ADR-0007 governance-only scope amendment
+phase: P3
+status: ready
+priority: critical
+branch: codex/viralgraph-cleanroom
+objective: Record the owner's 2026-09-04 agency and connected-publishing pivot as the superseding
+  decision, amend every contradicting accepted authority, parameterize the production release config
+  gate through governance/config/production-shape.json, delete the FORBIDDEN_APP_PATH gate, register
+  the ship plan and the packet execution-spec tree as documents, and record the cleanroom-trunk
+  authorization act - all before any apps/** connected-publishing file exists. Effort is 2.5
+  engineer-days including evidence, docs generation and verification.
+authority_refs:
+  - product-contract
+  - release-scope
+  - system-overview
+  - data-auth-tenancy
+  - quality-gates
+  - local-env-secrets
+  - deploy-rollback-incidents
+  - legacy-v1-retirement
+  - adr-0005-document-governance
+required_skills:
+  - architect-prime
+  - quality-check
+depends_on:
+  - WP-P3-009
+scope:
+  allowed_paths:
+    - AGENTS.md
+    - .agents/**
+    - docs/**
+    - docs/delivery/ACTIVE_WORK_PACKET.yaml
+    - docs/delivery/SHIP_PLAN.md
+    - docs/delivery/exec/**
+    - docs/generated/**
+    - docs/STATUS.md
+    - docs/INDEX.md
+    - governance/**
+    - governance/config/**
+    - governance/tests/**
+    - governance/evidence/WP-P3-009/**
+    - governance/evidence/WP-P3-010/**
+    - PROJECT_STATE.yaml
+    - llms.txt
+  forbidden_paths:
+    - apps/**
+    - packages/**
+    - supabase/**
+    - docs/archive/**
+    - legacy-exports/**
+  required_doc_ids:
+    - product-contract
+    - release-scope
+    - system-overview
+    - data-auth-tenancy
+    - quality-gates
+    - deploy-rollback-incidents
+    - adr-0005-document-governance
+deliverables:
+  - ADR-0007 is registered accepted with authority topic decision.0007, supersedes
+    adr-0001-dtc-first, and records the agency ICP, the Sendible-class V2 layer, direct reusable
+    connectors and their ranking, the Postiz hosted API escape hatch, the publish_media media
+    exception, the production cron/queue/custom-domain class, the honest untested-DTC supersession,
+    and the cleanroom-trunk authorization act.
+  - Every contradicting accepted authority, the build skill, and the finish-sprint mega prompt are
+    amended or marked superseded so the AGENTS.md conflict-stop rule does not fire, and the five
+    retired authority phrases survive only as ADR-0007 history.
+  - governance/config/production-shape.json records today's production wrangler block;
+    production-release-config-gate.test.mjs reads it instead of hard-coded expectations; the
+    FORBIDDEN_APP_PATH constant and its test are deleted while the executor, BYOK and Hyperdrive
+    tests stay.
+  - PROJECT_STATE.yaml records launch_customer agencies_multi_brand_studios and release_target
+    P4-launch.
+  - The ship plan is registered as docs/delivery/SHIP_PLAN.md with doc_id ship-plan, kind delivery,
+    status accepted and an empty authority_topics list, and is added to the cleanroom content
+    allowlist.
+  - The packet execution-spec tree is registered under docs/delivery/exec/** with one MANIFEST entry
+    per file, and generated documentation is regenerated with pnpm docs:generate.
+public_interfaces:
+  - No runtime, DNS, Worker, Vercel, Supabase, Stripe or R2 mutation. Documentation, governance
+    configuration, governance tests and project-state fields only. REST, MCP and CLI surfaces are
+    unchanged; the pinned OpenAPI path count stays 28 and the pinned MCP tool count stays 11.
+steps:
+  - id: p3j-001-adr-0007-and-authority-amendments
+    title: Accept ADR-0007 and amend every contradicting authority in one governance-only diff.
+    status: pending
+  - id: p3j-002-parameterize-production-gates
+    title: Add production-shape.json, rewrite the config-gate test, and delete FORBIDDEN_APP_PATH.
+    status: pending
+  - id: p3j-003-register-ship-plan
+    title: Register SHIP_PLAN.md, allowlist it for the cleanroom scan, and point ROADMAP at it.
+    status: pending
+  - id: p3j-004-register-execution-spec-tree
+    title: Copy and register the packet execution-spec tree under docs/delivery/exec and regenerate
+      documentation.
+    status: pending
+  - id: p3j-005-trunk-gates-and-code-owner-pr
+    title: Prove the gates on the trunk checkout, open the short-lived PR into the cleanroom trunk,
+      and record the code-owner approval as evidence.
+    status: pending
+acceptance:
+  automated:
+    - id: governance-docs-and-packet
+      criterion: pnpm governance:check passes with ADR-0007 registered accepted, ADR-0001 and the
+        finish-sprint mega prompt superseded, ship-plan registered with an empty authority_topics
+        list, and every execution-spec file registered.
+      status: pending
+      evidence: []
+    - id: governance-tests-parameterized
+      criterion: pnpm governance:test passes; production-release-config-gate reads
+        production-shape.json and stays green against today's wrangler.jsonc; the executor, BYOK and
+        Hyperdrive tests remain and FORBIDDEN_APP_PATH is gone.
+      status: pending
+      evidence: []
+    - id: retired-phrase-scan
+      criterion: The five retired authority phrases appear under AGENTS.md, .agents and docs only
+        inside the ADR-0007 Context paragraph, proven by a recorded ripgrep run that excludes the
+        registered execution-spec tree docs/delivery/exec/** - exactly one hit outside it.
+      status: pending
+      evidence: []
+    - id: repository-verify
+      criterion: pnpm verify passes on the trunk checkout with the governance-only diff in the
+        working tree and no apps/** connected-publishing file present.
+      status: pending
+      evidence: []
+  manual:
+    - id: code-owner-cleanroom-pr
+      criterion: A pull request from the short-lived branch into codex/viralgraph-cleanroom is
+        approved by the code owner with the Governance and Quality checks green. That approval is
+        the authorization act; main is not merged.
+      status: pending
+      evidence: []
+quality_gates:
+  - id: governance
+    command: pnpm governance:check
+    status: pending
+    evidence: []
+  - id: governance-tests
+    command: pnpm governance:test
+    status: pending
+    evidence: []
+  - id: repository-verification
+    command: pnpm verify
+    status: pending
+    evidence: []
+rollback:
+  strategy: Revert the single governance-only commit on codex/viralgraph-cleanroom with git revert,
+    then run pnpm docs:generate and pnpm verify to restore the generated documents. No remote
+    infrastructure, DNS, Worker, Vercel, Supabase or production configuration is changed by this
+    packet, so rollback is Git-only and needs no external coordination. If the short-lived branch
+    was already merged, revert the merge commit on the trunk and close the pull request.
+  remote_actions_required: false
+external_effects:
+  remote_mutation: none
+  destructive_remote_actions: false
+handoff:
+  current_step: p3j-001-adr-0007-and-authority-amendments
+  next_action: Apply the reviewed ADR-0007 draft, the MANIFEST entries and every authority amendment
+    from the scratch out directory into the trunk checkout, normalizing line endings to LF, and
+    leave them uncommitted until the gates are green.
+  blockers: []
+  changed_paths: []
+  last_green_checks: []
+completion:
+  successor_packet_id: null
+  evidence_paths: []
+  completed_at: null

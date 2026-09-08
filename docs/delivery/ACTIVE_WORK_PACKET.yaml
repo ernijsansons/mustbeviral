@@ -107,7 +107,9 @@ acceptance:
       criterion: A continuous 72-hour provider observation shows healthy private endpoints, redacted
         telemetry, private storage, disabled gates, and no customer-impacting activity.
       status: pending
-      evidence: []
+      evidence:
+        - governance/evidence/WP-P3-009/private-72-hour-observation-2026-09-07.md
+        - governance/evidence/WP-P3-009/replacement-observation-baseline-2026-09-08.md
   manual:
     - id: fresh-traffic-decision
       criterion:
@@ -118,16 +120,19 @@ acceptance:
 quality_gates:
   - id: design-direction
     command: pnpm design:check
-    status: pending
-    evidence: []
+    status: passed
+    evidence:
+      - governance/evidence/WP-P3-009/gate-run-2026-09-08.md
   - id: governance
     command: pnpm governance:check
-    status: pending
-    evidence: []
+    status: passed
+    evidence:
+      - governance/evidence/WP-P3-009/gate-run-2026-09-08.md
   - id: repository-verification
     command: pnpm verify
-    status: pending
-    evidence: []
+    status: passed
+    evidence:
+      - governance/evidence/WP-P3-009/gate-run-2026-09-08.md
 rollback:
   strategy:
     Keep all behavior gates false, leave the protected provider deployment in place, stop the
@@ -139,16 +144,29 @@ external_effects:
   destructive_remote_actions: false
 handoff:
   current_step: p3i-003-private-72-hour-observation
-  next_action: 'p3i-003: observe the protected provider surface for 72 continuous hours (window
-    2026-09-04T21:22Z to 2026-09-07T21:22Z) with daily zero-mutation snapshots (auth.sessions, all
-    tenant and money tables, R2 object count, Core health, Vercel runtime errors); the owner may set
-    the password at any time via the reset page; then prepare the p3i-004 traffic decision draft.'
+  next_action:
+    'p3i-003: observe the replacement private window 2026-09-08T03:18:11Z through at least
+    2026-09-11T03:18:11Z using observation-recovery-procedure-2026-09-08.md, with the next required
+    daily capture on September 9 at 03:18:11Z plus or minus two hours; retain the original window as
+    unproven and the separate owner traffic ruling as pending.'
   blockers: []
   changed_paths:
     - governance/evidence/WP-P3-009/trunk-sync-2026-09-04.md
     - governance/evidence/WP-P3-009/owner-identity-authorization-2026-09-04.md
     - governance/evidence/WP-P3-009/owner-session-zero-spend-smoke-2026-09-04.md
-  last_green_checks: []
+    - governance/evidence/WP-P3-009/private-observation-2026-09-05.md
+    - governance/evidence/WP-P3-009/private-observation-2026-09-06.md
+    - governance/evidence/WP-P3-009/private-observation-2026-09-08.md
+    - governance/evidence/WP-P3-009/private-72-hour-observation-2026-09-07.md
+    - governance/evidence/WP-P3-009/replacement-observation-baseline-2026-09-08.md
+    - governance/evidence/WP-P3-009/observation-recovery-procedure-2026-09-08.md
+    - governance/evidence/WP-P3-009/traffic-decision-draft.md
+    - governance/evidence/WP-P3-009/execution-recovery-review-2026-09-08.md
+    - governance/evidence/WP-P3-009/gate-run-2026-09-08.md
+    - governance/evidence/WP-P3-009/successor-WP-P3-010.yaml
+  last_green_checks:
+    - pnpm agent:preflight
+    - pnpm agent:verify
 completion:
   successor_packet_id: null
   evidence_paths: []
